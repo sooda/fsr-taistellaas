@@ -1,0 +1,95 @@
+Consistent coding style makes it easy to follow the code that others have written. Modular and general-purpose code is easy to maintain. Please try to follow the following.
+
+Writing code twice as slow as without following guidelines and without thinking what you're doing is still an order of magnitude faster than debugging it later!
+
+General structure
+=================
+
+* Be explicit and specific.
+* Use namespaces a lot.
+* Don't put (almost) anything to top-level src/, but to area-specific directories instead, to separate the modules in a clear way, e.g. src/slam, src/navigation, src/planning
+* Write modular code.
+* Premature optimization is the root of all evil. Humans are really bad at guessing the bottlenecks of code, so don't over-optimize over clarity unless you have measured that X really is a bottleneck.
+
+Documentation
+=============
+
+* Comment your code -- but comments should shortly explain what something happens and most importantly *why*, not how. The code specifies how. Compare comments and code to what you say to a bartender and what he does. You say "get me a beer", not "take a glass, put it under the beer tap, turn the tap on and wait till the glass is full and then give it to me". You're not interested in the details. (you don't tell him why you want the beer, but the fact that you want the beer is why he grabs the glass etc.)
+* Don't comment trivial code. Usually, comments inside a function are a sign of bad code if the code needs explanations. Good code has small enough functions that the only comments needed are those that describe the *purpose* of those functions. (Of course this is rarely true in practice, but do try.)
+* We will probably use Doxygen for generating pretty html pages for the docs. Please spend a minute here: http://www.stack.nl/~dimitri/doxygen/docblocks.html
+
+
+Coding style
+============
+
+High-level guidelines
+---------------------
+
+* Use modern C++. Don't respect those parts of mozilla or google coding guidelines that tell you not to use namespaces, exceptions, raii or other basic standard features of C++.
+* Use RAII.
+* Use exceptions to handle exceptional situations.
+* Use templates, if it reduces code duplication.
+* Read http://en.wikipedia.org/wiki/Code_smell
+* Hungarian notation is ugly, don't use it except when using the ready-made libraries, i.e. don't prepend your classes with the C character, or enums with E, etc.
+* Use of the boost library will be considered. It's a generic, high-quality library for making the code prettier.
+* Treat compiler warnings as errors. Be ashamed of commiting code that produces warnings, as it's a sign of bad code.
+* Let's try to use C++11 (to the point that it's supported by gcc at the lab). It has some really nice new features.
+* Obey KISS. http://en.wikipedia.org/wiki/KISS_principle
+
+
+Behaviour
+---------
+
+* Use STL containers and algorithms a lot where you can. Use std::vector instead of C-style arrays.
+* Don't use "using namespace something;" in headers. Avoid using it globally in .cpp files, but use it inside functions if it makes the code cleaner.
+* Use typedefs if general types get too long to write.
+* Use initializer lists.
+* Use references when passing around objects, unless you explicitly want to make a copy.
+* If there's no point of making a copy of your class, declare it as noncopyable.
+* Write generic (=general-purpose) code. Avoid special cases.
+* Don't repeat yourself. If you notice that you're doing something twice, put it in a function. That way when you change it you will only need to change one place.
+* Separate functionality in small, logical, distinct pieces. Functions should not be long (20-30 is a good general maximum). A class should model only one logical thing.
+* Use assert a lot. When you expect something, use an assert -- it will terminate your program at a safe place, instead of crashing later because something wasn't as expected. E.g. when you have a function that sums the items of two arrays, a good assertion would be that the sizes of those arrays match.
+* Don't use macros except for magic. Use magic sparingly, because it doesn't obey any laws of nature. Use enums and consts for constants.
+* Don't use "magic numbers". http://en.wikipedia.org/wiki/Magic_number_(programming)#Unnamed_numerical_constants
+
+
+Code appearance
+---------------
+* Separate operators with spaces. In doubt, use brackets. No: a+=3*i+9*4|c; Yes: a += 3 * i + 9 * (4 | c);
+* Don't put a space between a function name and its parameter list (do "void foo();", not "void foo ();"). Leave space after "if", "for", "while" and such, and also between ")" and "{". Don't put spaces inside braces ("foo( bar * ( 3 + 4 ) ); is crazy").
+* Don't write too long lines. Keep lines at 80-100 characters max and learn to have two (or even three) sources open vertically simultaneously. That's powerful. And humans are bad at synchronizing eyes at the lines if they have to move a long distance.
+* Split very long function calls if the lines would get long.
+* Indent using K&R style (http://en.wikipedia.org/wiki/Indent_style#K.26R_style) with one exception: don't put the opening brace for functions on its own line, but as with other constructs. Don't indent anything under namespaces, because namespaces usually span whole functions. Example:
+namespace foo {
+namespace bar {
+void zing() {
+	spam();
+}
+// and several other functions here...
+}
+}
+* Use tab characters for indenting, and spaces for aligning. Tabs describe the "deepness" of code, and spaces align code to correct location. Use whatever tab size you prefer, because it doesn't matter for others.
+* Align code sparingly, but sometimes it's nice to do like so (those are spaces between x' and ='s, not tabs):
+int foo_x      = y +  c;
+int zing_x     = 3  + d;
+int quuxbaeh_x = 42 * d;
+* Exception: if you need to break one line apart, indent the following with two tabs -- it differentiates line breaks from code indents:
+long_function(some_ugly_long_variable, another_long_variable,
+		even_more_stuff);
+if (x) {
+	y;
+	// ...
+}
+
+
+Naming
+------
+* end sources with .cpp and headers with .hpp
+* CONSTANT_NAME
+* NamespaceName
+* ClassName
+* EnumName
+* functionName
+* variableName
+* ... and such.

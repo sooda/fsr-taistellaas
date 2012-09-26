@@ -4,27 +4,33 @@ Basic stuff you'll need every day (read and understand ALL before doing anything
 * do "git status" often to check where you are!
 * "git fetch" gets new objects from a remote without touching your files
 * "git merge" merges a branch to another
-* "git pull" does fetch and merge automatically
+* "git pull" does fetch and merge automatically (sometimes git pull --rebase is better, see below for rebase)
 * "git add" adds files to the index for commiting
 * "git commit" does a commit with the indexed files
 * "git commit -a" adds every modified file automatically to the index and commits, sometimes useful but please check the results
+* DO NOT add unnecessary files, i.e. objects, temporary files or other things like that. Use .gitignore and .git/info/exclude well.
 * write your commit messages so that they describe what the commit does, not what you did when coding (i.e. "update gadget to twiddle", NOT "updated gadget to twiddle")
 * read commit-messages.txt before commiting, NEVER use the -m switch for git-commit
 * Commit VERY OFTEN. Commits must be atomic, easily revertable changes to single, specific parts of the program and should change only one thing.
 * Do NOT commit broken code to main branches. It's ok to have a topic branch to work with a weird problem, but ALWAYS keep master and your own main branches in a good state.
-* "git bisect" is a wonderful tool. You give it a good and a bad commit, and it tells you which commit in between of those broke something. Large commits make it difficult or impossible to bisect.
+* "git diff" is used to show the differences between to commits
+* "git show" shows what changes a single commit does
+* "git bisect" is a wonderful tool. You give it a good and a bad commit, and it tells you which commit in between of those broke something. Large commits make it difficult or impossible to bisect
 * ALWAYS review your commits with "git show" before pushing
+* Remember that commits exist first on your computer, and get public only when you push them
 * "git push" pushes a remote-tracked branch to its remote
 * "git push -u origin <branch>" pushes the given branch to our server
 * NEVER "push --force" without asking sooda first
 * If pushing fails, someone else has pushed after your last pull and you need to git fetch and rebase your changes
-*"git rebase" changes the parent of your last commit(s)
+* "git rebase" changes the parent of your last commit(s), and it's good to make the history look nice and clean without trivial and unnecessary merges
+* DO NOT merge to master from master, as mulppi did in 8816e803bad73b855a4ecd9fb5bf184902b682c6. That is ugly. Instead, rebase your changes if master is ahead of you, so that the commits get nicely on top of the newest commit (head). The same applies for simple changes for your own branches. See http://gitready.com/intermediate/2009/01/31/intro-to-rebase.html
 * use aliases: https://git.wiki.kernel.org/index.php/Aliases -- At least "df" for diff, "st" for status and "co" for checkout speed up the work a lot.
 * "git stash" puts your local changes to a secret hidden place as a magical commit that you can restore afterwards.
 * "git branch" makes a new branch
 * "git checkout" changes to a different branch. "git checkout -b" creates a branch first and then checkouts to it.
 * branches are cheap and useful. You don't need to push every local branch, but consider putting those changes you want to push to your own branch instead of master, if you aren't sure if what you're doing is the final version that others can use too, i.e. do your work in 'user/<yourname>' which can be merged back to master later.
 * Use git locally for EVERYTHING. Stash stuff often if needed, and use lots of branches for quick hacks. Git is much much better than just the undo feature of your editor.
+* "gitk" can be used to visualize the commit history in a simple gui. The --all parameter displays all branches.
 * Using git well is like doing lots of backups or paying for insurance. It may seem tough but you'll see the profit when you really need it.
 
 TODO: small usecases "what should i do when..."

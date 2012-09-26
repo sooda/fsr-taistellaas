@@ -1,5 +1,6 @@
 * Commit messages must consist of a short title and an informational text after that
 * The title should not be longer than 50 characters
+* Begin the title with a short word that's related to the thing if possible, e.g. "doc: improve commit guidelines" or "slam: add gizmo for foo"
 * PLEASE wrap the text lines at 72 characters or so
 * vim does commit message formatting AUTOMATICALLY
 
@@ -16,3 +17,4 @@ Messages do not need to be long, but do write something more detailed than what 
 Read this: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 
 What the commit does is obvious to its writer and by looking at the code it's trivial to see what changes to the code it does. Write the message so that other people will easily grasp what the change is, and, if possible, WHY it is there.
+

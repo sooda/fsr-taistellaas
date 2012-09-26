@@ -1,0 +1,29 @@
+Basic stuff you'll need every day:
+
+* if in doubt, use "man git-<command>" AND google
+* do "git status" often to check where you are!
+* "git fetch" gets new objects from a remote without touching your files
+* "git merge" merges a branch to another
+* "git pull" does fetch and merge automatically
+* "git add" adds files to the index for commiting
+* "git commit" does a commit with the indexed files
+* "git commit -a" adds every modified file automatically to the index and commits, sometimes useful but please check the results
+* write your commit messages so that they describe what the commit does, not what you did when coding (i.e. "update gadget to twiddle", NOT "updated gadget to twiddle")
+* read commit-messages.txt before commiting, NEVER use the -m switch for git-commit
+* Commit VERY OFTEN. Commits must be atomic, easily revertable changes to single, specific parts of the program and should change only one thing.
+* Do NOT commit broken code to main branches. It's ok to have a topic branch to work with a weird problem, but ALWAYS keep master and your own main branches in a good state.
+* "git bisect" is a wonderful tool. You give it a good and a bad commit, and it tells you which commit in between of those broke something. Large commits make it difficult or impossible to bisect.
+* ALWAYS review your commits with "git show" before pushing
+* "git push" pushes a remote-tracked branch to its remote
+* "git push -u origin <branch>" pushes the given branch to our server
+* NEVER "push --force" without asking sooda first
+* If pushing fails, someone else has pushed after your last pull and you need to git fetch and rebase your changes
+*"git rebase" changes the parent of your last commit(s)
+* use aliases: https://git.wiki.kernel.org/index.php/Aliases -- At least "df" for diff, "st" for status and "co" for checkout speed up the work a lot.
+* "git stash" puts your local changes to a secret hidden place as a magical commit that you can restore afterwards.
+* "git branch" makes a new branch
+* "git checkout" changes to a different branch. "git checkout -b" creates a branch first and then checkouts to it.
+* Use git locally for EVERYTHING. Stash stuff often if needed, and use lots of branches for quick hacks. Git is much much better than just the undo feature of your editor.
+* Using git well is like doing lots of backups or paying for insurance. It may seem tough but you'll see the profit when you really need it.
+
+TODO: small usecases "what should i do when..."

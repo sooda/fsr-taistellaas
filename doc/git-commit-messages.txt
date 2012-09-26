@@ -1,0 +1,1 @@
+* Commit messages must consist of a short title and 

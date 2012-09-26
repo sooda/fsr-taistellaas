@@ -1,1 +1,1 @@
-* Commit messages must consist of a short title and 
+* Commit messages must consist of a short title and actually why are there two files like this?

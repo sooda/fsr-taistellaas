@@ -1,4 +1,4 @@
-Basic stuff you'll need every day:
+Basic stuff you'll need every day (read and understand ALL before doing anything):
 
 * if in doubt, use "man git-<command>" AND google
 * do "git status" often to check where you are!
@@ -23,6 +23,7 @@ Basic stuff you'll need every day:
 * "git stash" puts your local changes to a secret hidden place as a magical commit that you can restore afterwards.
 * "git branch" makes a new branch
 * "git checkout" changes to a different branch. "git checkout -b" creates a branch first and then checkouts to it.
+* branches are cheap and useful. You don't need to push every local branch, but consider putting those changes you want to push to your own branch instead of master, if you aren't sure if what you're doing is the final version that others can use too, i.e. do your work in 'user/<yourname>' which can be merged back to master later.
 * Use git locally for EVERYTHING. Stash stuff often if needed, and use lots of branches for quick hacks. Git is much much better than just the undo feature of your editor.
 * Using git well is like doing lots of backups or paying for insurance. It may seem tough but you'll see the profit when you really need it.
 

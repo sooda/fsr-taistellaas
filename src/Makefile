@@ -16,7 +16,7 @@ DCPPFLAGS=-O0 -g3 $(WFLAGSDCPP) $(INCLUDES) $(EXTRADEFS)
 
 LD=g++
 LIBS=  -lMaCI -lGIMI -lGIMutils -lrt -lpthread -lssl -lcrypto -lSDL_gfx -lSDL_image \
-		-ljpeg -lpng -lssl\
+		-ljpeg -lpng12 -lssl\
 			`xml2-config --libs` `sdl-config  --libs` -lMaCI -lGIMI
 
 

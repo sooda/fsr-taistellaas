@@ -1,3 +1,11 @@
-YOU SHOULD READ THIS FILE BEFORE DOING ANYTHING!
+READ AND UNDERSTAND EVERYTHING UNDER doc/ BEFORE HACKING!
 
-NO U!
+Please write pretty code.
+
+Please work in your own branch and don't mess with master until ready.
+
+Please write good commit messages.
+
+Please commit well and don't do unnecessary merges.
+
+If in doubt, ask for help.

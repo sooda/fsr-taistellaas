@@ -28,7 +28,7 @@ License along with GIMnet. (See COPYING.LESSER) If not, see
 #include "thread.hpp"
 #include "sync.hpp"
 #include "J2B2-API.hpp"
-#include "SLAM.hpp"
+#include "SLAM/includes.hpp"
 
 class CJ2B2Demo : private gim::CSync, 
                   private gim::CThread

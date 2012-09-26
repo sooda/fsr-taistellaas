@@ -6,6 +6,8 @@ SLAM demo by Antti
 
 #include "SLAM.hpp"
 
+namespace SLAM {
+
 // constructor, initializes slam
 // takes initial location of the robot as parameter
 // map is contructed based on this initial location
@@ -111,5 +113,5 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 }
 #endif
 
-
+}
 

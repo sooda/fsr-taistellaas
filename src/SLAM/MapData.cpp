@@ -1,6 +1,8 @@
 
 #include "MapData.hpp"
 
+namespace SLAM {
+
 MapData::MapData(int xdim_val, int ydim_val,
                  double xsize_val, double ysize_val,
                  RobotLocation initial)
@@ -57,5 +59,7 @@ void MapData::setLocation(RobotLocation xyt) {
 // used to get the robot location
 RobotLocation MapData::getLocation() {
 	return robotLocation;
+}
+
 }
 

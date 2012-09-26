@@ -23,7 +23,6 @@ License along with GIMnet. (See COPYING.LESSER) If not, see
  * \author Antti Maula <antti.maula@tkk.fi>
  */
 #include "J2B2Demo.hpp"
-#include "SLAM.hpp"
 #include "owndebug.h"
 #include <math.h>
 #include <signal.h>
@@ -478,8 +477,8 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
     }
    
 	// let's see if this works
-	RobotLocation loc = RobotLocation(0,0,0);
-	SLAM slam = SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
+	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
+	SLAM::SLAM slam = SLAM::SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
 	slam.drawLaserData(screen, window_width, window_height);
 
 	/* 

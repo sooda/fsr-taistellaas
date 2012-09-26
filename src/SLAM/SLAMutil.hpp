@@ -7,6 +7,8 @@ Utility stuff and such
 #ifndef _J2B2_UTILITIES_HPP_
 #define _J2B2_UTILITIES_HPP_
 
+namespace SLAM {
+
 class RobotLocation {
 
 public:
@@ -43,6 +45,8 @@ public:
 	int y;
 
 };
+
+}
 
 #endif
 

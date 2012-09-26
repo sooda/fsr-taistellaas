@@ -9,7 +9,9 @@ Antti 26.9.
 #ifndef _J2B2_MAPDATA_HPP_
 #define _J2B2_MAPDATA_HPP_
 
-#include "utilities.hpp"
+#include "SLAMutil.hpp"
+
+namespace SLAM {
 
 class MapData {
 
@@ -62,6 +64,8 @@ RobotLocation robotLocation;	// robot location in the map
 double map [100][100][OBS_TYPE_SIZE];  // map data
 
 };
+
+}
 
 #endif
 

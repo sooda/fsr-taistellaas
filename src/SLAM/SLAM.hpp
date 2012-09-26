@@ -7,19 +7,20 @@ SLAM main interface class
 #ifndef _J2B2_SLAM_HPP_
 #define _J2B2_SLAM_HPP_
 
-#include "J2B2-API.hpp"
+#include "../J2B2-API.hpp"
 #include "MapData.hpp"
-#include "utilities.hpp"
+#include "SLAMutil.hpp"
 #include <math.h>
 #include <signal.h>
 
 #ifndef _DONT_USE_SDL_
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_thread.h>
-#include <SDL/SDL_gfxPrimitives.h>
+#include <../SDL/SDL.h>
+#include <../SDL/SDL_image.h>
+#include <../SDL/SDL_thread.h>
+#include <../SDL/SDL_gfxPrimitives.h>
 #endif
 
+namespace SLAM {
 
 class SLAM {
 
@@ -64,5 +65,7 @@ RobotLocation lastOdometryData;
 
 
 };
+
+}
 
 #endif

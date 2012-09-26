@@ -29,7 +29,7 @@ LINK=$(LD) $(LDFLAGS)
 .PHONY: all
 
 # Define targets
-TARGETS=J2B2-UI-example J2B2-UI-example-simple 
+TARGETS=J2B2-UI-example  
 # All rule compiles all per default
 all:	$(TARGETS)
 
@@ -37,18 +37,10 @@ all:	$(TARGETS)
 ###############################################
 ###############################################
 # J2B2-UI-example target, and dependencies
-J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp
+J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM.opp MapData.opp 
 J2B2-UI-example: GIMlibs $(J2B2-UI-EXAMPLE_OBJECTS)
 	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE_OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
 	@echo "      [LD] $@"
-###############################################
-###############################################
-J2B2-UI-EXAMPLE-SIMPLE_OBJECTS=J2B2-UI-example-simple.opp
-J2B2-UI-example-simple: GIMlibs $(J2B2-UI-EXAMPLE-SIMPLE_OBJECTS)
-	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE-SIMPLE_OBJECTS) $(LIBS)
-	@echo "      [LD] $@"
-###############################################
-###############################################
 ###############################################
 ###############################################
 ###############################################

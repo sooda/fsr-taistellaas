@@ -23,10 +23,10 @@ License along with GIMnet. (See COPYING.LESSER) If not, see
  * \author Antti Maula <antti.maula@tkk.fi>
  */
 #include "J2B2Demo.hpp"
+#include "SLAM.hpp"
 #include "owndebug.h"
 #include <math.h>
 #include <signal.h>
-
 
 
 // SDL includes
@@ -476,7 +476,13 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
       SDL_BlitSurface(image, NULL, screen, &rcDest);
       SDL_FreeSurface(image);
     }
-    
+   
+	// let's see if this works
+	RobotLocation loc = RobotLocation(0,0,0);
+	SLAM slam = SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
+	slam.drawLaserData(screen, window_width, window_height);
+
+	/* 
     // Draw the LaserScan
     if (iLastLaserDistanceArray.size()) {
       float min_d = 1000;
@@ -515,6 +521,8 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
       
     }
     
+	*/
+
     // Print help
 #define HELPSTRCOUNT 7
     const char helpstr[HELPSTRCOUNT][60] = { 

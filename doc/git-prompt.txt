@@ -1,0 +1,8 @@
+Protip: at some point you'll note that you do "git status" all the time to
+- see which branch you are in
+- check if you have a dirty tree
+- see if you're still bisecting/in a conflict/else
+
+It's possible to put that information to the shell prompt line. Many distributions have git prompt scripts automagically installed somewhere so that it can be used straight away.
+
+See here: http://www.dvhart.com/2011/06/2376/

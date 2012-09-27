@@ -3,8 +3,8 @@ Basic stuff you'll need every day (read and understand ALL before doing anything
 * if in doubt, use "man git-<command>" AND google
 * do "git status" often to check where you are!
 * "git fetch" gets new objects from a remote without touching your files
-* "git merge" merges a branch to another
-* "git pull" does fetch and merge automatically (sometimes git pull --rebase is better, see below for rebase)
+* "git merge" merges one branch to another
+* "git pull" does fetch and merge automatically (sometimes git pull --rebase is better and it's even possible to configure pull to rebase by default, see below)
 * "git add" adds files to the index for commiting
 * "git commit" does a commit with the indexed files
 * "git commit -a" adds every modified file automatically to the index and commits, sometimes useful but please check the results
@@ -22,8 +22,10 @@ Basic stuff you'll need every day (read and understand ALL before doing anything
 * "git push -u origin <branch>" pushes the given branch to our server
 * NEVER "push --force" without asking sooda first
 * If pushing fails, someone else has pushed after your last pull and you need to git fetch and rebase your changes
+* the remote server accepts only commits that result in a "fast-forward" merge, i.e. one where the new commits are based on a commit that is on top of the remote so that your commits can just be applied on top and your last commit becomes the head of that branch
 * "git rebase" changes the parent of your last commit(s), and it's good to make the history look nice and clean without trivial and unnecessary merges
 * DO NOT merge to master from master, as mulppi did in 8816e803bad73b855a4ecd9fb5bf184902b682c6. That is ugly. Instead, rebase your changes if master is ahead of you, so that the commits get nicely on top of the newest commit (head). The same applies for simple changes for your own branches. See http://gitready.com/intermediate/2009/01/31/intro-to-rebase.html
+* If in doubt, do "git config branch.master.rebase true" and "git config branch.autosetuprebase always" as is discussed in http://blog.aplikacja.info/2010/11/git-pull-rebase-by-default/ and "git pull" does a rebase instead of a merge by default.
 * use aliases: https://git.wiki.kernel.org/index.php/Aliases -- At least "df" for diff, "st" for status and "co" for checkout speed up the work a lot.
 * "git stash" puts your local changes to a secret hidden place as a magical commit that you can restore afterwards.
 * "git branch" makes a new branch

@@ -52,7 +52,8 @@ CJ2B2Demo::CJ2B2Demo(CJ2B2Client &aInterface)
     iCurrentSensorEvent(KSensorEventAllClear), // Sensors seem clear at begin.
     iSmallestDistanceToObject(),
     iLastCameraImage(),
-    iLastLaserDistanceArray()
+    iLastLaserDistanceArray(),
+    motionControl(aInterface)
 {
 }
 //*****************************************************************************
@@ -480,6 +481,10 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
 	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
 	SLAM::SLAM slam = SLAM::SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
 	slam.drawLaserData(screen, window_width, window_height);
+	MaCI::Ranging::TDistance dist = slam.getNearest();
+	if (dist.distance < Motion::SAFETY_DIST)
+		motionControl.avoidObstacle(dist.angle);
+
 
 	/* 
     // Draw the LaserScan

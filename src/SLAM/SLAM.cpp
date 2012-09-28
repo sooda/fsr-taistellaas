@@ -17,7 +17,8 @@ SLAM::SLAM(double xsize, double ysize,
            MaCI::Ranging::TDistanceArray initial) 
 	: currentMapData(xdim, ydim, xsize, ysize, loc),
 	  lastLaserData(initial),
-	  lastOdometryData(RobotLocation(0,0,0))
+	  lastOdometryData(RobotLocation(0,0,0)),
+	  lastNearest()
 {
 
 }
@@ -69,6 +70,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
   
 	if (lastLaserData.size()) {
 		float min_d = 1000;
+		MaCI::Ranging::TDistance min_dist;
 		float scale = 160; // scales from meters to screen pixels
 		int min_x_end = 0;
 		int min_y_end = 0;
@@ -96,6 +98,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 					min_d = measurement.distance;
 					min_x_end = pix_x;
 					min_y_end = pix_y;
+					min_dist = measurement;
 				}
 			}
 		}
@@ -108,10 +111,16 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 		 x_origin, y_origin-1,
 		 min_x_end, min_y_end,
 		 255, 255, 0, 255);
+
+		lastNearest = min_dist;
 	}
     
 }
 #endif
+
+MaCI::Ranging::TDistance SLAM::getNearest() const {
+	return lastNearest;
+}
 
 }
 

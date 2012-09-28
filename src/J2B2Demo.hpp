@@ -29,6 +29,7 @@ License along with GIMnet. (See COPYING.LESSER) If not, see
 #include "sync.hpp"
 #include "J2B2-API.hpp"
 #include "SLAM/includes.hpp"
+#include "motion/motioncontrol.hpp"
 
 class CJ2B2Demo : private gim::CSync, 
                   private gim::CThread
@@ -87,6 +88,8 @@ private:
 
   MaCI::Image::CImageContainer iLastCameraImage;
   MaCI::Ranging::TDistanceArray iLastLaserDistanceArray;
+
+  Motion::MotionControl motionControl;
 };
 
 #endif

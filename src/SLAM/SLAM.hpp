@@ -55,6 +55,8 @@ void informOfObservation(MapData::ObservationType type, Location xy);
 #ifndef _DONT_USE_SDL_
 // draws the laser scan on screen
 void drawLaserData(SDL_Surface* screen, const int window_width, const int window_height);
+
+MaCI::Ranging::TDistance getNearest() const;
 #endif
 
 private:
@@ -62,6 +64,7 @@ private:
 MapData currentMapData;
 MaCI::Ranging::TDistanceArray lastLaserData;
 RobotLocation lastOdometryData;
+MaCI::Ranging::TDistance lastNearest;
 
 
 };

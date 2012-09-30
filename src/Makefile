@@ -16,7 +16,7 @@ DCPPFLAGS=-O0 -g3 $(WFLAGSDCPP) $(INCLUDES) $(EXTRADEFS)
 
 LD=g++
 LIBS=  -lMaCI -lGIMI -lGIMutils -lrt -lpthread -lssl -lcrypto -lSDL_gfx -lSDL_image \
-		-ljpeg -lpng12 -lssl\
+		-ljpeg -lpng12 -lssl `pkg-config opencv --cflags --libs` \
 			`xml2-config --libs` `sdl-config  --libs` -lMaCI -lGIMI
 
 
@@ -37,7 +37,8 @@ all:	$(TARGETS)
 ###############################################
 ###############################################
 # J2B2-UI-example target, and dependencies
-J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM/SLAM.opp SLAM/MapData.opp motion/motioncontrol.opp
+J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM/SLAM.opp SLAM/MapData.opp \
+		motion/motioncontrol.opp cam/Camera.opp
 J2B2-UI-example: GIMlibs $(J2B2-UI-EXAMPLE_OBJECTS)
 	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE_OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
 	@echo "      [LD] $@"

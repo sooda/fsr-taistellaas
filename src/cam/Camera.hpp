@@ -1,7 +1,7 @@
 #ifndef _J2B2_CAMERA_HPP_
 #define _J2B2_CAMERA_HPP_
 
-#include "MachineCtrlClient.hpp"
+#include "MaCI/MachineCtrlClient.hpp"
 #include "../SLAM/SLAMutil.hpp"
 
 /*

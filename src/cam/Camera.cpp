@@ -15,12 +15,12 @@ using namespace MaCI::Image;
 
 namespace cam {
 
-Camera::Camera(const MaCI::Image::CImageClient *cameraClient,
-	const ServoPosition *servoPosition)
-	: cameraClient(cameraClient), servoPosition(servoPostion)
+Camera::Camera(MaCI::Image::CImageClient cameraClient,
+	const ServoPosition servoPosition)
+//	: cameraClient(cameraClient), servoPosition(servoPostion)
 {
-	bool calibrated = false;
-	bool show_image = true;
+	calibrated = false;
+	show_image = true;
 }
 
 Camera::~Camera()
@@ -30,7 +30,7 @@ Camera::~Camera()
 
 Location* Camera::getDistanceToObjects()
 {
-
+	return new Location();
 }
 
 void Camera::updateCameraData()
@@ -50,7 +50,7 @@ void Camera::getCameraData()
 		throw ERR_CAMERA_CLIENT_INITIALIZATION;
 	}
 
-	r = this->cameraClient->GetImageData(imgData, &imgSeq);
+	r = this->cameraClient->GetImageData(this->imgData, &imgSeq, 0);
 	if (r) {
 		throw ERR_GET_IMAGE_DATA;
 	}
@@ -72,12 +72,17 @@ void Camera::checkCalibration()
 
 bool Camera::calibrateCamera()
 {
-
+	// TODO: implement
+	return (calibrated = true);
 }
 void Camera::showImage()
 {
 	using namespace cv;
 	using namespace std;
+
+	Mat src; Mat src_gray;
+	int thresh = 100;
+	RNG rng(12345);
 
 	/// Load source image and convert it to gray
 	src = imread( "floorball.jpg", 1 );
@@ -90,8 +95,6 @@ void Camera::showImage()
 	char* source_window = "Source";
 	namedWindow( source_window, CV_WINDOW_AUTOSIZE );
 	imshow( source_window, src );
-
-	createTrackbar( " Threshold:", "Source", &thresh, max_thresh, thresh_callback );
 
 	Mat threshold_output;
 	vector<vector<Point> > contours;

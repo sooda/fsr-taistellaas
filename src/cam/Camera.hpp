@@ -2,7 +2,7 @@
 #define _J2B2_CAMERA_HPP_
 
 #include <MaCI/MachineCtrlClient.hpp>
-#include "J2B2-API.hpp"
+#include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
 
 /*
@@ -27,7 +27,11 @@ public:
 
 	// constructor initializes the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(const MaCI::Image::CImageClient, const ServoPosition);
+	Camera(MaCI::Image::CImageClient, const ServoPosition);
+
+	// copy constructor
+	Camera(const cam::Camera&);
+	Camera operator=(const Camera&);
 
 	// destructor
 	~Camera();
@@ -48,7 +52,7 @@ private:
 	bool calibrated;
 	bool show_image;
 
-	const MaCI::Image::CImageClient *cameraClient;
+	MaCI::Image::CImageClient *cameraClient;
 	MaCI::Image::CImageData imgData;
 	MaCI::Image::CImageContainer cameraImage;
 

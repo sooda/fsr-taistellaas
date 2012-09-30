@@ -1,7 +1,8 @@
 #ifndef _J2B2_CAMERA_HPP_
 #define _J2B2_CAMERA_HPP_
 
-#include "MaCI/MachineCtrlClient.hpp"
+#include <MaCI/MachineCtrlClient.hpp>
+#include "J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
 
 /*
@@ -11,13 +12,22 @@
 
 namespace cam {
 
+class ServoPosition { };
+class Location { };
+
 class Camera {
 
 public:
 
+	enum Exception {
+		ERR_CAMERA_CLIENT_INITIALIZATION,
+		ERR_GET_IMAGE_DATA,
+		ERR_GET_IMAGE
+	} exp;
+
 	// constructor initializes the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::Image::CImageClient, ServoPosition *servoPosition);
+	Camera(const MaCI::Image::CImageClient, const ServoPosition);
 
 	// destructor
 	~Camera();
@@ -32,11 +42,13 @@ public:
 	// Calibrate camera
 	bool calibrateCamera();
 
+
 private:
 
-	bool calibrated = false;
+	bool calibrated;
+	bool show_image;
 
-	MaCI::Image::CImageClient *cameraClient;
+	const MaCI::Image::CImageClient *cameraClient;
 	MaCI::Image::CImageData imgData;
 	MaCI::Image::CImageContainer cameraImage;
 
@@ -45,7 +57,7 @@ private:
 	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
 
 	// ServoPosition contains information about camera servos
-	 ::ServoPosition *servoPosition;
+	const ServoPosition *servoPosition;
 
 
 	void getCameraData();
@@ -53,6 +65,7 @@ private:
 
 	// TODO: add some functions to recognize objects
 
+	void showImage();
 };
 
 }

@@ -23,11 +23,11 @@ public:
 		ERR_CAMERA_CLIENT_INITIALIZATION,
 		ERR_GET_IMAGE_DATA,
 		ERR_GET_IMAGE
-	} exp;
+	};
 
 	// constructor initializes the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::Image::CImageClient, const ServoPosition);
+	Camera(MaCI::Image::CImageClient*, const ServoPosition*);
 
 	// copy constructor
 	Camera(const cam::Camera&);

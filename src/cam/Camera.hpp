@@ -17,8 +17,7 @@ public:
 
 	// constructor initializes the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::Image::CImageClient *cameraClient,
-		ServoPosition *servoPosition);
+	Camera(MaCI::Image::CImageClient, ServoPosition *servoPosition);
 
 	// destructor
 	~Camera();
@@ -49,7 +48,8 @@ private:
 	 ::ServoPosition *servoPosition;
 
 
-	void GetCameraData();
+	void getCameraData();
+	void checkCalibration();
 
 	// TODO: add some functions to recognize objects
 

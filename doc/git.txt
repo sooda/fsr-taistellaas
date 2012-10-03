@@ -34,5 +34,3 @@ Basic stuff you'll need every day (read and understand ALL before doing anything
 * Use git locally for EVERYTHING. Stash stuff often if needed, and use lots of branches for quick hacks. Git is much much better than just the undo feature of your editor.
 * "gitk" can be used to visualize the commit history in a simple gui. The --all parameter displays all branches.
 * Using git well is like doing lots of backups or paying for insurance. It may seem tough but you'll see the profit when you really need it.
-
-TODO: small usecases "what should i do when..."

@@ -1,0 +1,16 @@
+Read the documentation before coding, in this order:
+	git-workflow.txt
+	commit-messages.txt
+	git.txt (read only brifly and memorize that it includes googlable magic words)
+	programming-guidelines.txt
+
+If you have the time, look into:
+	http://www.kernel.org/pub/software/scm/git/docs/user-manual.html
+	http://git-scm.com/documentation
+	http://www-cs-students.stanford.edu/~blynn/gitmagic/
+
+If feeling like a pro, read:
+	git-prompt.txt
+
+BUGS:
+	- too much git documentation here already, as googling will always help anyway

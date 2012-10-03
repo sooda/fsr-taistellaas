@@ -1,0 +1,106 @@
+Introduction
+------------
+
+Git records your changes as "commits" and stores them in a tree structure (or more closely, a directed acyclic graph. see http://eagain.net/articles/git-for-computer-scientists/ if you're curious). Be sure to commit often so that you get a very nice "undo history" (do use your editor for simple undo/redo when editing, though).
+
+Commits can be copied individually between branches, reverted, and other fun stuff. You can move freely between commits and branches, so it's a good thing to learn to commit when something atomic has been written, so that you can go back to a specific point when something worked in a specific way.
+
+Use "gitk --all" often to visualize the history tree.
+
+Moving between branches
+-----------------------
+
+A branch name points to a "tip" of a branch, which is again a collection of a distinct coding history (another "subtree" in the whole history tree). Once you commit some code, the tip of the branch you are in is moved to that commit. The working directory you see is always a state of the git history, plus your local uncommitted ("dirty") changes.
+
+Workflow:
+* "git branch <branchname>" creates a new branch,
+* "git checkout <branchname>" moves to another branch,
+* "git checkout -b <branchname>" creates a new branch and checks out to it.
+* use "git status" often to see which branch you are in.
+
+Create your own topic branches to work in when you want to try out a feature, and merge it back to your own user branch when finished. Don't be afraid of branches; they're cool, easy to use and cheap performance-wise.
+
+Think the master branch (just a basic branch, but is called "master" and usually contains the latest stable code) as the trunk of a tree, and the git branches as upwards growing branches of that tree. Unlike with ordinary trees, these branches can merge back to the trunk and to each other at any point, synchronizing their contents. It is also possible to detach a branch root from the trunk and reattach it at some higher (i.e. newer) location.
+
+http://git-scm.com/book/en/Git-Branching-Branching-Workflows
+
+Commiting
+---------
+
+Commit once you get something working (compiles and runs correctly). In general, don't commit any broken stuff unless you're willing to "squash" commits (described later).
+
+Workflow:
+ * (edit stuff)
+ * git status
+ * git add <some files> (or git commit -a if you're feeling brave)
+ * git commit
+ * (write your commit message)
+ * git show
+
+Optional, if you noted that something went wrong after doing the above or wrote a typo in the commit message:
+
+ * (edit some files to fix a problem)
+ * git add <some files>
+ * git commit --amend
+ * (edit your last commit message)
+ * git show
+
+ Git allows you to edit any commits. Only edit those that have not been pushed to our main repository, so other people won't get your wrong commits, because amend overwrites the history with those new commits.
+
+
+Getting others' changes
+-----------------------
+
+Be sure to do as http://blog.aplikacja.info/2010/11/git-pull-rebase-by-default/ tells to do BEFORE DOING ANYTHING WITH GIT:
+ * git config branch.master.rebase true
+ * git config branch.autosetuprebase always
+
+"git fetch" gets the new "objects", i.e. commits and their contents, from the origin server.
+
+"git pull --rebase <target>" in a destination branch moves destination to be "based on" the new changes. "git merge" does usually a merge commit that records those two states of the branches and joins them. See http://git-scm.com/book/en/Git-Branching-Rebasing
+
+With master, you usually want to simply "git pull", which now does fetch and rebase, i.e. get new changes and record local changes to be on top of them.
+
+If you have been working on your own branch for some time, it will be older than the master branch. Run "git rebase master" periodically in your own main branch (and observe the history with gitk) to get new changes from there.
+
+Read http://nvie.com/posts/a-successful-git-branching-model/ to get a figure on how "real world software" is developed.
+
+Showing what has happened
+-------------------------
+
+* "git log"
+* "git log --pretty=oneline --graph"
+* "gitk --all"
+* "git show <commit id>" (with no parameters, shows the newest in current branch)
+
+
+Publishing your changes
+-----------------------
+
+Note that if when you publish something (e.g. commits in a branch), you must not change them or otherwise others will get angry at you when they try to commit something based on those.
+
+* "git push origin <branchname>" if you have already published something in that branch already,
+Push your test branches to a nice name hierarchy, "git push -u origin <some-test-branch>:user/<yourname>/<test-branch-name>", e.g. "git push -u origin testquux:user/sooda/quux". Nobody cares what your branches are named locally, but give them meaningful names in the server.
+
+When you have finished working on a new feature, merge it to your branch: git checkout <your-name> and git merge <new-feature>. Check gitk to see how the history looks like now.
+
+Tell sooda to merge your changes to master when they are stable enough.
+
+
+Moving backwards in history
+---------------------------
+
+* Simply "git checkout <commit-id>".
+* You can go back to the tip of the branch simply with "git checkout <branchname>"
+
+
+Undoing a bad commit
+--------------------
+
+* "git revert <commit>" creates a commit that is the inverse of another. Because it's a normal commit, it's recorded in the commit history.
+
+
+Moving the branch head (advanced)
+---------------------------------
+
+google "how to use git reset" and be very careful with --hard.

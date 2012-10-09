@@ -77,10 +77,13 @@ Showing what has happened
 Publishing your changes
 -----------------------
 
-Note that if when you publish something (e.g. commits in a branch), you must not change them or otherwise others will get angry at you when they try to commit something based on those.
+Note that if when you publish something (e.g. commits in a branch), you must not change them anymore (with commit --amend or rebase) or otherwise others will get angry at you when they try to commit something based on those.
 
-* "git push origin <branchname>" if you have already published something in that branch already,
+* "git push origin <branchname>" if you have already published something in that branch already.
+
 Push your test branches to a nice name hierarchy, "git push -u origin <some-test-branch>:user/<yourname>/<test-branch-name>", e.g. "git push -u origin testquux:user/sooda/quux". Nobody cares what your branches are named locally, but give them meaningful names in the server.
+
+* GOOD TIP: To make "git push" update only the code you want, do "git config push.default upstream". This means, that the default action for simply "git push" will be to only push the commits in the *current* branch to the branch it is "tracking", i.e. to the one that matches it in origin server (testquux to user/sooda/quux in the previous example). By default, "git push" tries to push every change you have locally in every branch.
 
 When you have finished working on a new feature, merge it to your branch: git checkout <your-name> and git merge <new-feature>. Check gitk to see how the history looks like now.
 

@@ -1,0 +1,3 @@
+
+OBJECTS += $(addprefix $(SLAM/gmapping/configfile/), configfile.opp)
+

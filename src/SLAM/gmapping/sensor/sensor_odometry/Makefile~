@@ -1,0 +1,4 @@
+DIR4 := SLAM/gmapping/sensor/sensor_odometry/
+
+OBJECTS += $(addprefix $(DIR4), odometrysensor.opp odometryreading.opp)
+

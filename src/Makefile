@@ -1,49 +1,26 @@
-# GDIR define
-include Makefile.ext
 
-# params
-CC=gcc
-CXX=g++
-EXTRADEFS=-DLINUX_OS $(CE)
-WFLAGSC=-Wall -Wunused -Wshadow
-WFLAGSCPP=-Wall -Wunused -Wshadow -Weffc++
-WFLAGSDCPP=
-
-# Flags for DEVELOPEMENT phase
-CFLAGS=-O0 -g3 $(WFLAGSC) $(INCLUDES) $(EXTRADEFS)
-CPPFLAGS=-O0 -g3 $(WFLAGSCPP) $(INCLUDES) $(EXTRADEFS) `xml2-config --cflags`
-DCPPFLAGS=-O0 -g3 $(WFLAGSDCPP) $(INCLUDES) $(EXTRADEFS)
-
-LD=g++
-LIBS=  -lMaCI -lGIMI -lGIMutils -lrt -lpthread -lssl -lcrypto -lSDL_gfx -lSDL_image \
-		-ljpeg -lpng12 -lssl\
-			`xml2-config --libs` `sdl-config  --libs` -lMaCI -lGIMI
-
-
-# Define COMPILE and LINK commands
-COMPILEC=$(CC) $(CFLAGS) -c
-COMPILECPP=$(CXX) $(CPPFLAGS) -c
-COMPILEDCPP=$(CXX) $(DCPPFLAGS) -c
-LINK=$(LD) $(LDFLAGS)
-
-.PHONY: all
+include standard_defs.mk
 
 # Define targets
-TARGETS=J2B2-UI-example  
+TARGETS = J2B2-UI-example
+
 # All rule compiles all per default
+.PHONY: all
 all:	$(TARGETS)
 
-###############################################
-###############################################
-###############################################
-# J2B2-UI-example target, and dependencies
-J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM/SLAM.opp SLAM/MapData.opp motion/motioncontrol.opp
-J2B2-UI-example: GIMlibs $(J2B2-UI-EXAMPLE_OBJECTS)
-	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE_OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
+# Define objects
+OBJECTS = J2B2-UI-example.opp J2B2Demo.opp motion/motioncontrol.opp
+
+include SLAM/Makefile
+
+.PHONY: test
+test: ;@echo "$(foreach OBJ, $(OBJECTS), "$(OBJ)            ")"
+
+J2B2-UI-example: GIMlibs $(OBJECTS)
+	@$(LINK) -o $@ $(OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
 	@echo "      [LD] $@"
-###############################################
-###############################################
-###############################################
+
+# GIMlib stuff
 PHONY: libGIMI.a libMaCI.a libGIMutils.a libSerialLinkClient.a 
 libGIMI.a:
 	+@if [ -d $(GDIR)/GIMI ]; then cd $(GDIR)/GIMI; make libGIMI.a-dist; fi
@@ -55,27 +32,10 @@ libSerialLinkClient.a:
 	+@if [ -d $(GDIR)/GIMnetApps/SerialLink ]; then cd $(GDIR)/GIMnetApps/SerialLink; make CE="-O2" libSerialLinkClient.a; fi
 
 .PHONY: GIMlibs
-GIMlibs: libGIMI.a libMaCI.a libGIMutils.a libSerialLinkClient.a 
-###############################################
+GIMlibs: libGIMI.a libMaCI.a libGIMutils.a libSerialLinkClient.a
+
+# Cleanup
 .PHONY: clean
 clean:
-	@rm -f *.o *.opp *.dopp $(J2B2-UI-EXAMPLE_OBJECTS) $(TARGETS)
+	@rm -f *.o *.opp *.dopp $(OBJECTS) $(TARGETS)
 	@echo "     [LOCAL-CLEAN]"
-
-########### Compile rules ####################
-# Compile rule for all .o (.c) file
-%.o:	%.c
-	@$(COMPILEC) -o $@ $<
-	@echo "      [CC] $<"
-
-# Compile rule for all .opp (.cpp) files
-%.opp:	%.cpp
-	@$(COMPILECPP) -o $@ $<
-	@echo "      [CXX] $<"
-
-# Compile rule for all .dopp (dirty .cpp) files
-%.dopp:	%.cpp
-	@$(COMPILEDCPP) -o $@ $<
-	@echo "      [DIRTY-CXX] $<"
-
-##############################################

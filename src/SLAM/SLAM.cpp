@@ -18,14 +18,12 @@ SLAM::SLAM(double xsize, double ysize,
 	: currentMapData(xdim, ydim, xsize, ysize, loc),
 	  lastLaserData(initial),
 	  lastOdometryData(RobotLocation(0,0,0)),
-	  lastNearest()
+	  lastNearest()//,
+	  //slamThingy()
 {
 
-}
-
-// destructor
-SLAM::~SLAM() {
-	// do nothing
+   
+    
 }
 
 // can be called to get the current map data object
@@ -40,18 +38,17 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	lastLaserData = laserData;
 
-	// do the magic here
+	//slamThingy.updateMap(lastLaserData, lastOdometryData);
 
 }
 
 // make slam update map based on odometry data
-// values should be differences since last calling this function
 // (this should only be called by the motion control module)
-void SLAM::updateOdometryData(RobotLocation delta) {
+void SLAM::updateOdometryData(RobotLocation loc) {
 
-	lastOdometryData = delta;
+	lastOdometryData = loc;
 
-	// also a good place for magic to happen
+	//slamThingy.updateMap(lastLaserData, lastOdometryData);
 
 }
 
@@ -59,7 +56,7 @@ void SLAM::updateOdometryData(RobotLocation delta) {
 // x and y are in meters
 void SLAM::informOfObservation(MapData::ObservationType type, Location xy) {
 
-	// save some magic also for here
+	// magic happens here
 
 }
 

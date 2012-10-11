@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry/Makefile
+END
+odometryreading.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry/odometryreading.cpp
+END
+odometrysensor.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry/odometrysensor.cpp
+END
+odometryreading.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry/odometryreading.h
+END
+odometrysensor.h
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/data/svn/gmapping/!svn/ver/2/trunk/sensor/sensor_odometry/odometrysensor.h
+END

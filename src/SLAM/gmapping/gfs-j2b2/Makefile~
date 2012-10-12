@@ -1,4 +1,0 @@
-DIR3 := SLAM/gmapping/gfs-j2b2/
-
-OBJECTS += $(addprefix $(DIR3), gfs-j2b2.opp)
-

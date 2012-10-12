@@ -1,4 +1,0 @@
-DIR3 := SLAM/gmapping/log/
-
-OBJECTS += $(addprefix $(DIR3), configuration.opp sensorlog.opp)
-

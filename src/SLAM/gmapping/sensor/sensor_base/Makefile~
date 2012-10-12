@@ -1,4 +1,0 @@
-DIR4 := SLAM/gmapping/sensor/sensor_base/
-
-OBJECTS += $(addprefix $(DIR4), sensor.opp sensorreading.opp)
-

@@ -1,4 +1,0 @@
-DIR3 := SLAM/gmapping/utils/
-
-OBJECTS += $(addprefix $(DIR3), stat.opp)
-

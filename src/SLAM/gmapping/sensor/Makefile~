@@ -1,7 +1,0 @@
-DIR3 := SLAM/gmapping/sensor/
-
-include $(addprefix $(DIR3), sensor_base/Makefile)
-include $(addprefix $(DIR3), sensor_odometry/Makefile)
-include $(addprefix $(DIR3), sensor_range/Makefile)
-
-

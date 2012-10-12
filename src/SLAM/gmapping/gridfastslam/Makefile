@@ -1,3 +1,6 @@
-
-OBJECTS += SLAM/gmapping/gridfastslam/gridslamprocessor.opp SLAM/gmapping/gridfastslam/motionmodel.opp
+OBJECTS += $(addprefix SLAM/gmapping/gridfastslam/, \
+	gridslamprocessor.opp \
+	motionmodel.opp \
+	gridslamprocessor_tree.opp \
+)
 

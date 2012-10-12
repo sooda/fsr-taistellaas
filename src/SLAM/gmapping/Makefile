@@ -1,4 +1,4 @@
-
+INCLUDES += -I SLAM/gmapping
 include SLAM/gmapping/utils/Makefile
 include SLAM/gmapping/log/Makefile
 include SLAM/gmapping/sensor/Makefile

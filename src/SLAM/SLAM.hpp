@@ -12,7 +12,7 @@ SLAM main interface class
 #include <math.h>
 #include <signal.h>
 #include "../J2B2-API.hpp"
-//#include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
+#include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
 
 #ifndef _DONT_USE_SDL_
 #include <../SDL/SDL.h>
@@ -63,7 +63,7 @@ MapData currentMapData;
 MaCI::Ranging::TDistanceArray lastLaserData;
 RobotLocation lastOdometryData;
 MaCI::Ranging::TDistance lastNearest;
-//GMapping::GFSJ2B2 slamThingy;
+GMapping::GFSJ2B2 slamThingy;
 
 
 };

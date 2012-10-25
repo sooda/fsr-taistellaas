@@ -18,8 +18,8 @@ SLAM::SLAM(double xsize, double ysize,
 	: currentMapData(xdim, ydim, xsize, ysize, loc),
 	  lastLaserData(initial),
 	  lastOdometryData(RobotLocation(0,0,0)),
-	  lastNearest()//,
-	  //slamThingy()
+	  lastNearest(),
+	  slamThingy(std::string())
 {
 
    
@@ -38,7 +38,22 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	lastLaserData = laserData;
 
-	//slamThingy.updateMap(lastLaserData, lastOdometryData);
+	GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
+
+	gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
+
+	if (gfsmap != 0) {
+		// map was updated
+
+		int xsize = gfsmap->getMapSizeX();
+		int ysize = gfsmap->getMapSizeY();
+
+		for (int x = 0; x < xsize; x++) {
+			for (int y = 0; y < ysize; y++) {
+				currentMapData.setCellValue(GridPoint(x,y), MapData::WALL, gfsmap->cell(x,y));
+			}
+		}
+	}	
 
 }
 

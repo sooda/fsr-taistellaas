@@ -54,6 +54,9 @@ void informOfObservation(MapData::ObservationType type, Location xy);
 // draws the laser scan on screen
 void drawLaserData(SDL_Surface* screen, const int window_width, const int window_height);
 
+// draws map data on the screen
+void drawMapData(SDL_Surface* screen, const int window_width, const int window_height);
+
 MaCI::Ranging::TDistance getNearest() const;
 #endif
 

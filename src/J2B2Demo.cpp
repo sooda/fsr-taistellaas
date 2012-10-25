@@ -160,8 +160,8 @@ int CJ2B2Demo::RunInfoDemo(int aIterations)
 }
 //*****************************************************************************
 
-int CJ2B2Demo::RunSDLDemo(int aIterations)
-{ 
+int CJ2B2Demo::RunSDLDemo(int aIterations) {
+ 
   if (iSDLThreadActive) {
     dPrint(1,"SDLDemo already active! Will not start again.");
     return -1;
@@ -212,8 +212,13 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
   // Set imporant info :)
   SDL_WM_SetCaption("Simple J2B2 Demo application","J2B2Demo");
   
+	/////////////////////////////
+	// Initialize SLAM
+	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
+	SLAM::SLAM slam = SLAM::SLAM(100,100,100,100,loc,iLastLaserDistanceArray);
+  	/////////////////////////////
 
-  // Now, run the loop of processing as long as the demo is alive.
+	// Now, run the loop of processing as long as the demo is alive.
   while(iDemoActive && 
         iSDLThreadActive && 
         (aIterations == -1 || iterations < aIterations)) {
@@ -478,12 +483,12 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
     }
    
 	// let's see if this works
-	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
-	SLAM::SLAM slam = SLAM::SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
-	slam.drawLaserData(screen, window_width, window_height);
-	MaCI::Ranging::TDistance dist = slam.getNearest();
-	if (dist.distance < Motion::SAFETY_DIST)
-		motionControl.avoidObstacle(dist.angle);
+	
+	//slam.drawLaserData(screen, window_width, window_height);
+	slam.drawMapData(screen, window_width, window_height);
+	//MaCI::Ranging::TDistance dist = slam.getNearest();
+	//if (dist.distance < Motion::SAFETY_DIST)
+	//	motionControl.avoidObstacle(dist.angle);
 
 
 	/* 

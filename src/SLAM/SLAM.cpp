@@ -38,9 +38,9 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	lastLaserData = laserData;
 
-	GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
+ 	GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
 
-	gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
+	//gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
 
 	if (gfsmap != 0) {
 		// map was updated
@@ -127,6 +127,19 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 		lastNearest = min_dist;
 	}
     
+}
+
+// draws the map on screen
+void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int window_height) {
+ 
+	for (int x = 0; x < 100; x++) {
+		for (int y = 0; y < 100; y++) {
+			double wall = currentMapData.getCellValue(GridPoint(x,y), MapData::WALL);
+			int color = (int)(wall*255);
+			pixelRGBA(screen, x, y, color, color, 255, 150);
+		}
+	}
+   
 }
 #endif
 

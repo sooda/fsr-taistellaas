@@ -22,11 +22,6 @@ MapData::MapData(int xdim_val, int ydim_val,
 
 }
 
-// destructor
-MapData::~MapData() {
-
-}
-
 // used to set the value of one cell of the map to another
 void MapData::setCellValue(GridPoint xy, ObservationType type, double value) {
 	map[xy.x][xy.y][type] = value;

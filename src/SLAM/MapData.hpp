@@ -31,9 +31,6 @@ MapData(int xdim, int ydim,
         double xsize, double ysize,
         RobotLocation initial);
 
-// destructor
-~MapData();
-
 // used to set the value of one cell of the map to another
 void setCellValue(GridPoint xy, ObservationType type, double value);
 

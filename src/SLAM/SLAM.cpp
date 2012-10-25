@@ -36,6 +36,11 @@ MapData SLAM::getCurrentMapData() {
 // make slam update map based on laser measurements
 void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
+	if (laserData.empty()) {
+		std::cerr << "Null laser scan array!" << std::endl;
+		return;
+	}
+
 	lastLaserData = laserData;
 
 	GMapping::Map<double, GMapping::DoubleArray2D, false>* new_gfsmap;	

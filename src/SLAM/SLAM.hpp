@@ -66,8 +66,9 @@ MapData currentMapData;
 MaCI::Ranging::TDistanceArray lastLaserData;
 RobotLocation lastOdometryData;
 MaCI::Ranging::TDistance lastNearest;
-GMapping::GFSJ2B2 slamThingy;
 
+GMapping::GFSJ2B2 slamThingy;
+GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
 
 };
 

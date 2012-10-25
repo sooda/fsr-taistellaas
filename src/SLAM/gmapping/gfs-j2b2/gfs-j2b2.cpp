@@ -80,12 +80,22 @@ GFSJ2B2::GFSJ2B2(std::string configfilename) {
 	  //	  randseed = cfg.value("gfs","randseed", randseed);
 	  resampleThreshold = cfg.value("gfs","resampleThreshold", resampleThreshold);
 	  generateMap = cfg.value("gfs","generateMap", generateMap);
+
+	  cerr << "Parameters parsed from " << configfilename << endl;
 	}
+	else {
+		cerr << "Default parameters" << endl;
+	}
+	
 
-	cerr << "Parameters parsed, wohoo!";
+	// init our lase
+	int beams = 181;
+	double resolution = 2*3.14/360; // one degree in radians
+	OrientedPoint location = OrientedPoint(0,0,0);
+	double span = 180;
+	double max_range = 80;
+	frontLaser = new RangeSensor("FLASER",beams,resolution,location,span,max_range);
 
-	// init our laser
-	frontLaser = new RangeSensor("FLASER",181,1,OrientedPoint(0,0,0),0,100);
 	frontLaser->updateBeamsLookup();
 	sensorMap.insert(make_pair("FLASER", frontLaser));
 
@@ -126,7 +136,7 @@ Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceAr
 		const MaCI::Ranging::TDistance& measurement = array[i];
 		reading[i]=(double)measurement.distance;
 	}
-	reading.setPose(OrientedPoint(loc.x, loc.y, loc.theta));
+	reading.setPose(OrientedPoint(loc.x*10, loc.y*10, loc.theta));
 
 	// try processing
 	bool processed = processor->processScan(reading);

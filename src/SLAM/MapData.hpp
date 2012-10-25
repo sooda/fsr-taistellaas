@@ -9,6 +9,7 @@ Antti 26.9.
 #ifndef _J2B2_MAPDATA_HPP_
 #define _J2B2_MAPDATA_HPP_
 
+#include <iostream>
 #include "SLAMutil.hpp"
 
 namespace SLAM {

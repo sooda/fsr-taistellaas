@@ -19,7 +19,7 @@ SLAM::SLAM(double xsize, double ysize,
 	  lastLaserData(initial),
 	  lastOdometryData(RobotLocation(0,0,0)),
 	  lastNearest(),
-	  slamThingy(std::string())
+	  slamThingy("SLAM/gmapping/ini/gfs-LMS-j2b2.ini")
 {
 
    
@@ -38,22 +38,27 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	lastLaserData = laserData;
 
- 	GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
+	GMapping::Map<double, GMapping::DoubleArray2D, false>* new_gfsmap;	
 
-	//gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
+	new_gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
 
-	if (gfsmap != 0) {
+	if (new_gfsmap != 0) {
 		// map was updated
 
-		int xsize = gfsmap->getMapSizeX();
-		int ysize = gfsmap->getMapSizeY();
+		std::cerr << "New map, hurrah!" << std::endl;
 
-		for (int x = 0; x < xsize; x++) {
-			for (int y = 0; y < ysize; y++) {
+		delete gfsmap;
+		gfsmap = new_gfsmap;
+
+		for (int x = 0; x < 100; x++) {
+			for (int y = 0; y < 100; y++) {
 				currentMapData.setCellValue(GridPoint(x,y), MapData::WALL, gfsmap->cell(x,y));
 			}
 		}
 	}	
+	else {
+		std::cerr << "No new map..." << std::endl;
+	}
 
 }
 
@@ -131,10 +136,19 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 
 // draws the map on screen
 void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int window_height) {
- 
-	for (int x = 0; x < 100; x++) {
-		for (int y = 0; y < 100; y++) {
-			double wall = currentMapData.getCellValue(GridPoint(x,y), MapData::WALL);
+
+	if (gfsmap == 0) {
+		return;
+	}
+
+	int xsize = gfsmap->getMapSizeX();
+	int ysize = gfsmap->getMapSizeY();
+
+	std::cout << "Map xsize: " << xsize << " ysize: " << ysize << std::endl;
+
+	for (int x = 0; x < xsize; x++) {
+		for (int y = 0; y < ysize; y++) {
+			double wall = gfsmap->cell(x,y);
 			int color = (int)(wall*255);
 			pixelRGBA(screen, x, y, color, color, 255, 150);
 		}

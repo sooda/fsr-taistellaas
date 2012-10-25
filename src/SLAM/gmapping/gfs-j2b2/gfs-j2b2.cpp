@@ -1,6 +1,9 @@
 /*****************************************************************
  *
- * Uh al tralala
+ * Uh ah tralala
+ *
+ * This if the wrapper for the rao-blackwellian particle filter
+ * a.k.a. gmapping
  *
  *****************************************************************/
 
@@ -82,9 +85,9 @@ GFSJ2B2::GFSJ2B2(std::string configfilename) {
 	cerr << "Parameters parsed, wohoo!";
 
 	// init our laser
-	frontLaser = new RangeSensor("UBERLASER",181,1,OrientedPoint(0,0,0),0,100);
+	frontLaser = new RangeSensor("FLASER",181,1,OrientedPoint(0,0,0),0,100);
 	frontLaser->updateBeamsLookup();
-	sensorMap.insert(make_pair("UBERLASER", frontLaser));
+	sensorMap.insert(make_pair("FLASER", frontLaser));
 
 	//CREATION
 	

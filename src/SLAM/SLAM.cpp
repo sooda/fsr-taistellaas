@@ -57,7 +57,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		}
 	}	
 	else {
-		std::cerr << "No new map..." << std::endl;
+		//std::cerr << "No new map..." << std::endl;
 	}
 
 }
@@ -144,7 +144,7 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 	int xsize = gfsmap->getMapSizeX();
 	int ysize = gfsmap->getMapSizeY();
 
-	std::cout << "Map xsize: " << xsize << " ysize: " << ysize << std::endl;
+	//std::cout << "Map xsize: " << xsize << " ysize: " << ysize << std::endl;
 
 	for (int x = 0; x < xsize; x++) {
 		for (int y = 0; y < ysize; y++) {

@@ -136,7 +136,7 @@ Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceAr
 		const MaCI::Ranging::TDistance& measurement = array[i];
 		reading[i]=(double)measurement.distance;
 	}
-	reading.setPose(OrientedPoint(loc.x*10, loc.y*10, loc.theta));
+	reading.setPose(OrientedPoint(loc.x, loc.y, loc.theta));
 
 	// try processing
 	bool processed = processor->processScan(reading);

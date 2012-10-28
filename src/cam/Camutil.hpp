@@ -1,11 +1,14 @@
-#ifndef _J2B2_CAMERA_HPP_
-#define _J2B2_CAMERA_HPP_
+#ifndef _J2B2_CAMUTIL_HPP_
+#define _J2B2_CAMUTIL_HPP_
 
 #include <MaCI/MachineCtrlClient.hpp>
 #include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#include <Eigen/Dense>
+using namespace Eigen;
 
 /*
  * Camera Utility class
@@ -18,13 +21,14 @@ class Camutil {
 
 public:
 
-// constructor
-Camutil();
+	// constructor
+	Camutil();
 
-static cv::Mat imgToMat (MaCI::Image::CImageContainer);
-static void FindBalls (cv::Mat);
+	static cv::Mat imgToMat (MaCI::Image::CImageContainer);
+	static void FindBalls (cv::Mat);
 
 private:
+
 
 };
 }

@@ -27,18 +27,21 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 
 void Camutil::FindBalls (Mat src)
 {
+	const int limit_h = 10;
+	const int limit_s = 50;
+	const int limit_v = 90;
 
-        Mat dst;
+	Mat dst;
 	cvtColor(src, dst, CV_BGR2HSV);
 
 	// tresholding
-	inRange(dst, Scalar(0, 140, 140), Scalar(10, 255, 255), dst);
+	inRange(dst, Scalar(0, limit_s, limit_v), Scalar(limit_h, 255, 255), dst);
 
 	// dilation
 	int dilation_size = 2;
 	Mat element = getStructuringElement( MORPH_RECT,
-                                       Size( 2*dilation_size + 1, 2*dilation_size+1 ),
-                                       Point( dilation_size, dilation_size ) );
+					Size( 2*dilation_size + 1, 2*dilation_size + 1 ),
+					Point( dilation_size, dilation_size ) );
 	dilate( dst, dst, element );
 
 	// contours
@@ -48,10 +51,7 @@ void Camutil::FindBalls (Mat src)
 
 	for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
 	{
-//		double area = contourArea(contours[idx]);
-		Scalar color( rand()&255, rand()&255, rand()&255 );
-//		if (area < 100) continue;
-//		if (area > 1000) color = Scalar(0,0,255);
+		Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
 
 		Point2f center;
 		float radius;
@@ -60,7 +60,6 @@ void Camutil::FindBalls (Mat src)
 		if (radius < 15) continue;
 		std::cout << idx << ": " << center << " " << radius << std::endl;
 
-//		drawContours( src, contours, idx, color, CV_FILLED, 8, hierarchy );
 		circle( src, center, (int)radius * 1.2, color, 2);
 	}
 

@@ -15,12 +15,19 @@ using namespace MaCI::Image;
 
 namespace cam {
 
-Camera::Camera(MaCI::Image::CImageClient *cameraClient,
-	const ServoPosition *servoPosition)
-	: cameraClient(cameraClient), servoPosition(servoPosition),
-	  calibrated(false), show_image(true)
+Camera::Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine)
+	: machineCtrl(machine), cameraClient(NULL),
+	  cameraImage(CImageContainer()), calibrated(false), show_image(true),
+	  servoCtrl(ServoControl(machine))
 {
+	// Get component list
+	MaCI::MachineCtrl::TMaCIMachineComponents comp;
+	machineCtrl->GetMachineComponents(comp);
 
+	// If the list has any components ...
+	if (comp.size() > 0) {
+		cameraClient = machineCtrl->GetImageClient("CameraFront", true);
+	}
 }
 
 Camera::~Camera()
@@ -46,11 +53,13 @@ void Camera::getCameraData()
 	bool r;
 	unsigned int imgSeq = 0;
 
+	MaCI::Image::CImageData imgData;
+
 	if (!this->cameraClient) {
 		throw ERR_CAMERA_CLIENT_INITIALIZATION;
 	}
 
-	r = this->cameraClient->GetImageData(this->imgData, &imgSeq, 0);
+	r = this->cameraClient->GetImageData(imgData, &imgSeq, 0);
 	if (r) {
 		throw ERR_GET_IMAGE_DATA;
 	}

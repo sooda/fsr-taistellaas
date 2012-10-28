@@ -4,6 +4,7 @@
 #include <MaCI/MachineCtrlClient.hpp>
 #include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
+#include "ServoControl.hpp"
 
 /*
  * Camera and object recognition module
@@ -12,7 +13,6 @@
 
 namespace cam {
 
-class ServoPosition { };
 class Location { };
 
 class Camera {
@@ -27,7 +27,7 @@ public:
 
 	// constructor initializes the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::Image::CImageClient*, const ServoPosition*);
+	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine);
 
 	// copy constructor
 	Camera(const cam::Camera&);
@@ -49,19 +49,22 @@ public:
 
 private:
 
+	MaCI::MachineCtrl::CMachineCtrlClient *machineCtrl;
+	MaCI::Image::CImageClient *cameraClient;
+	MaCI::Image::CImageContainer cameraImage;
+
+
+//	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl
+
+	// distances
+//	MaCI::Ranging::TDistance lastDistance;
+//	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
+
 	bool calibrated;
 	bool show_image;
 
-	MaCI::Image::CImageClient *cameraClient;
-	MaCI::Image::CImageData imgData;
-	MaCI::Image::CImageContainer cameraImage;
+	ServoControl servoCtrl;
 
-	// distances
-	MaCI::Ranging::TDistance lastDistance;
-	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
-
-	// ServoPosition contains information about camera servos
-	const ServoPosition *servoPosition;
 
 
 	void getCameraData();

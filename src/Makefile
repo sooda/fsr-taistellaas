@@ -5,19 +5,21 @@ include Makefile.ext
 CC=gcc
 CXX=g++
 EXTRADEFS=-DLINUX_OS $(CE)
-WFLAGSC=-Wall -Wunused -Wshadow
-WFLAGSCPP=-Wall -Wunused -Wshadow -Weffc++
+WFLAGSC=-Wall -Wunused
+WFLAGSCPP=-Wall -Wunused -Weffc++
 WFLAGSDCPP=
 
 # Flags for DEVELOPEMENT phase
 CFLAGS=-O0 -g3 $(WFLAGSC) $(INCLUDES) $(EXTRADEFS)
-CPPFLAGS=-O0 -g3 $(WFLAGSCPP) $(INCLUDES) $(EXTRADEFS) `xml2-config --cflags`
+CPPFLAGS=-O0 -g3 $(WFLAGSCPP) $(INCLUDES) $(EXTRADEFS) \
+		`xml2-config --cflags` `pkg-config eigen3 --cflags`
 DCPPFLAGS=-O0 -g3 $(WFLAGSDCPP) $(INCLUDES) $(EXTRADEFS)
 
 LD=g++
-LIBS=  -lMaCI -lGIMI -lGIMutils -lrt -lpthread -lssl -lcrypto -lSDL_gfx -lSDL_image \
-		-ljpeg -lpng12 -lssl `pkg-config opencv --cflags --libs` \
-			`xml2-config --libs` `sdl-config  --libs` -lMaCI -lGIMI
+LIBS=  -lMaCI -lGIMI -lGIMutils -lrt -lpthread -lssl -lcrypto -lSDL_gfx \
+		-lSDL_image -ljpeg -lpng12 `pkg-config opencv --cflags --libs` \
+		`xml2-config --libs` `sdl-config  --libs` `pkg-config eigen3 --cflags`
+		
 
 
 # Define COMPILE and LINK commands
@@ -38,7 +40,7 @@ all:	$(TARGETS)
 ###############################################
 # J2B2-UI-example target, and dependencies
 J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM/SLAM.opp SLAM/MapData.opp \
-		motion/motioncontrol.opp cam/Camera.opp cam/Camutil.opp
+		motion/motioncontrol.opp cam/Camera.opp cam/Camutil.opp cam/ServoControl.opp
 J2B2-UI-example: GIMlibs $(J2B2-UI-EXAMPLE_OBJECTS)
 	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE_OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
 	@echo "      [LD] $@"
@@ -71,7 +73,7 @@ clean:
 
 # Compile rule for all .opp (.cpp) files
 %.opp:	%.cpp
-	@$(COMPILECPP) -o $@ $<
+	$(COMPILECPP) -o $@ $<
 	@echo "      [CXX] $<"
 
 # Compile rule for all .dopp (dirty .cpp) files

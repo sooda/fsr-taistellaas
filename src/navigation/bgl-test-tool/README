@@ -1,0 +1,7 @@
+astar_search.hpp: slightly modified from boost; i believe boost has a bug
+
+prerequisites: boost, sfml
+
+running: simply 'make'
+
+using: left mouse button creates walls, right deletes, space searches. red=wall, green=mouse, blue=route, yellow=searched area

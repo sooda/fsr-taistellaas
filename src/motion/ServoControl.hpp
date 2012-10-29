@@ -11,7 +11,7 @@
 #ifndef SERVOCONTROL_HPP_
 #define SERVOCONTROL_HPP_
 
-namespace cam {
+namespace Motion {
 
 class ServoControl {
 public:

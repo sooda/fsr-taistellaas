@@ -7,7 +7,7 @@
 
 #include "ServoControl.hpp"
 
-using namespace cam;
+using namespace Motion;
 
 ServoControl::ServoControl(MaCI::MachineCtrl::CMachineCtrlClient *machine)
 	: iMachine(machine), iServoCtrl(NULL)

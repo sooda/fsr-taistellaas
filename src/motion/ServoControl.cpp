@@ -72,4 +72,21 @@ void ServoControl::TestMovement()
 
 }
 
+float ServoControl::getPosition(ServoControl::EServo servo)
+{
+	if (!iServoCtrl) return 0.0;
 
+	float pos;
+
+	iServoCtrl->GetPosition(servo, pos, 500);
+	return pos;
+
+}
+
+bool ServoControl::setPosition(ServoControl::EServo servo, float pos)
+{
+	if (iServoCtrl) return false;
+
+	iServoCtrl->SetPosition(pos, servo);
+	return true;
+}

@@ -4,7 +4,11 @@
 #include <MaCI/MachineCtrlClient.hpp>
 #include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
-#include "ServoControl.hpp"
+#include "../motion/ServoControl.hpp"
+#include "Camutil.hpp"
+
+#define dPan Motion::ServoControl::KServoCameraPTUPan
+#define dTilt Motion::ServoControl::KServoCameraPTUTilt
 
 /*
  * Camera and object recognition module
@@ -25,7 +29,7 @@ public:
 		ERR_GET_IMAGE
 	};
 
-	// constructor initializes the Camera module
+	// constructor initialises the Camera module
 	// takes CImageClient and ServoPosition as parameter
 	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine);
 
@@ -63,16 +67,21 @@ private:
 	bool calibrated;
 	bool show_image;
 
-	ServoControl servoCtrl;
+	Motion::ServoControl servoCtrl;
 
 
 
 	void getCameraData();
 	void checkCalibration();
 
-	// TODO: add some functions to recognize objects
+	// TODO: add some functions to recognise objects
 
 	void showImage();
+
+	Eigen::Matrix3f getCamRotation();
+	Eigen::Matrix3f getTranslationFromRobotOrigo();
+
+	void getPositionOfTargets();
 };
 
 }

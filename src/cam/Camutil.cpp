@@ -8,6 +8,7 @@
 */
 
 using namespace cv;
+using namespace Eigen;
 
 namespace cam {
 

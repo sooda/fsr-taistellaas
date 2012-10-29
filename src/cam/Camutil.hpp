@@ -8,7 +8,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <Eigen/Dense>
-using namespace Eigen;
 
 /*
  * Camera Utility class

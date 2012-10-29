@@ -12,13 +12,14 @@
 #include "Camera.hpp"
 
 using namespace MaCI::Image;
+using namespace Eigen;
 
 namespace cam {
 
 Camera::Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine)
 	: machineCtrl(machine), cameraClient(NULL),
 	  cameraImage(CImageContainer()), calibrated(false), show_image(true),
-	  servoCtrl(ServoControl(machine))
+	  servoCtrl(Motion::ServoControl(machine))
 {
 	// Get component list
 	MaCI::MachineCtrl::TMaCIMachineComponents comp;
@@ -142,6 +143,37 @@ void Camera::showImage()
 	/// Show in a window
 	namedWindow("Contours", CV_WINDOW_AUTOSIZE);
 	imshow("Contours", drawing);
+}
+
+Eigen::Matrix3f Camera::getCamRotation()
+{
+	float tilt = servoCtrl.getPosition(dTilt);
+	float pan = servoCtrl.getPosition(dPan);
+
+	Matrix3f rotation;
+
+	rotation = AngleAxisf(tilt, Vector3f::UnitZ()) * AngleAxisf(pan, Vector3f::UnitY());
+
+	return rotation;
+
+}
+
+Eigen::Matrix3f Camera::getTranslationFromRobotOrigo()
+{
+	// NOTE: this function will always return constant translation
+
+	Affine3f m;
+	m = Translation3f(5, 5, 50); // x = 5, y = 5, z = 50
+
+	return m.matrix();
+}
+
+void Camera::getPositionOfTargets()
+{
+	// TODO: Not working!
+	Matrix3f cameraMatrix = getTranslationFromRobotOrigo() * getCamRotation();
+
+
 }
 
 }

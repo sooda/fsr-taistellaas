@@ -40,7 +40,7 @@ all:	$(TARGETS)
 ###############################################
 # J2B2-UI-example target, and dependencies
 J2B2-UI-EXAMPLE_OBJECTS=J2B2-UI-example.opp J2B2Demo.opp SLAM/SLAM.opp SLAM/MapData.opp \
-		motion/motioncontrol.opp cam/Camera.opp cam/Camutil.opp cam/ServoControl.opp
+		motion/motioncontrol.opp cam/Camera.opp cam/Camutil.opp motion/ServoControl.opp
 J2B2-UI-example: GIMlibs $(J2B2-UI-EXAMPLE_OBJECTS)
 	@$(LINK) -o $@ $(J2B2-UI-EXAMPLE_OBJECTS) $(LIBS) -lSDL -lSDL_gfx -lSDL_image -lpng
 	@echo "      [LD] $@"

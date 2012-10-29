@@ -26,8 +26,14 @@ public:
 	};
 
 	ServoControl(MaCI::MachineCtrl::CMachineCtrlClient*);
+	ServoControl(const ServoControl&); // unimplemented
+
 	virtual ~ServoControl();
 	void TestMovement();
+	float getPosition(ServoControl::EServo);
+	bool setPosition(ServoControl::EServo, float);
+
+	ServoControl operator=(const ServoControl&); // unimplemented
 
 private:
 	MaCI::MachineCtrl::CMachineCtrlClient *iMachine;

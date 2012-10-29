@@ -158,7 +158,7 @@ Eigen::Matrix3f Camera::getCamRotation()
 
 }
 
-Eigen::Matrix3f Camera::getTranslationFromRobotOrigo()
+Eigen::Matrix4f Camera::getTranslationFromRobotOrigo()
 {
 	// NOTE: this function will always return constant translation
 
@@ -171,7 +171,7 @@ Eigen::Matrix3f Camera::getTranslationFromRobotOrigo()
 void Camera::getPositionOfTargets()
 {
 	// TODO: Not working!
-	Matrix3f cameraMatrix = getTranslationFromRobotOrigo() * getCamRotation();
+	Matrix3f cameraMatrix = getTranslationFromRobotOrigo().topLeftCorner(3, 3) * getCamRotation();
 
 
 }

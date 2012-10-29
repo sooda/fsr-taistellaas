@@ -79,7 +79,7 @@ private:
 	void showImage();
 
 	Eigen::Matrix3f getCamRotation();
-	Eigen::Matrix3f getTranslationFromRobotOrigo();
+	Eigen::Matrix4f getTranslationFromRobotOrigo();
 
 	void getPositionOfTargets();
 };

@@ -1,7 +1,7 @@
 #ifndef _J2B2_CAMUTIL_HPP_
 #define _J2B2_CAMUTIL_HPP_
 
-#include <MaCI/MachineCtrlClient.hpp>
+#include "MachineCtrlClient.hpp"
 #include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
 #include <opencv2/highgui/highgui.hpp>

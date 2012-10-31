@@ -45,6 +45,6 @@ INCLUDES := -I../../include \
 -I../../include/MaCI/interfaces/Text \
 -I../../include/GIMI \
 -I../../include/GIMnetAP \
--I../../include/GIMnetAP/protocol \
+-I../../include/GIMnetAP/protocol
 
-LDFLAGS := -L../../lib
+LIBDIRS := -L../../lib

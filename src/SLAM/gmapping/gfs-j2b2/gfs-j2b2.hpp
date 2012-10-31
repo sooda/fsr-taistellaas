@@ -22,8 +22,11 @@ public:
 	GFSJ2B2(std::string configfilename);
 
 	// map updating
-	Map<double, DoubleArray2D, false>* updateMap(MaCI::Ranging::TDistanceArray& array, 
-		                                     SLAM::RobotLocation& loc);
+	void updateMap(MaCI::Ranging::TDistanceArray& array, 
+                   SLAM::RobotLocation& loc,
+                   Map<double, DoubleArray2D, false>*& newMap,
+                   SLAM::RobotLocation& newLoc);
+
 private:
 
 	RangeSensor* frontLaser;

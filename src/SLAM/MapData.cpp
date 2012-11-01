@@ -12,10 +12,10 @@ MapData::MapData(int xdim_val, int ydim_val,
 	  robotLocation(initial) 
 {
 
-	for (int i = 0; i < xdim; i++) {
-		for (int j = 0; j < ydim; j++) {
+	for (int i = 0; i < gridSize; i++) {
+		for (int j = 0; j < gridSize; j++) {
 			for (int k = 0; k < OBS_TYPE_SIZE; k++) {
-				map[i][j][k] = 0.5;
+				map[i][j][k] = -1;
 			}
 		}
 	}
@@ -24,7 +24,7 @@ MapData::MapData(int xdim_val, int ydim_val,
 
 // used to set the value of one cell of the map to another
 void MapData::setCellValue(GridPoint xy, ObservationType type, double value) {
-	if (xy.x > xdim || xy.x < 0 || xy.y > ydim || xy.y < 0) { 
+	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) { 
 		std::cerr << "MapData::setCellValue called with out of bouds value" << std::endl;
 		return;
 	}
@@ -35,7 +35,7 @@ void MapData::setCellValue(GridPoint xy, ObservationType type, double value) {
 
 // used to get the value of one cell of the map
 double MapData::getCellValue(GridPoint xy, ObservationType type) {
-	if (xy.x > xdim || xy.x < 0 || xy.y > ydim || xy.y < 0) {
+	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
 		std::cerr << "MapData::getCellValue called with out of bouds value" << std::endl;
 		return -1;
 	}
@@ -46,7 +46,7 @@ double MapData::getCellValue(GridPoint xy, ObservationType type) {
 
 // used to set the value at some location of the map to another (from nearest cell)
 void MapData::setValue(Location xy, ObservationType type, double value) {
-	if (xy.x > xdim || xy.x < 0 || xy.y > ydim || xy.y < 0) {
+	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
 		std::cerr << "MapData::setValue called with out of bouds value" << std::endl;
 		return;
 	}
@@ -59,7 +59,7 @@ void MapData::setValue(Location xy, ObservationType type, double value) {
 
 // used to get the value at some location of the map (goes to nearest cell)
 double MapData::getValue(Location xy, ObservationType type) {
-	if (xy.x > xdim || xy.x < 0 || xy.y > ydim || xy.y < 0) {
+	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
 		std::cerr << "MapData::getValue called with out of bouds value" << std::endl;
 		return -1;
 	}

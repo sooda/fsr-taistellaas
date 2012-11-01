@@ -125,8 +125,10 @@ GFSJ2B2::GFSJ2B2(std::string configfilename) {
 }
 
 
-Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceArray& array, 
-                                                      SLAM::RobotLocation& loc) {
+void GFSJ2B2::updateMap(MaCI::Ranging::TDistanceArray& array, 
+                        SLAM::RobotLocation& loc,
+                        Map<double, DoubleArray2D, false>*& newMap,
+                        SLAM::RobotLocation& newLoc) {
 	
 	// transform into gmapping compatible form
 	const RangeSensor* rs = frontLaser;
@@ -141,8 +143,6 @@ Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceAr
 	// try processing
 	bool processed = processor->processScan(reading);
 
-	Map<double, DoubleArray2D, false>* mymap;
-	
 	// this returns true when the algorithm effectively 
 	// processes (the traveled path since the last 
 	// processing is over a given threshold)
@@ -170,7 +170,19 @@ Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceAr
 		// double best_weight=particles[best_idx].weightSum;
 		// cerr << "Best Particle is " << best_idx << " with weight " << best_weight << endl;
 			
-		mymap = processor->getParticles()[best_idx].map.toDoubleMap();
+		newMap = processor->getParticles()[best_idx].map.toDoubleMap();
+
+	//	std::cout << "newMap " << newMap << std::endl;
+
+		OrientedPoint myloc = processor->getParticles()[best_idx].pose;
+
+		IntPoint loc = newMap->world2map(myloc.x, myloc.y);
+
+		newLoc.x = loc.x;
+		newLoc.y = loc.y;
+		newLoc.theta = myloc.theta;
+
+	//	std::cout << "newLoc: " << newLoc.x << " " << newLoc.y << " " << newLoc.theta << std::endl;
 
 		// clone processor for some reason
 		GridSlamProcessor* newProcessor = processor->clone();
@@ -180,11 +192,10 @@ Map<double, DoubleArray2D, false>* GFSJ2B2::updateMap(MaCI::Ranging::TDistanceAr
 	} 
 	else {
 
-		mymap = 0;
+		newMap = 0;
 
 	}
 
-	return mymap;
 }
 
 };

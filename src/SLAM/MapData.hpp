@@ -51,6 +51,8 @@ void setLocation(RobotLocation xyt);
 RobotLocation getLocation();
 
 
+const static int gridSize = 200;
+
 private:
 
 int xdim, ydim;			// dimension of the map (cells)
@@ -59,7 +61,7 @@ double cellxsize, cellysize;	// size of one cell (meters)
 
 RobotLocation robotLocation;	// robot location in the map
 
-double map [100][100][OBS_TYPE_SIZE];  // map data
+double map [gridSize][gridSize][OBS_TYPE_SIZE];  // map data
 
 };
 

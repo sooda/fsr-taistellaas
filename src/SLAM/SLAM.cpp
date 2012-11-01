@@ -19,10 +19,14 @@ SLAM::SLAM(double xsize, double ysize,
 	  lastLaserData(initial),
 	  lastOdometryData(RobotLocation(0,0,0)),
 	  lastNearest(),
+	  x0(-1), 
+	  y0(-1),
+	  x1(-1),
+	  y1(-1),
 	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini") // TODO: don't hardcode this here
 {
 
-   
+  currentMapData.setLocation(RobotLocation(MapData::gridSize/2,MapData::gridSize/2,0));
     
 }
 
@@ -43,10 +47,12 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	lastLaserData = laserData;
 
-	GMapping::Map<double, GMapping::DoubleArray2D, false>* new_gfsmap;	
+	GMapping::Map<double, GMapping::DoubleArray2D, false>* new_gfsmap = 0;	
 
-	new_gfsmap = slamThingy.updateMap(lastLaserData, lastOdometryData);
+	RobotLocation newLoc = RobotLocation(0,0,0);
 
+	slamThingy.updateMap(lastLaserData, lastOdometryData, new_gfsmap, newLoc);
+	
 	if (new_gfsmap != 0) {
 		// map was updated
 
@@ -55,9 +61,87 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		delete gfsmap;
 		gfsmap = new_gfsmap;
 
-		for (int x = 0; x < 100; x++) {
-			for (int y = 0; y < 100; y++) {
-				currentMapData.setCellValue(GridPoint(x,y), MapData::WALL, gfsmap->cell(x,y));
+		int xmax = gfsmap->getMapSizeX();
+		int ymax = gfsmap->getMapSizeY();
+	
+		if (x0 == -1 && y0 == -1 && x1 == -1 && y1 == -1) {
+			x0 = 0;
+			y0 = 0;
+			x1 = xmax;
+			y1 = ymax;
+	
+			for (int x = 0; x < xmax; x++) {
+				for (int y = 0; y < ymax; y++) {
+					if (gfsmap->cell(x,y) > 0.5) {
+						x0 = x;
+						goto end1;
+					}
+				}
+			}
+			end1:
+	
+			for (int x = xmax-1; x >= 0; x--) {
+				for (int y = 0; y < ymax; y++) {
+					if (gfsmap->cell(x,y) > 0.5) {
+						x1 = x;
+						goto end2;
+					}
+				}
+			}
+			end2:
+			
+			for (int y = 0; y < ymax; y++) {
+				for (int x = 0; x < xmax; x++) {
+					if (gfsmap->cell(x,y) > 0.5) {
+						y0 = y;
+						goto end3;
+					}
+				}
+			} 
+			end3:
+	
+			for (int y = ymax-1; y >= 0; y--) {
+				for (int x = 0; x < xmax; x++) {
+					if (gfsmap->cell(x,y) > 0.5) {
+						y1 = y;
+						goto end4;
+					}
+				}
+			}
+			end4:
+	
+			while (x1-x0 < MapData::gridSize-2) {
+				if (x0 > 0) {
+					x0--;
+				}
+				if (x1 < xmax) {
+					x1++;
+				}
+			}	
+
+			while (y1-y0 < MapData::gridSize-2) {
+				if (y0 > 0) {
+					y0--;
+				}
+				if (y1 < ymax) {
+					y1++;
+				}
+			}
+
+			std::cout << "asdf" << std::endl;
+		}
+	
+		if(x0 != -1 && y0 != -1 && x1 != -1 && y1 != -1) {	
+	
+			newLoc.x -= x0;
+			newLoc.y -= y0;
+			
+			currentMapData.setLocation(newLoc);
+	
+			for (int x = x0; x <= x1; x++) {
+				for (int y = y0; y <= y1; y++) {
+					currentMapData.setCellValue(GridPoint(x-x0,y-y0), MapData::WALL, gfsmap->cell(x,y));				
+				}
 			}
 		}
 	}	
@@ -146,18 +230,24 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		return;
 	}
 
-	int xsize = gfsmap->getMapSizeX();
-	int ysize = gfsmap->getMapSizeY();
-
-	//std::cout << "Map xsize: " << xsize << " ysize: " << ysize << std::endl;
-
-	for (int x = 0; x < xsize; x++) {
-		for (int y = 0; y < ysize; y++) {
-			double wall = gfsmap->cell(x,y);
-			int color = (int)(wall*255);
-			pixelRGBA(screen, x, y, color, color, 255, 150);
+	// draw the map
+	for (int x = 0; x < MapData::gridSize; x++) {
+		for (int y = 0; y < MapData::gridSize; y++) {
+			double wall = currentMapData.getCellValue(GridPoint(x,y), MapData::WALL);
+			int color = (int)(150+wall*100);
+			pixelRGBA(screen, x, MapData::gridSize-y, color, color, color, 100);	
 		}
 	}
+
+	// draw the robot
+	RobotLocation loc = currentMapData.getLocation();
+	filledCircleRGBA(screen, loc.x, MapData::gridSize-loc.y, (int)(5), 0, 255, 255, 255);
+    for (int i = 0; i < 10; i++) {
+		pixelRGBA(screen, loc.x+i*cos(loc.theta), 
+		                  MapData::gridSize-loc.y-i*sin(loc.theta),
+		                  255, 0, 0, 255);
+	}  
+
    
 }
 #endif

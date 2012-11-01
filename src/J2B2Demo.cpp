@@ -137,8 +137,8 @@ int CJ2B2Demo::RunInfoDemo(int aIterations)
                                                      1000)) {
         const TPose2D *pose = pd.GetPose2D();
         if (pose && ownTime_get_ms_since(tbegin) > 500) {
-          dPrint(1,"Odometry position now at: x:%f, y:%f, a: %frad",
-                 pose->x, pose->y, pose->a);
+         // dPrint(1,"Odometry position now at: x:%f, y:%f, a: %frad",
+         //        pose->x, pose->y, pose->a);
 		  iLastOdometryReading = SLAM::RobotLocation(pose->x, pose->y, pose->a);
           tbegin = ownTime_get_ms();
         }

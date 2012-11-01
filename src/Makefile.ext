@@ -1,4 +1,5 @@
-INCLUDES := -I../../include \
+INCLUDES := -I. \
+-I../../include \
 -I../../include/ImageUtils \
 -I../../include/ImageUtils/SVGImage \
 -I../../include/ImageUtils/conversions \
@@ -45,6 +46,8 @@ INCLUDES := -I../../include \
 -I../../include/MaCI/interfaces/Text \
 -I../../include/GIMI \
 -I../../include/GIMnetAP \
--I../../include/GIMnetAP/protocol
+-I../../include/GIMnetAP/protocol \
+-I../../../ext-libs/include \
+-I../../../ext-libs/include/gmapping
 
 LIBDIRS := -L../../lib

@@ -11,10 +11,14 @@ TARGET := taistellaas
 OBJDIR := out/obj
 DEPDIR := out/dep
 
-# only one level of source directories should be enough
-SRCS := $(wildcard *.cpp) $(wildcard */*.cpp)
+# a couple of levels of source directories should be enough
+SRCS := $(wildcard *.cpp) $(wildcard */*.cpp) \
+	$(wildcard */*/*.cpp)
 OBJS := $(patsubst %.cpp,$(OBJDIR)/%.o,$(SRCS))
 DEPS := $(patsubst $(OBJDIR)/%,$(DEPDIR)/%.d,$(OBJS))
+
+# where external tools are installed
+EXT_LIBS := ../../../ext-libs
 
 # we could try clang some day, so keep these in variables
 CXX := g++
@@ -28,7 +32,7 @@ include Makefile.ext
 CFLAGS = $(CFLAGS_) -O0 -g3 \
 	$(INCLUDES) \
 	`xml2-config --cflags` \
-	-DLINUX_OS -Wall
+	-DLINUX_OS -DLINUX -Wall
 
 # automatic dependency generation
 CFLAGS += -MMD -MP -MF $(subst $(OBJDIR)/,$(DEPDIR)/,$(@)).d
@@ -37,13 +41,14 @@ CFLAGS += -MMD -MP -MF $(subst $(OBJDIR)/,$(DEPDIR)/,$(@)).d
 LDFLAGS := $(LDFLAGS_) $(LIBDIRS) \
 	-lMaCI -lGIMI -lGIMutils \
 	-lrt -lpthread -lcrypto -ljpeg -lpng12 -lssl \
-	`xml2-config --libs` `sdl-config  --libs` -lSDL_gfx -lSDL_image
+	`xml2-config --libs` `sdl-config  --libs` -lSDL_gfx -lSDL_image \
+	-lgridfastslam -lscanmatcher -llog -lsensor_range -lsensor_odometry -lsensor_base -lutils -lconfigfile \
+	-L$(EXT_LIBS)/lib -Wl,-rpath=$(EXT_LIBS)/lib
 
 # magic for automatic objdir generation
 .SECONDEXPANSION:
 
 all: $(TARGET)
-	echo $(DEPS)
 
 # convenience commands
 execute_real: $(TARGET)

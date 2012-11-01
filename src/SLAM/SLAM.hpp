@@ -11,7 +11,7 @@ SLAM main interface class
 #include "SLAMutil.hpp"
 #include <math.h>
 #include <signal.h>
-#include "../J2B2-API.hpp"
+#include "J2B2-API.hpp"
 #include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
 
 #ifndef _DONT_USE_SDL_

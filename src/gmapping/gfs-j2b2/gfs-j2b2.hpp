@@ -5,12 +5,12 @@
  *****************************************************************/
 
 
-#include "../utils/commandline.h"
-#include "../gridfastslam/gridslamprocessor.h"
-#include "../utils/orientedboundingbox.h"
-#include "../configfile/configfile.h"
-#include "../../SLAMutil.hpp"
-#include "../../../J2B2-API.hpp"
+#include "utils/commandline.h"
+#include "gridfastslam/gridslamprocessor.h"
+#include "utils/orientedboundingbox.h"
+#include "configfile/configfile.h"
+#include "SLAM/SLAMutil.hpp"
+#include "J2B2-API.hpp"
 
 namespace GMapping {
 

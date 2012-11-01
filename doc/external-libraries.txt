@@ -1,0 +1,50 @@
+Using external libraries
+------------------------
+
+Code reuse is important; don't reinvent the wheel is there already is a good one available.
+
+This repository should contain only our own code; external libraries can be usually installed with a packaging manager. If your operating system does not provide some package that we use, it's possible to install it manually (by compiling from sources, usually.
+)
+For simplicity and consistency, our build system assumes that src/../../../ext-libs contains directories called 'include' and 'lib'. The include files (headers) and libraries (.so files) of libraries must be placed there. For example:
+
+	sooda@puuhastelu ~/tkkstuff/current/fsr $ ls
+	downloads  ext-libs  FSR-dist
+	sooda@puuhastelu ~/tkkstuff/current/fsr $ ls ext-libs/
+	include  lib
+	sooda@puuhastelu ~/tkkstuff/current/fsr $ ls -l ext-libs/include/
+	total 0
+	lrwxrwxrwx 1 sooda sooda 30 Nov  1 20:41 gmapping -> ../../downloads/gmapping/trunk
+
+
+Gmapping
+--------
+
+"GMapping is a highly efficient Rao-Blackwellized particle filer to learn grid maps from laser range data."
+
+Gmapping doesn't seem to be popular enough to be in some distros' packaging managers. It must be installed manually.
+
+http://www.openslam.org/gmapping.html
+
+Installing:
+
+0) Go to some directory where you want to build the library in (I (sooda) store those in 'downloads' in my fsr course dir, as can be seen in the listing above)
+1) Get the sources via openslam's version control:
+   svn co https://svn.openslam.org/data/svn/gmapping
+2) Go to its directory: ('trunk' is subversion's word for 'master' branch)
+   cd gmapping/trunk
+3) Follow the instructions in docs/Instructions.txt
+   Basically, run ./configure and make.
+   If the build fails due to qt not being found, you can prevent Makefile from building the failing gui tools we don't use anyway; just remove the word 'gui' at the end of the line that begins with SUBDIRS=
+4) When the library is built, you can copy or symlink the directories to ext-libs. A symlink called gmapping is sufficient in include, and you can copy or symlink the lib dir contents. For example:
+   cd (path to ext-libs here)
+   cd include
+   ln -s ../../downloads/gmapping/trunk gmapping
+   cd ../lib
+   ln -s ../../downloads/gmapping/trunk/lib/*.so .
+
+
+TODO
+----
+
+- Eigen
+- OpenCV

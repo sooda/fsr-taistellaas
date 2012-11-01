@@ -8,4 +8,6 @@ Please write good commit messages.
 
 Please commit well and don't do unnecessary merges.
 
+Please don't include external libraries in git, only add documentation on how to install them.
+
 If in doubt, ask for help.

@@ -51,13 +51,19 @@ LDFLAGS := $(LDFLAGS_) $(LIBDIRS) \
 all: $(TARGET)
 
 # convenience commands
-execute_real: $(TARGET)
+run_real: $(TARGET)
 	./taistellaas 130.233.120.178 40002
 
-execute_simulator: $(TARGET)
+simulate: $(TARGET)
 	./taistellaas localhost $(shell grep -wo 4002. ../../application/execute_simulator_client) FSRSim.J2B2
 
-.PHONY: all execute_real execute_simulator
+simulate-gdb: $(TARGET)
+	gdb -ex run --args ./taistellaas localhost $(shell grep -wo 4002. ../../application/execute_simulator_client) FSRSim.J2B2
+
+simulate-valgrind: $(TARGET)
+	valgrind ./taistellaas localhost $(shell grep -wo 4002. ../../application/execute_simulator_client) FSRSim.J2B2
+
+.PHONY: all run_real simulate simulate-gdb simulate-valgrind
 
 $(TARGET): $(OBJS)
 	$(LD) $^ -o $@ $(LDFLAGS)
@@ -76,6 +82,16 @@ $(OBJDIR)/%.o: %.cpp | $$(subst $(OBJDIR),$(DEPDIR),$$(@D))/.dir $$(@D)/.dir
 clean:
 	rm -f $(TARGET) $(OBJS) $(DEPS)
 
-.PHONY: clean
+help:
+	@echo "Build targets:"
+	@echo "    all: build only (run simply 'make')"
+	@echo "    simulate: run the simulator client"
+	@echo "    simulate-gdb: run the simulator client under the gnu debugger"
+	@echo "    simulate-valgrind: run the simulator client under valgrind"
+	@echo "    run-real: control the real robot"
+	@echo "    clean: remove generated files"
+
+
+.PHONY: clean help
 
 -include $(DEPS)

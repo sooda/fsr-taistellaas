@@ -19,7 +19,7 @@ SLAM::SLAM(double xsize, double ysize,
 	  lastLaserData(initial),
 	  lastOdometryData(RobotLocation(0,0,0)),
 	  lastNearest(),
-	  slamThingy("SLAM/gmapping/ini/gfs-LMS-j2b2.ini")
+	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini") // TODO: don't hardcode this here
 {
 
    

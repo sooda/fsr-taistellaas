@@ -7,11 +7,12 @@ SLAM main interface class
 #ifndef _J2B2_SLAM_HPP_
 #define _J2B2_SLAM_HPP_
 
-#include "../J2B2-API.hpp"
 #include "MapData.hpp"
 #include "SLAMutil.hpp"
 #include <math.h>
 #include <signal.h>
+#include "../J2B2-API.hpp"
+#include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
 
 #ifndef _DONT_USE_SDL_
 #include <../SDL/SDL.h>
@@ -34,9 +35,6 @@ SLAM(double xsize, double ysize,
      RobotLocation loc,
      MaCI::Ranging::TDistanceArray initial);
 
-// destructor
-~SLAM();
-
 // can be called to get the current map data object
 MapData getCurrentMapData();
 
@@ -56,6 +54,9 @@ void informOfObservation(MapData::ObservationType type, Location xy);
 // draws the laser scan on screen
 void drawLaserData(SDL_Surface* screen, const int window_width, const int window_height);
 
+// draws map data on the screen
+void drawMapData(SDL_Surface* screen, const int window_width, const int window_height);
+
 MaCI::Ranging::TDistance getNearest() const;
 #endif
 
@@ -66,6 +67,8 @@ MaCI::Ranging::TDistanceArray lastLaserData;
 RobotLocation lastOdometryData;
 MaCI::Ranging::TDistance lastNearest;
 
+GMapping::GFSJ2B2 slamThingy;
+GMapping::Map<double, GMapping::DoubleArray2D, false>* gfsmap;
 
 };
 

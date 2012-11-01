@@ -51,6 +51,7 @@ CJ2B2Demo::CJ2B2Demo(CJ2B2Client &aInterface)
     iSDLThreadActive(false),
     iCurrentSensorEvent(KSensorEventAllClear), // Sensors seem clear at begin.
     iSmallestDistanceToObject(),
+	iLastOdometryReading(0,0,0),
     iLastCameraImage(),
     iLastLaserDistanceArray(),
     motionControl(aInterface)
@@ -125,7 +126,7 @@ int CJ2B2Demo::RunInfoDemo(int aIterations)
 
   }
 
-  // This prints Odometry output every 5 seconds.
+  // This prints Odometry output every 0.5 seconds.
   if (iInterface.iPositionOdometry) {
     while(iDemoActive && 
           iInfoThreadActive && 
@@ -135,9 +136,10 @@ int CJ2B2Demo::RunInfoDemo(int aIterations)
                                                      &posSeq,
                                                      1000)) {
         const TPose2D *pose = pd.GetPose2D();
-        if (pose && ownTime_get_ms_since(tbegin) > 5000) {
+        if (pose && ownTime_get_ms_since(tbegin) > 500) {
           dPrint(1,"Odometry position now at: x:%f, y:%f, a: %frad",
                  pose->x, pose->y, pose->a);
+		  iLastOdometryReading = SLAM::RobotLocation(pose->x, pose->y, pose->a);
           tbegin = ownTime_get_ms();
         }
       } else {
@@ -160,8 +162,8 @@ int CJ2B2Demo::RunInfoDemo(int aIterations)
 }
 //*****************************************************************************
 
-int CJ2B2Demo::RunSDLDemo(int aIterations)
-{ 
+int CJ2B2Demo::RunSDLDemo(int aIterations) {
+ 
   if (iSDLThreadActive) {
     dPrint(1,"SDLDemo already active! Will not start again.");
     return -1;
@@ -212,8 +214,13 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
   // Set imporant info :)
   SDL_WM_SetCaption("Simple J2B2 Demo application","J2B2Demo");
   
+	/////////////////////////////
+	// Initialize SLAM
+	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
+	SLAM::SLAM slam = SLAM::SLAM(100,100,100,100,loc,iLastLaserDistanceArray);
+  	/////////////////////////////
 
-  // Now, run the loop of processing as long as the demo is alive.
+	// Now, run the loop of processing as long as the demo is alive.
   while(iDemoActive && 
         iSDLThreadActive && 
         (aIterations == -1 || iterations < aIterations)) {
@@ -476,14 +483,19 @@ int CJ2B2Demo::RunSDLDemo(int aIterations)
       SDL_BlitSurface(image, NULL, screen, &rcDest);
       SDL_FreeSurface(image);
     }
-   
+  
+	//////////////////////////////////////////
+	// our own stuff
+	//
 	// let's see if this works
-	SLAM::RobotLocation loc = SLAM::RobotLocation(0,0,0);
-	SLAM::SLAM slam = SLAM::SLAM(1,1,1,1,loc,iLastLaserDistanceArray);
-	slam.drawLaserData(screen, window_width, window_height);
-	MaCI::Ranging::TDistance dist = slam.getNearest();
-	if (dist.distance < Motion::SAFETY_DIST)
-		motionControl.avoidObstacle(dist.angle);
+
+	slam.updateOdometryData(iLastOdometryReading);
+	//slam.drawLaserData(screen, window_width, window_height);
+	slam.updateLaserData(iLastLaserDistanceArray);
+	slam.drawMapData(screen, window_width, window_height);
+	//MaCI::Ranging::TDistance dist = slam.getNearest();
+	//if (dist.distance < Motion::SAFETY_DIST)
+	//	motionControl.avoidObstacle(dist.angle);
 
 
 	/* 

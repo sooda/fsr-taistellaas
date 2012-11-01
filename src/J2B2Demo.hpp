@@ -86,6 +86,7 @@ private:
   ESensorEvent iCurrentSensorEvent;
   MaCI::Ranging::TDistance iSmallestDistanceToObject;
 
+  SLAM::RobotLocation iLastOdometryReading;
   MaCI::Image::CImageContainer iLastCameraImage;
   MaCI::Ranging::TDistanceArray iLastLaserDistanceArray;
 

@@ -43,6 +43,7 @@ LDFLAGS := $(LDFLAGS_) $(LIBDIRS) \
 	-lrt -lpthread -lcrypto -ljpeg -lpng12 -lssl \
 	`xml2-config --libs` `sdl-config  --libs` -lSDL_gfx -lSDL_image \
 	-lgridfastslam -lscanmatcher -llog -lsensor_range -lsensor_odometry -lsensor_base -lutils -lconfigfile \
+	`pkg-config --libs opencv` \
 	-L$(EXT_LIBS)/lib -Wl,-rpath=$(EXT_LIBS)/lib
 
 # magic for automatic objdir generation

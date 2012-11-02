@@ -2,7 +2,13 @@
 #define _J2B2_CAMERA_HPP_
 
 #include "MachineCtrlClient.hpp"
+#include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
+#include "../motion/ServoControl.hpp"
+#include "Camutil.hpp"
+
+#define dPan Motion::ServoControl::KServoCameraPTUPan
+#define dTilt Motion::ServoControl::KServoCameraPTUTilt
 
 /*
  * Camera and object recognition module
@@ -11,14 +17,25 @@
 
 namespace cam {
 
+class Location { };
+
 class Camera {
 
 public:
 
-	// constructor initializes the Camera module
+	enum Exception {
+		ERR_CAMERA_CLIENT_INITIALIZATION,
+		ERR_GET_IMAGE_DATA,
+		ERR_GET_IMAGE
+	};
+
+	// constructor initialises the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::Image::CImageClient *cameraClient,
-		ServoPosition *servoPosition);
+	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine);
+
+	// copy constructor
+	Camera(const cam::Camera&);
+	Camera operator=(const Camera&);
 
 	// destructor
 	~Camera();
@@ -33,26 +50,38 @@ public:
 	// Calibrate camera
 	bool calibrateCamera();
 
+
 private:
 
-	bool calibrated = false;
-
+	MaCI::MachineCtrl::CMachineCtrlClient *machineCtrl;
 	MaCI::Image::CImageClient *cameraClient;
-	MaCI::Image::CImageData imgData;
 	MaCI::Image::CImageContainer cameraImage;
 
+
+//	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl
+
 	// distances
-	MaCI::Ranging::TDistance lastDistance;
-	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
+//	MaCI::Ranging::TDistance lastDistance;
+//	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
 
-	// ServoPosition contains information about camera servos
-	 ::ServoPosition *servoPosition;
+	bool calibrated;
+	bool show_image;
+
+	Motion::ServoControl servoCtrl;
 
 
-	void GetCameraData();
 
-	// TODO: add some functions to recognize objects
+	void getCameraData();
+	void checkCalibration();
 
+	// TODO: add some functions to recognise objects
+
+	void showImage();
+
+	Eigen::Matrix3f getCamRotation();
+	Eigen::Matrix4f getTranslationFromRobotOrigo();
+
+	void getPositionOfTargets();
 };
 
 }

@@ -48,20 +48,21 @@ Eigen
 
 "Eigen is a C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms."
 
-If you are using Ubuntu or other Debian based distributions AND you have root priviliges (admin rights) to the computer you are using,
-you can check if your distribution packager manager provides a package called libeigen3-dev (or libeigen3). If not, you have to install
-if manually as follows:
+If you are using Ubuntu or some other Debian based distribution and you have root priviliges (admin rights, sudo, i.e. it's your computer) to the computer you are using,
+you can check if your distribution's package manager provides a package called libeigen3-dev (or libeigen3). If not, you have to install
+it manually as follows:
 
-0) Go the some directory where you want to extract the library (SOODA FULLFILL THIS PLEASE!)
-1) Get library package:
+0) Go the some directory where you want to extract the library, doesn't matter where
+1) Get the library package:
    wget http://bitbucket.org/eigen/eigen/get/3.1.1.tar.bz2
-2) Extract library
+2) Extract it
    tar -xjvf 3.1.1.tar.bz2
 3) You should now have a new directory similar to eigen-eigen-43d9075b23ef. You can check the name with command
    ls
-4) Luckily eigen is a plain header library, so you do not have to build anything. Just command as follow: (SOODA OHJEISTA KOPIOIMAAN OIKEAAN PAIKKAAN??!)
-   cp -fr eigen-eigen-*/Eigen eigen3
-5) Now you are able to use eigen library.
+4) Luckily eigen is a plain header library, so you do not have to build anything. Just move the header files to a proper place, to the include directory under ext-libs:
+   mv eigen-eigen-*/Eigen path-to-your-ext-libs/include/
+5) Now you are ready. You can remove the unneeded files and the package:
+   rm -rf eigen-eigen-* 3.1.1.tar.bz2
 
 
 

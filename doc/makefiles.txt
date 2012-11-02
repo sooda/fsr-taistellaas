@@ -1,0 +1,25 @@
+Makefiles
+=========
+
+Makefile is a rule file for the 'make' build tool. It is based on dependencies
+between files, and figures out what to do when files are out of sync. If source
+files are newer than binaries/object files, they are recompiled.
+
+
+Bookmarks
+---------
+
+Here's some URLs that contain good tips on modular and very automatic magic.
+Don't be afraid, you most probably won't need these. These helped in creating
+our fancy makefile.
+
+http://www.gnu.org/software/make/manual/make.html
+http://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html
+http://www.cmcrossroads.com/index2.php?option=com_content&do_pdf=1&id=6936
+http://www.gnu.org/software/make/manual/html_node/Text-Functions.html
+http://www.gnu.org/software/make/manual/html_node/Secondary-Expansion.html
+http://mad-scientist.net/make/autodep.html
+http://stackoverflow.com/questions/1365305/flat-object-file-directory-structure-output-with-gnu-make
+http://stackoverflow.com/questions/12821728/looking-for-the-perfect-makefile-canvas
+http://stackoverflow.com/questions/313778/generate-dependencies-for-a-makefile-for-a-project-in-c-c
+http://locklessinc.com/articles/makefile_tricks/

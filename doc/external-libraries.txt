@@ -43,8 +43,29 @@ Installing:
    ln -s ../../downloads/gmapping/trunk/lib/*.so .
 
 
+Eigen
+-----
+
+"Eigen is a C++ template library for linear algebra: matrices, vectors, numerical solvers, and related algorithms."
+
+If you are using Ubuntu or other Debian based distributions AND you have root priviliges (admin rights) to the computer you are using,
+you can check if your distribution packager manager provides a package called libeigen3-dev (or libeigen3). If not, you have to install
+if manually as follows:
+
+0) Go the some directory where you want to extract the library (SOODA FULLFILL THIS PLEASE!)
+1) Get library package:
+   wget http://bitbucket.org/eigen/eigen/get/3.1.1.tar.bz2
+2) Extract library
+   tar -xjvf 3.1.1.tar.bz2
+3) You should now have a new directory similar to eigen-eigen-43d9075b23ef. You can check the name with command
+   ls
+4) Luckily eigen is a plain header library, so you do not have to build anything. Just command as follow: (SOODA OHJEISTA KOPIOIMAAN OIKEAAN PAIKKAAN??!)
+   cp -fr eigen-eigen-*/Eigen eigen3
+5) Now you are able to use eigen library.
+
+
+
 TODO
 ----
 
-- Eigen
 - OpenCV

@@ -23,7 +23,8 @@ SLAM::SLAM(double xsize, double ysize,
 	  y0(-1),
 	  x1(-1),
 	  y1(-1),
-	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini") // TODO: don't hardcode this here
+	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini"), // TODO: don't hardcode this here
+	  gfsmap(NULL)
 {
 
   currentMapData.setLocation(RobotLocation(MapData::gridSize/2,MapData::gridSize/2,0));

@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	if (SDL_Init(SDL_INIT_VIDEO) == -1) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) == -1) {
 		cerr << "Failed to initialize SDL Video: " << SDL_GetError() << endl;
 		return 1;
 	}

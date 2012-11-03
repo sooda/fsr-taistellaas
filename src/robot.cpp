@@ -26,6 +26,10 @@ Robot::Robot(CJ2B2Client& j2b2)
 	// for fps calculation
 	statistics.startTime = ownTime_get_ms();
 
+	// returns a joystick structure that we don't use for anything
+	// don't bother cleaning up, will do that later if necessary
+	SDL_JoystickOpen(0);
+
 	// start other threads, return immediately to caller
 	RunThread(THREAD_MAIN);
 	RunThread(THREAD_SENSE);
@@ -203,6 +207,7 @@ void Robot::stop(void) {
 }
 void Robot::pollEvents(void) {
 	SDL_Event event;
+	static bool joystickMode = false;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 			case SDL_QUIT:
@@ -211,6 +216,23 @@ void Robot::pollEvents(void) {
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 				handleKey(event.type, event.key.keysym.sym);
+				break;
+			case SDL_JOYAXISMOTION:
+				// control with a joystick if a joystick button is pressed simultaneously
+				if (joystickMode) {
+					if (event.jaxis.axis == 0)
+						manual.angle = -event.jaxis.value / 32768.0 * M_PI;
+					else if (event.jaxis.axis == 1)
+						manual.speed = -event.jaxis.value / 32768.0 * 0.3;
+				}
+				break;
+			case SDL_JOYBUTTONDOWN:
+				joystickMode = true;
+				break;
+			case SDL_JOYBUTTONUP:
+				joystickMode = false;
+				manual.angle = 0;
+				manual.speed = 0;
 				break;
 			default:
 				break;

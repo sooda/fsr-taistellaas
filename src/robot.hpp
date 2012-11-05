@@ -77,10 +77,9 @@ private:
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;
 		Measurement<MaCI::Ranging::TDistanceArray> lidar;
-		Measurement<int> lidarNumber;
 	} lastMeas;
 
-	struct Stats { // locking? let's assume these are atomically accessable
+	struct Stats { // locking? let's assume these are atomically accessable. XXX should these members in measurement class?
 		int odometry;
 		int lidar;
 		int camera;

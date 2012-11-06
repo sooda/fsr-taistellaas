@@ -1,9 +1,19 @@
+var ballsize = 10;
+
 function circle(ctx, x, y, color) {
 	ctx.strokeStyle = color;
 	ctx.fillStyle = color;
 	ctx.beginPath();
-	ctx.arc(x, y, 5, 0, 2*Math.PI, 0);
+	ctx.arc(x, y, ballsize, 0, 2*Math.PI, 0);
 	ctx.fill();
+}
+
+function square(ctx, x, y, color) {
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.rect(x - ballsize, y - ballsize, 2 * ballsize, 2 * ballsize);
+	ctx.stroke();
 }
 
 // only axis-aligned so far, i.e. facing horizontally/vertically at points
@@ -67,10 +77,13 @@ function route(ctx, pts) {
 		var bx = pts[i].x;
 		var by = pts[i].y;
 		circle(ctx, bx, by, 'red');
+		ctx.strokeStyle = 'green';
 		dir = ellipse(ctx, ax, ay, bx, by, dir);
 		ax = bx;
 		ay = by;
 	}
+	ctx.strokeStyle = 'yellow';
+	ellipse(ctx, ax, ay, pts[0].x, pts[0].y, dir);
 }
 
 // http://stackoverflow.com/questions/55677/how-do-i-get-the-coordinates-of-a-mouse-click-on-a-canvas-element
@@ -125,10 +138,46 @@ function draw(ctx) {
 	route(ctx, pts);
 }
 
-function clickEvent(ev) {
-	pos = relMouseCoords(ev);
-	pts.push(pos);
-	draw(ctx);
+var lastmouse, mi = -1;
+
+function mupEvent(ev) {
+	mi = -1;
+}
+
+function mmoveEvent(ev) {
+	var pos = relMouseCoords(ev);
+	if (mi == -1) {
+		var i = findball(pos);
+		draw(ctx);
+		square(ctx, pts[i].x, pts[i].y, 'white');
+	} else {
+		pts[mi].x += pos.x - lastmouse.x;
+		pts[mi].y += pos.y - lastmouse.y;
+		lastmouse = pos;
+		draw(ctx);
+		square(ctx, pts[i].x, pts[i].y, 'white');
+	}
+}
+
+function findball(pos) {
+	for (var i = 0; i < pts.length; i++) {
+		var dx = pos.x - pts[i].x;
+		var dy = pos.y - pts[i].y;
+		if (Math.sqrt(dx * dx + dy * dy) < ballsize)
+			return i;
+	}
+	return -1;
+}
+
+function mdownEvent(ev) {
+	var pos = relMouseCoords(ev);
+	mi = findball(pos);
+	lastmouse = pos;
+	if (mi == -1) {
+		pts.push(pos);
+		mi = pts.length - 1;
+		draw(ctx);
+	}
 }
 
 var pts = [];
@@ -149,5 +198,7 @@ window.onload = function() {
 	ctx = canvas.getContext('2d');
 	draw(ctx);
 
-	canvas.addEventListener('click', clickEvent);
+	canvas.addEventListener('mousedown', mdownEvent);
+	canvas.addEventListener('mousemove', mmoveEvent);
+	canvas.addEventListener('mouseup', mupEvent);
 }

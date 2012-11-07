@@ -32,6 +32,7 @@ include Makefile.ext
 CFLAGS = $(CFLAGS_) -O0 -g3 \
 	$(INCLUDES) \
 	`xml2-config --cflags` \
+	`sdl-config --cflags` \
 	-DLINUX_OS -DLINUX -Wall
 
 # automatic dependency generation

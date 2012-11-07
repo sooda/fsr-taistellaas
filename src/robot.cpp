@@ -1,8 +1,8 @@
 #include "robot.hpp"
+#include "util.hpp"
 #include "owndebug.h"
 #include <stdexcept>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <string>
 
@@ -26,6 +26,8 @@ Robot::Robot(CJ2B2Client& j2b2)
 	// for fps calculation
 	statistics.startTime = ownTime_get_ms();
 
+	manual.enabled = true;
+
 	// returns a joystick structure that we don't use for anything
 	// don't bother cleaning up, will do that later if necessary
 	SDL_JoystickOpen(0);
@@ -43,10 +45,27 @@ Robot::~Robot() {
 	wait();
 }
 
+void Robot::navigate(void) {
+	// navigation.findRoute(my_final_dest_from_planner); // MIDTERM: not used yet -- navigation has a static route
+	auto route = navigation.getRoute();
+	route.pop_front();
+	motionControl.setRoute(route);
+}
+
 void Robot::threadMain(void) {
+	while (lastMeas.pose.get().x == 0) ownSleep_ms(1);
+	auto currentPos = lastMeas.pose.get();
+	SLAM::RobotLocation p = SLAM::RobotLocation(currentPos.x, currentPos.y, currentPos.a);
+	motionControl.setPose(p);
+	navigate(); // MIDTERM: what.
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
-		ownSleep_ms(100);
+		if (!manual.enabled) {
+			auto currentPos = lastMeas.pose.get();
+			SLAM::RobotLocation p = SLAM::RobotLocation(currentPos.x, currentPos.y, currentPos.a);
+			motionControl.iterate(p);
+		}
+		ownSleep_ms(100); // TODO: determine good value to synch with motor control loop
 	}
 }
 
@@ -69,10 +88,13 @@ void Robot::threadSense(void) {
 		if (j2b2.iPositionOdometry->GetPositionEvent(pd, &positionSeq, 10)) {
 			statistics.odometry++;
 			const MaCI::Position::TPose2D* pose = pd.GetPose2D();
-			if (pose)
+			if (pose) {
+				lastMeas.pose.set(*pose);
 				slam.updateOdometryData(SLAM::RobotLocation(pose->x, pose->y, pose->a));
-			else
+			} else {
 				dPrint(1, "WTF, got position event with no pose");
+			}
+
 		}
 
 		MaCI::Image::CImageData imgData;
@@ -114,7 +136,10 @@ void Robot::threadSense(void) {
 void Robot::threadControl(void) {
 	while (!IsRequestTermination()) {
 		// TODO: automatic driving (manual still optional)
-		motionControl.setSpeed(manual.speed, manual.angle);
+		if (manual.enabled)
+			motionControl.setSpeed(manual.speed, manual.angle);
+		else
+			motionControl.refreshSpeed();
 		ownSleep_ms(200);
 	}
 }
@@ -147,13 +172,6 @@ void Robot::threadUser(void) {
 		frames++;
 		ownSleep_ms(10);
 	}
-}
-
-template <typename T>
-std::string lexical_cast(T x) {
-	std::stringstream s;
-	s << x;
-	return s.str();
 }
 
 void Robot::drawScreen(SDL_Surface* screen, int frameno) {
@@ -194,6 +212,13 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 
 	slam.drawMapData(screen, win_width, win_height);
 	slam.drawLaserData(screen, win_width, win_height);
+
+	if (manual.enabled) {
+		info.push_back("Manual steering");
+	} else {
+		info.push_back("Automatic steering");
+		motionControl.drawMap(screen, 10, win_height-1-10);
+	}
 
 	int y = 200;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {
@@ -253,6 +278,12 @@ void Robot::handleKey(int type, SDLKey key) {
 				break;
 			case SDLK_RIGHT:
 				manual.angle = -M_PI / 10;
+				break;
+			case SDLK_SPACE:
+				manual.enabled = true;
+				break;
+			case SDLK_RETURN:
+				manual.enabled = false;
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

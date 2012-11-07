@@ -6,6 +6,7 @@
 #include "J2B2-API.hpp"
 #include "SLAM/includes.hpp"
 #include "motion/motioncontrol.hpp"
+#include "navi/navigation.hpp"
 
 // a measurement with a lock for safely transferring data between threads
 template <class T>
@@ -66,6 +67,8 @@ private:
 	void threadSlam(void);
 	void threadUser(void);
 
+	void navigate(void);
+
 	void pollEvents(void);
 	void handleKey(int, SDLKey);
 	void drawScreen(SDL_Surface*, int);
@@ -73,10 +76,12 @@ private:
 	CJ2B2Client& j2b2;
 	Motion::MotionControl motionControl;
 	SLAM::SLAM slam;
+	Navi::Navigation navigation;
 
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;
 		Measurement<MaCI::Ranging::TDistanceArray> lidar;
+		Measurement<MaCI::Position::TPose2D> pose;
 	} lastMeas;
 
 	struct Stats { // locking? let's assume these are atomically accessable. XXX should these members in measurement class?
@@ -89,6 +94,7 @@ private:
 
 	struct {
 		float speed, angle;
+		bool enabled;
 	} manual;
 
 	static const int win_width = 1024, win_height = 768;

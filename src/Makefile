@@ -29,7 +29,7 @@ include Makefile.ext
 
 # no ":=" here, automatic variables used in deps
 # append CFLAGS_ from command line, if given
-CFLAGS = $(CFLAGS_) -O0 -g3 \
+CFLAGS = $(CFLAGS_) -O0 -g3 -std=c++0x \
 	$(INCLUDES) \
 	`xml2-config --cflags` \
 	`sdl-config --cflags` \

@@ -140,8 +140,21 @@ function draw(ctx) {
 
 var lastmouse, mi = -1;
 
+function routeUpdated() {
+	var info = [];
+	for (var i = 0; i < pts.length; i++)
+		info.push("("
+				+ Math.round(100 * pts[i].x / scale) / 100
+				+ ", "
+				+ Math.round(100 * (h - pts[i].y) / scale) / 100
+				+ ")");
+	msg = "<pre>" + info.join(",<br>") + "</pre>";
+	document.getElementById('results').innerHTML = msg;
+}
+
 function mupEvent(ev) {
 	mi = -1;
+	routeUpdated();
 }
 
 function mmoveEvent(ev) {
@@ -149,13 +162,15 @@ function mmoveEvent(ev) {
 	if (mi == -1) {
 		var i = findball(pos);
 		draw(ctx);
+		if (i == -1)
+			return;
 		square(ctx, pts[i].x, pts[i].y, 'white');
 	} else {
 		pts[mi].x += pos.x - lastmouse.x;
 		pts[mi].y += pos.y - lastmouse.y;
 		lastmouse = pos;
 		draw(ctx);
-		square(ctx, pts[i].x, pts[i].y, 'white');
+		square(ctx, pts[mi].x, pts[mi].y, 'white');
 	}
 }
 

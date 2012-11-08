@@ -21,22 +21,29 @@ DEPS := $(patsubst $(OBJDIR)/%,$(DEPDIR)/%.d,$(OBJS))
 EXT_LIBS := ../../../ext-libs
 
 # we could try clang some day, so keep these in variables
-CXX := g++
-LD := g++
+# set only if not defined on command line
+CXX ?= g++
+LD ?= c++
 
 # ugly list of include paths separeted in a different file
 include Makefile.ext
 
 # no ":=" here, automatic variables used in deps
 # append CFLAGS_ from command line, if given
-CFLAGS = $(CFLAGS_) -O0 -g3 -std=c++0x \
+# this shouldn't include anything special for gcc as the
+# clang complete rules are built with this
+CFLAGS = $(CFLAGS_) -std=c++0x \
 	$(INCLUDES) \
 	`xml2-config --cflags` \
 	`sdl-config --cflags` \
 	-DLINUX_OS -DLINUX -Wall
 
+# gcc/compiling specific:
+# optimization, debugging info,
 # automatic dependency generation
-CFLAGS += -MMD -MP -MF $(subst $(OBJDIR)/,$(DEPDIR)/,$(@)).d
+CFLAGS_FINAL = $(CFLAGS) -O0 -g3 \
+	-MMD -MP -MF $(subst $(OBJDIR)/,$(DEPDIR)/,$(@)).d \
+
 
 # read LDFLAGS_ from command line too
 LDFLAGS := $(LDFLAGS_) $(LIBDIRS) \
@@ -53,7 +60,7 @@ LDFLAGS := $(LDFLAGS_) $(LIBDIRS) \
 all: $(TARGET)
 
 # convenience commands
-run_real: $(TARGET)
+runreal: $(TARGET)
 	./taistellaas 130.233.120.178 40002
 
 simulate: $(TARGET)
@@ -65,14 +72,14 @@ simulate-gdb: $(TARGET)
 simulate-valgrind: $(TARGET)
 	valgrind ./taistellaas localhost $(shell grep -wo 4002. ../../application/execute_simulator_client) FSRSim.J2B2
 
-.PHONY: all run_real simulate simulate-gdb simulate-valgrind
+.PHONY: all runreal simulate simulate-gdb simulate-valgrind
 
 $(TARGET): $(OBJS)
 	$(LD) $^ -o $@ $(LDFLAGS)
 
 # build objects, require directories for objs and deps
 $(OBJDIR)/%.o: %.cpp | $$(subst $(OBJDIR),$(DEPDIR),$$(@D))/.dir $$(@D)/.dir
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CFLAGS_FINAL) -c $< -o $@
 
 # a sentinel file to help generating identical directory structure for objs and deps
 %/.dir:
@@ -81,8 +88,18 @@ $(OBJDIR)/%.o: %.cpp | $$(subst $(OBJDIR),$(DEPDIR),$$(@D))/.dir $$(@D)/.dir
 
 .PRECIOUS: %/.dir
 
+# definition file for vim's clang_complete plugin
+.clang_complete: Makefile Makefile.ext
+	echo "$(CFLAGS)"|tr ' ' '\n' > .clang_complete
+
+# clean up the built output files
 clean:
 	rm -f $(TARGET) $(OBJS) $(DEPS)
+
+# clean up some more, something that the user might not want to remove
+# with the make clean target
+reallyclean: clean
+	rm -rf .clang_complete out
 
 help:
 	@echo "Build targets:"
@@ -90,7 +107,7 @@ help:
 	@echo "    simulate: run the simulator client"
 	@echo "    simulate-gdb: run the simulator client under the gnu debugger"
 	@echo "    simulate-valgrind: run the simulator client under valgrind"
-	@echo "    run-real: control the real robot"
+	@echo "    runreal: control the real robot"
 	@echo "    clean: remove generated files"
 
 

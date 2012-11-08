@@ -3,12 +3,10 @@
 
 namespace SLAM {
 
-MapData::MapData(int xdim_val, int ydim_val,
-                 double xsize_val, double ysize_val,
-                 RobotLocation initial)
-	: xdim(xdim_val), ydim(ydim_val),
-	  xsize(xsize_val), ysize(ysize_val),
-	  cellxsize(xsize_val/xdim_val), cellysize(ysize_val/ydim_val),
+MapData::MapData(RobotLocation initial)
+	: xdim(gridSize), ydim(gridSize),
+	  xsize(gridSize*unitSize), ysize(gridSize*unitSize),
+	  cellxsize(gridSize), cellysize(gridSize),
 	  robotLocation(initial) 
 {
 

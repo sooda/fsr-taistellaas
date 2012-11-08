@@ -9,7 +9,7 @@
 Robot::Robot(CJ2B2Client& j2b2)
 		: CThread(NUM_THREADS), j2b2(j2b2),
 		motionControl(j2b2),
-		slam(SLAM::SLAM(100, 100, 100, 100, SLAM::RobotLocation(0, 0, 0), MaCI::Ranging::TDistanceArray())),
+		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
 		lastMeas(),
 		statistics(),
 		manual() {

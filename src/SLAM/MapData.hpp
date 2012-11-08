@@ -28,9 +28,7 @@ enum ObservationType {
 };
 
 // constructor
-MapData(int xdim, int ydim, 
-        double xsize, double ysize,
-        RobotLocation initial);
+MapData(RobotLocation initial);
 
 // used to set the value of one cell of the map to another
 void setCellValue(GridPoint xy, ObservationType type, double value);
@@ -51,7 +49,8 @@ void setLocation(RobotLocation xyt);
 RobotLocation getLocation();
 
 
-const static int gridSize = 200;
+constexpr static int gridSize = 250;
+constexpr static double unitSize = 0.04;
 
 private:
 

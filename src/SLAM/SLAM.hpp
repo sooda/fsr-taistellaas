@@ -13,6 +13,7 @@ SLAM main interface class
 #include <signal.h>
 #include "J2B2-API.hpp"
 #include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
+#include <gimutils.h>
 
 #ifndef _DONT_USE_SDL_
 #include <../SDL/SDL.h>
@@ -30,24 +31,23 @@ public:
 // constructor, initializes slam
 // takes initial location of the robot as parameter
 // map is contructed based on this initial location
-SLAM(double xsize, double ysize,
-     double xdim, double ydim,
-     RobotLocation loc,
-     MaCI::Ranging::TDistanceArray initial);
+SLAM(RobotLocation initial);
 
-// can be called to get the current map data object
+// destructor
+~SLAM();
+
+// returns the current map data object
 MapData getCurrentMapData();
 
-// make slam update map based on laser measurements
+// inform SLAM of the latest laser data
+// may also trigger SLAM update
 void updateLaserData(MaCI::Ranging::TDistanceArray laserData);
 
-// make slam update map based on odometry data
-// values should be differences since last calling this function
-// (this should only be called by the motion control module)
+// inform SLAM of the latest odometry data
 void updateOdometryData(RobotLocation delta);
 
 // inform slam of some object at some location
-// x and y are in meters
+// x and y are in meters in current map coordinates
 void informOfObservation(MapData::ObservationType type, Location xy); 
 
 #ifndef _DONT_USE_SDL_
@@ -58,6 +58,7 @@ void drawLaserData(SDL_Surface* screen, const int window_width, const int window
 void drawMapData(SDL_Surface* screen, const int window_width, const int window_height);
 
 MaCI::Ranging::TDistance getNearest() const;
+
 #endif
 
 private:
@@ -66,6 +67,7 @@ MapData currentMapData;
 MaCI::Ranging::TDistanceArray lastLaserData;
 RobotLocation lastOdometryData;
 MaCI::Ranging::TDistance lastNearest;
+gim::time lastOdometryUpdateTime, lastLaserUpdateTime;
 
 int x0, y0, x1, y1;
 

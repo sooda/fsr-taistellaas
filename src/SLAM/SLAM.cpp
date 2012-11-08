@@ -11,14 +11,13 @@ namespace SLAM {
 // constructor, initializes slam
 // takes initial location of the robot as parameter
 // map is contructed based on this initial location
-SLAM::SLAM(double xsize, double ysize, 
-           double xdim, double ydim, 
-           RobotLocation loc,
-           MaCI::Ranging::TDistanceArray initial) 
-	: currentMapData(xdim, ydim, xsize, ysize, loc),
-	  lastLaserData(initial),
+SLAM::SLAM(RobotLocation initial) 
+	: currentMapData(initial),
+	  lastLaserData(),
 	  lastOdometryData(RobotLocation(0,0,0)),
 	  lastNearest(),
+	  lastOdometryUpdateTime(0), 
+	  lastLaserUpdateTime(0),
 	  x0(-1), 
 	  y0(-1),
 	  x1(-1),
@@ -26,9 +25,14 @@ SLAM::SLAM(double xsize, double ysize,
 	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini"), // TODO: don't hardcode this here
 	  gfsmap(NULL)
 {
-
   currentMapData.setLocation(RobotLocation(MapData::gridSize/2,MapData::gridSize/2,0));
-    
+}
+
+// destructor
+SLAM::~SLAM() {
+	if (gfsmap) {
+		delete gfsmap;
+	}
 }
 
 // can be called to get the current map data object
@@ -42,9 +46,18 @@ MapData SLAM::getCurrentMapData() {
 void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	if (laserData.empty()) {
-		std::cerr << "Null laser scan array!" << std::endl;
+		std::cerr << "SLAM: Null laser scan array!" << std::endl;
 		return;
 	}
+	if (lastOdometryUpdateTime.getSeconds() == 0) {
+		std::cerr << "SLAM: No odometry data for update!" << std::endl;
+		return;
+	}
+
+
+	gim::time start(true);
+
+	lastLaserUpdateTime.setToCurrent();
 
 	lastLaserData = laserData;
 
@@ -57,7 +70,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 	if (new_gfsmap != 0) {
 		// map was updated
 
-		std::cerr << "New map, hurrah!" << std::endl;
+		std::cerr << "SLAM: map updated." << std::endl;
 
 		delete gfsmap;
 		gfsmap = new_gfsmap;
@@ -128,8 +141,6 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 					y1++;
 				}
 			}
-
-			std::cout << "asdf" << std::endl;
 		}
 	
 		if(x0 != -1 && y0 != -1 && x1 != -1 && y1 != -1) {	
@@ -138,27 +149,63 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			newLoc.y -= y0;
 			
 			currentMapData.setLocation(newLoc);
-	
+			
 			for (int x = x0; x <= x1; x++) {
 				for (int y = y0; y <= y1; y++) {
 					currentMapData.setCellValue(GridPoint(x-x0,y-y0), MapData::WALL, gfsmap->cell(x,y));				
 				}
 			}
 		}
+
+	
+		gim::time duration(true);
+
+		duration -= start;
+
+		std::cout << "SLAM: t = " << duration.getSeconds() << "." << duration.getUSeconds() << "s" << std::endl; 
+
 	}	
 	else {
-		//std::cerr << "No new map..." << std::endl;
+		//std::cerr << "SLAM: no new map" << std::endl;
 	}
 
 }
 
 // make slam update map based on odometry data
-// (this should only be called by the motion control module)
 void SLAM::updateOdometryData(RobotLocation loc) {
 
-	lastOdometryData = loc;
+	static RobotLocation lastLoc;
+	loc.normalizeTheta();
+	
+	if (lastOdometryUpdateTime == gim::time(0)) {
+		lastLoc = loc;
+	}
 
-	//slamThingy.updateMap(lastLaserData, lastOdometryData);
+	lastOdometryUpdateTime.setToCurrent();
+	
+	RobotLocation dxy = loc - lastLoc;	
+	dxy.normalizeTheta();
+	double ddist = sqrt(dxy.x*dxy.x+dxy.y*dxy.y);
+	double dtheta = dxy.theta;
+	lastLoc = loc;
+
+	double avgAngleOdo = lastOdometryData.theta + 0.5 * dtheta;
+	RobotLocation odoChange(ddist*cos(avgAngleOdo), ddist*sin(avgAngleOdo), 0);
+	lastOdometryData += odoChange;
+	lastOdometryData.theta += dtheta;
+	lastOdometryData.normalizeTheta();
+
+	RobotLocation gridLoc = currentMapData.getLocation();
+	double avgAngleMap = gridLoc.theta + 0.5 * dtheta;
+	RobotLocation mapChange(ddist*cos(avgAngleMap), ddist*sin(avgAngleMap), 0);
+	mapChange /= MapData::unitSize;
+	gridLoc += mapChange;
+	gridLoc.theta += dtheta;
+	gridLoc.normalizeTheta();
+	currentMapData.setLocation(gridLoc);
+
+//	std::cout << lastLoc.x << "," << lastLoc.y << "," << lastLoc.theta << " " << 
+//		lastOdometryData.x << "," << lastOdometryData.y << "," << lastOdometryData.theta << std::endl;
 
 }
 

@@ -48,6 +48,7 @@ INCLUDES := -I. \
 -I../../include/GIMnetAP \
 -I../../include/GIMnetAP/protocol \
 -I../../../ext-libs/include \
--I../../../ext-libs/include/gmapping
+-I../../../ext-libs/include/gmapping \
+-I/usr/include/eigen3
 
 LIBDIRS := -L../../lib

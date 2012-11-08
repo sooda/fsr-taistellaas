@@ -38,8 +38,6 @@ void MotionControl::setPose(Pose pose) {
 	lastPose = pose;
 }
 
-float r2d(float deg) { return deg / M_PI * 180; }
-
 // Main control loop to read current pose and update control values
 void MotionControl::iterate(SLAM::RobotLocation myPose) {
 	if (myPose.theta < 0) myPose.theta += 2*M_PI;
@@ -196,7 +194,7 @@ MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 	cout << "ellipse params from " << source.x << " " << source.y << " " << source.theta << " to " << dest.x << "," << dest.y << "," << dest.theta << endl;
 	ArcParams p;
 	static const float eps = 0.01;
-	if (fabsf(source.theta - M_PI/2) < eps || fabs(source.theta - 3*M_PI/2) < eps) {
+	if (floateq(source.theta, DIR_UP, eps) || floateq(source.theta, DIR_DOWN, eps)) {
 		cout << "\tVertical" << endl;
 		// facing up or down
 		p.ox = dest.x;
@@ -204,7 +202,7 @@ MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 		p.a = source.x - dest.x;
 		p.b = dest.y - source.y;
 		p.horizontal = false;
-	} else if (fabsf(source.theta - 0) < eps || fabsf(source.theta - 2*M_PI) < eps || fabs(source.theta - M_PI) < eps) {
+	} else if (floateq(source.theta, DIR_RIGHT, eps) || floateq(source.theta, DIR_RIGHT + 2*M_PI) || floateq(source.theta, DIR_LEFT, eps)) { // FIXME: hack for both 0 and 2pi
 		cout << "\tHorizontal" << endl;
 		p.ox = source.x;
 		p.oy = dest.y;

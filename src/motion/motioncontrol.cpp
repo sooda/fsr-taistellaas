@@ -196,7 +196,7 @@ MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 	cout << "ellipse params from " << source.x << " " << source.y << " " << source.theta << " to " << dest.x << "," << dest.y << "," << dest.theta << endl;
 	ArcParams p;
 	static const float eps = 0.01;
-	if (fabsf(source.theta - M_PI/2) < eps || fabs(source.theta - 3*M_PI/4) < eps) {
+	if (fabsf(source.theta - M_PI/2) < eps || fabs(source.theta - 3*M_PI/2) < eps) {
 		cout << "\tVertical" << endl;
 		// facing up or down
 		p.ox = dest.x;

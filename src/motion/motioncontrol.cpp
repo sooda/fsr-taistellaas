@@ -42,7 +42,10 @@ void MotionControl::setPose(Pose pose) {
 void MotionControl::iterate(SLAM::RobotLocation myPose) {
 	if (myPose.theta < 0) myPose.theta += 2*M_PI;
 	lastPose = myPose;
-	if (waypoints.size() == 0) { // FIXME: kludge
+	cout << "ITERATE" << endl;
+	cout << midpoints.size() << endl;
+	if (midpoints.size() == 0) { // FIXME: kludge
+		cout << "\tNo midpoints" << endl;
 		ctrl.speed = 0;
 		ctrl.angle = 0;
 		return;
@@ -62,7 +65,6 @@ void MotionControl::iterate(SLAM::RobotLocation myPose) {
 	ctrl.speed = k.p * rho;
 	ctrl.angle = k.a * alpha - k.b * beta;
 
-	cout << "ITERATE" << endl;
 	cout<< "\tdx = " << dx << endl;
 	cout<< "\tdy = " << dy << endl;
 	cout<< "\tmy theta = " << myPose.theta << " " << r2d(myPose.theta) << endl;
@@ -141,7 +143,10 @@ const MotionControl::Pose& MotionControl::currentMidpoint(void) const {
 void MotionControl::reloadWaypoint(Pose source) {
 	auto destination = waypoints.front();
 	ArcParams ellipse = ellipseParams(source, destination);
-	buildMidpoints(ellipse);
+	// not initialized if 0
+	if (ellipse.ox != 0 && ellipse.oy != 0) {
+		buildMidpoints(ellipse);
+	}
 }
 // XXX this should maybe not be called from another thread while doing some parsing
 // Currently only called once after starting, will probably be called after having
@@ -210,7 +215,8 @@ MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 		p.b = source.y - dest.y;
 		p.horizontal = true;
 	} else {
-		throw std::runtime_error("FIXME: bad pose for waypoint " + lexical_cast(source.theta));
+		dPrint(0, ("FIXME: cannot continue -- bad pose for waypoint " + lexical_cast(source.theta)).c_str());
+		p.ox=p.oy=0; // invent a better way for this
 	}
 	cout << "Got params: " << p.ox << " " << p.oy << " " << p.a << " " << p.b << endl;
 	return p;

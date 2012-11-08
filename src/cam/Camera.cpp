@@ -13,6 +13,7 @@
 
 using namespace MaCI::Image;
 using namespace Eigen;
+using namespace std;
 
 namespace cam {
 
@@ -145,33 +146,78 @@ void Camera::showImage()
 	imshow("Contours", drawing);
 }
 
-Eigen::Matrix3f Camera::getCamRotation()
+Eigen::Vector2f Camera::getCamRotation()
 {
 	float tilt = servoCtrl.getPosition(dTilt);
 	float pan = servoCtrl.getPosition(dPan);
 
+	Vector2f angles (tilt, pan);
+
+	return angles;
+
+}
+
+Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
+{
+	// image
+    const float width = 640;
+    const float height = 480;
+
+    // servos
+	Vector2f angles = getCamRotation();
+    const float tilt = angles(0);
+    const float pan = angles(1);
+
+    const float fov = FOV / 360.0 * M_PI;
+
+    // yksi pikseli vastaa radiaaneja (pystysuunnassa) (pixel per degree) (voidaanko käyttää myös vaakasuunnassa?)
+    const float ppd = fov/height;
+
+    // kohteen etäisyys keskipisteestä
+    float ydist = height/2 - top;
+    float xdist = width/2 - left;
+
+    // tarkoittaa kulmina xangl radiaania
+    float yangl = ppd*ydist;
+    float xangl = ppd*xdist;
+
+    // tällöin kulma
+    float ya = tilt + yangl;
+    float xa = pan + xangl;
+
+
 	Matrix3f rotation;
 
-	rotation = AngleAxisf(tilt, Vector3f::UnitZ()) * AngleAxisf(pan, Vector3f::UnitY());
+    rotation = AngleAxisf(ya, Vector3f::UnitY()) * AngleAxisf(xa, Vector3f::UnitZ());
 
 	return rotation;
 
 }
 
-Eigen::Matrix4f Camera::getTranslationFromRobotOrigo()
-{
-	// NOTE: this function will always return constant translation
-
-	Affine3f m;
-	m = Translation3f(5, 5, 50); // x = 5, y = 5, z = 50
-
-	return m.matrix();
-}
-
 void Camera::getPositionOfTargets()
 {
-	// TODO: Not working!
-	Matrix3f cameraMatrix = getTranslationFromRobotOrigo().topLeftCorner(3, 3) * getCamRotation();
+    // object
+    const int left = 320;
+    const int top = 240;
+
+	Matrix3f R = getObjectRotation(left, top);
+
+	Vector3f T(0, 0, 1); // floor
+    Vector3f p(5, 0, 50); // position of the camera
+    Vector3f v(1, 0, 0); // direction of the view of the camera
+    Vector3f t(0,0,0);
+
+    v = R.transpose() * v;
+    cout << v << endl;
+
+    t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
+
+    cout << "pallo: " << t << endl;
+
+    float distance = sqrt(t.x() * t.x() + t.y() * t.y());
+
+    cout << "dist: " << distance << endl;
+
 
 
 }

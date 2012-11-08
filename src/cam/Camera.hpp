@@ -1,6 +1,8 @@
 #ifndef _J2B2_CAMERA_HPP_
 #define _J2B2_CAMERA_HPP_
 
+#include <iostream>
+
 #include "MachineCtrlClient.hpp"
 #include "../J2B2-API.hpp"
 #include "../SLAM/SLAMutil.hpp"
@@ -9,6 +11,8 @@
 
 #define dPan Motion::ServoControl::KServoCameraPTUPan
 #define dTilt Motion::ServoControl::KServoCameraPTUTilt
+
+#define FOV 50.0
 
 /*
  * Camera and object recognition module
@@ -78,9 +82,8 @@ private:
 
 	void showImage();
 
-	Eigen::Matrix3f getCamRotation();
-	Eigen::Matrix4f getTranslationFromRobotOrigo();
-
+	Eigen::Vector2f getCamRotation();
+	Eigen::Matrix3f getObjectRotation(const float, const float);
 	void getPositionOfTargets();
 };
 

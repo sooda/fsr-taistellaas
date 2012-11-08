@@ -21,9 +21,8 @@ DEPS := $(patsubst $(OBJDIR)/%,$(DEPDIR)/%.d,$(OBJS))
 EXT_LIBS := ../../../ext-libs
 
 # we could try clang some day, so keep these in variables
-# set only if not defined on command line
-CXX ?= g++
-LD ?= c++
+CXX := g++
+LD := g++
 
 # ugly list of include paths separeted in a different file
 include Makefile.ext

@@ -108,11 +108,11 @@ void MotionControl::drawMap(SDL_Surface* screen, int sx, int sy) const {
 		Pose(1.5, 2, 0)
 
 	};
-	for (const Pose& p: poles) {
-		filledCircleRGBA(screen, sx + p.x * pxl_per_m, sy - p.y * pxl_per_m, 5, 255, 0, 0, 255);
+	for (auto it = poles.begin(); it != poles.end(); ++it) {
+		filledCircleRGBA(screen, sx + it->x * pxl_per_m, sy - it->y * pxl_per_m, 5, 255, 0, 0, 255);
 	}
-	for (const Pose& p: waypoints) {
-		filledCircleRGBA(screen, sx + p.x * pxl_per_m, sy - p.y * pxl_per_m, 5, 0, 0, 255, 255);
+	for (auto it = waypoints.begin(); it != waypoints.end(); ++it) {
+		filledCircleRGBA(screen, sx + it->x * pxl_per_m, sy - it->y * pxl_per_m, 5, 0, 0, 255, 255);
 	}
 	auto last = midpoints.begin();
 	//cout << endl << "Starting le draw" << endl;

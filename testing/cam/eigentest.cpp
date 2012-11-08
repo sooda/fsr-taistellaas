@@ -4,50 +4,11 @@
 using namespace std;
 using namespace Eigen;
 
-int main ()
+int main (int argc, char** argv)
 {
 /*
-oletetaan, ett‰ lˆydet‰‰n 800x600 kuvasta pallo, keskipisteelt‰‰n kohdassa (400,300)
-
-saadaan tilt ja pan kulmat: (-0.5pi, 0.5pi) vai asteina??
-- tilt = 0.3*pi = 0.94
-- pan  = -0.2*pi = -0.63
-
+oletetaan, ett√§ l√∂ydet√§√§n 800x600 kuvasta pallo, keskipisteelt√§√§n kohdassa (400,300)
 */
-
-	// image
-	const float height = 600;
-	const float width = 800;
-
-	// servos
-	const float tilt = 3.14; // degree
-	const float pan = 0.0;
-
-	const float fov = 50;
-
-	// object
-	const int left = 400;
-	const int top = 300;
-
-	// yksi pikseli vastaa asteita (pystysuunnassa) (pixel per degree)
-	const float ppd = fov/height;
-
-	// kohteen et‰isyys keskipisteest‰ (pystysuunnassa)
-	float xdist = height/2 - top;
-
-	// tarkoittaa kulmina xangl astetta
-	float xangl = ppd*xdist;
-
-	// t‰llˆin kulma pystysuunnassa
-	float xa = tilt - xangl;
-
-	// et‰isyys kohteeseen
-	float dist = 50 / tan(xa/360*2*3.14) +5;
-
-//	cout << width << "x" << height << " kuvassa kohdassa (" << left << "," << top << ") loytyvaan kohteeseen etaisuutta: " << dist << endl;
-
-
-	/* matriisis‰‰tˆ */
 
 /*
 [22:11:20] ¬´ Mulppi¬ª jos T ois [0 0 1], p ois [x y z], v ois [v_x v_y v_z], t ois [t_x t_y 0] ja k ois skalaari
@@ -56,13 +17,43 @@ saadaan tilt ja pan kulmat: (-0.5pi, 0.5pi) vai asteina??
 [22:14:43] ¬´ Mulppi¬ª eli t = p - (Tp')/(Tv')*v
 */
 
+	// image
+	const float width = 800;
+	const float height = 600;
+
+	// servos
+	const float tilt = -M_PI/4; // degree
+	const float pan = 0.0;
+
+	const float fov = 50.0 / 360.0 * M_PI;
+
+	// object
+	const int left = 400;
+	const int top = 300;
+
+	// yksi pikseli vastaa radiaaneja (pystysuunnassa) (pixel per degree) (voidaanko k√§ytt√§√§ my√∂s vaakasuunnassa?)
+	const float ppd = fov/height;
+
+	// kohteen et√§isyys keskipisteest√§
+	float ydist = height/2 - top;
+	float xdist = width/2 - left;
+
+	// tarkoittaa kulmina xangl radiaania
+	float yangl = ppd*ydist;
+	float xangl = ppd*xdist;
+
+	// t√§ll√∂in kulma
+	float ya = tilt + yangl;
+	float xa = pan + xangl;
+
+
 	Matrix3f R;
 
-//	R = AngleAxisf(tilt, Vector3f::UnitY()) /* * AngleAxisf(pan, Vector3f::UnitZ()) */ ;
-	R = AngleAxisf(-M_PI/4, Vector3f::UnitY()) * AngleAxisf(M_PI/4, Vector3f::UnitZ());
+	R = AngleAxisf(ya, Vector3f::UnitY()) * AngleAxisf(xa, Vector3f::UnitZ());
 
 	Vector3f T(0, 0, 1); // floor
-	Vector3f p(5, 0, 50); // center of the image
+//	Vector3f p(5, 0, 50); // position of the camera
+	Vector3f p(0, 0, 100); // position of the camera
 	Vector3f v(1, 0, 0); // direction of the view of the camera
 	Vector3f t(0,0,0);
 
@@ -77,26 +68,5 @@ saadaan tilt ja pan kulmat: (-0.5pi, 0.5pi) vai asteina??
 
 	cout << "dist: " << distance << endl;
 
-/*
-	Vector4f point(0,0,0,1); // origo
-
-
-	T1 = Translation3f(5, 50, 0);
-
-	point = T1 * point;
-	point = R * point;
-
-	// kameran paikkavektori
-	Vector3f = point.topRightCorner<1,3>();
-
-	// lattiatasomatriisi
-	Matrix3f plane;
-
-//	cout << "point:\n" << point << endl;
-
-	point = R.inverse() * point;
-//	cout << "inversed point:\n" << point << endl;
-//	cout << "top rows: \n" << point.topRows(3) << endl;
-*/
 	return 0;
 }

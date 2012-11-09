@@ -42,15 +42,24 @@ void setValue(Location xy, ObservationType type, double value);
 // used to get the value at some location of the map (goes to nearest cell)
 double getValue(Location xy, ObservationType type);
 
-// used to set the location of the robot
-void setLocation(RobotLocation xyt);
+// trnasform a location to a grid point in map
+GridPoint loc2grid(Location xy);
 
-// used to get the robot location
-RobotLocation getLocation();
+// transform a grid point in map to location
+Location grid2loc(GridPoint xy);
 
+// used to set the location of the robot in the map grid
+void setGridLocation(RobotLocation xyt);
 
-constexpr static int gridSize = 250;
-constexpr static double unitSize = 0.04;
+// used to get the robot location in meters from center of map
+RobotLocation getRobotLocation();
+	
+// used to get the robot location in the map grid
+RobotLocation getGridLocation();
+	
+
+constexpr static int gridSize = 301;
+constexpr static double unitSize = 0.03;
 
 private:
 
@@ -67,4 +76,5 @@ double map [gridSize][gridSize][OBS_TYPE_SIZE];  // map data
 }
 
 #endif
+
 

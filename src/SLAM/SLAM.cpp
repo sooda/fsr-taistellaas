@@ -25,7 +25,7 @@ SLAM::SLAM(RobotLocation initial)
 	  slamThingy("gmapping/ini/gfs-LMS-j2b2.ini"), // TODO: don't hardcode this here
 	  gfsmap(NULL)
 {
-  currentMapData.setLocation(RobotLocation(MapData::gridSize/2,MapData::gridSize/2,0));
+  currentMapData.setGridLocation(RobotLocation(MapData::gridSize/2,MapData::gridSize/2,0));
 }
 
 // destructor
@@ -148,7 +148,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			newLoc.x -= x0;
 			newLoc.y -= y0;
 			
-			currentMapData.setLocation(newLoc);
+			currentMapData.setGridLocation(newLoc);
 			
 			for (int x = x0; x <= x1; x++) {
 				for (int y = y0; y <= y1; y++) {
@@ -195,14 +195,14 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 	lastOdometryData.theta += dtheta;
 	lastOdometryData.normalizeTheta();
 
-	RobotLocation gridLoc = currentMapData.getLocation();
+	RobotLocation gridLoc = currentMapData.getGridLocation();
 	double avgAngleMap = gridLoc.theta + 0.5 * dtheta;
 	RobotLocation mapChange(ddist*cos(avgAngleMap), ddist*sin(avgAngleMap), 0);
 	mapChange /= MapData::unitSize;
 	gridLoc += mapChange;
 	gridLoc.theta += dtheta;
 	gridLoc.normalizeTheta();
-	currentMapData.setLocation(gridLoc);
+	currentMapData.setGridLocation(gridLoc);
 
 //	std::cout << lastLoc.x << "," << lastLoc.y << "," << lastLoc.theta << " " << 
 //		lastOdometryData.x << "," << lastOdometryData.y << "," << lastOdometryData.theta << std::endl;
@@ -225,7 +225,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 	if (lastLaserData.size()) {
 		float min_d = 1000;
 		MaCI::Ranging::TDistance min_dist;
-		float scale = 160; // scales from meters to screen pixels
+		float scale = 50; // scales from meters to screen pixels
 		int min_x_end = 0;
 		int min_y_end = 0;
 		int x_origin = window_width/2;
@@ -247,7 +247,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 			if (pix_x >= 0 && pix_x < window_width && pix_y >= 0 && pix_y < window_height) {
 				// draw the wall pixel with red dot and circle
 				pixelRGBA(screen, pix_x, pix_y, 255, 0, 0, 150);
-				filledCircleRGBA(screen, pix_x, pix_y, 5, 255, 0, 0, 150);
+				filledCircleRGBA(screen, pix_x, pix_y, 3, 255, 0, 0, 150);
 				if (measurement.distance < min_d) {
 					min_d = measurement.distance;
 					min_x_end = pix_x;
@@ -288,8 +288,8 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 	}
 
 	// draw the robot
-	RobotLocation loc = currentMapData.getLocation();
-	filledCircleRGBA(screen, loc.x, MapData::gridSize-loc.y, (int)(5), 0, 255, 255, 255);
+	RobotLocation loc = currentMapData.getGridLocation();
+	filledCircleRGBA(screen, loc.x, MapData::gridSize-loc.y, (int)(0.4 / MapData::unitSize / 2), 0, 255, 255, 255);
     for (int i = 0; i < 10; i++) {
 		pixelRGBA(screen, loc.x+i*cos(loc.theta), 
 		                  MapData::gridSize-loc.y-i*sin(loc.theta),

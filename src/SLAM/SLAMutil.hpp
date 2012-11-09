@@ -96,14 +96,20 @@ public:
 
 	// rotation
     inline RobotLocation operator%=(const double angle) {
-        x = x*cos(angle)-y*sin(angle);
-        y = x*sin(angle)+y*cos(angle);
+		double x_ = x;
+		double y_ = y;
+        x = x_*cos(angle)-y_*sin(angle);
+        y = x_*sin(angle)+y_*cos(angle);
 		theta += angle;
         return *this;
     }
 
-
 };
+
+inline std::ostream& operator<<(std::ostream& os, const RobotLocation& obj) {
+	os << "(" << obj.x << "," << obj.y << "," << obj.theta << ")";
+	return os;
+}
 
 class Location {
 

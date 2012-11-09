@@ -43,12 +43,15 @@ void setValue(Location xy, ObservationType type, double value);
 double getValue(Location xy, ObservationType type);
 
 // trnasform a location to a grid point in map
-GridPoint loc2grid(Location xy);
+static GridPoint loc2grid(Location xy);
 
 // transform a grid point in map to location
-Location grid2loc(GridPoint xy);
+static Location grid2loc(GridPoint xy);
 
-// used to set the location of the robot in the map grid
+// used to set the location of the robot in meters
+void setLocation(RobotLocation xyt);
+
+// used to set the location of the robot in the grid
 void setGridLocation(RobotLocation xyt);
 
 // used to get the robot location in meters from center of map

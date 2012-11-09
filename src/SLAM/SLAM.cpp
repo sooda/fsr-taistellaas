@@ -187,22 +187,39 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 	dxy.normalizeTheta();
 	double ddist = sqrt(dxy.x*dxy.x+dxy.y*dxy.y);
 	double dtheta = dxy.theta;
+
+/*  std::cout << "---" << std::endl;
+	RobotLocation test (1,0,0);
+	std::cout << "test: " << test << std::endl;	
+	test %= M_PI/2;
+	std::cout << "test: " << test << std::endl;	
+	test %= M_PI/2;
+	std::cout << "test: " << test << std::endl;	
+	test %= M_PI/2;
+	std::cout << "test: " << test << std::endl;	*/
+
+//	std::cout << "---" << std::endl;	
+//	std::cout << "ddist: " << ddist << ", dtheta: " << dtheta << std::endl;
+//	std::cout << "dxy: " << dxy << std::endl; 
+	dxy %= -lastLoc.theta;
+//	std::cout << "dxyr: " << dxy << std::endl; 
+//	std::cout << "loc: " << loc << std::endl; 
+	
 	lastLoc = loc;
 
-	double avgAngleOdo = lastOdometryData.theta + 0.5 * dtheta;
-	RobotLocation odoChange(ddist*cos(avgAngleOdo), ddist*sin(avgAngleOdo), 0);
-	lastOdometryData += odoChange;
-	lastOdometryData.theta += dtheta;
+	RobotLocation dxyo = dxy % lastOdometryData.theta;
+	dxyo.theta = dtheta;
+//	std::cout << "dxyo " << dxy.x << " " << dxy.y << " " << dxy.theta << std::endl;
+	lastOdometryData += dxyo;
 	lastOdometryData.normalizeTheta();
 
-	RobotLocation gridLoc = currentMapData.getGridLocation();
-	double avgAngleMap = gridLoc.theta + 0.5 * dtheta;
-	RobotLocation mapChange(ddist*cos(avgAngleMap), ddist*sin(avgAngleMap), 0);
-	mapChange /= MapData::unitSize;
-	gridLoc += mapChange;
-	gridLoc.theta += dtheta;
-	gridLoc.normalizeTheta();
-	currentMapData.setGridLocation(gridLoc);
+	RobotLocation maploc = currentMapData.getRobotLocation();
+	RobotLocation dxym = dxy % maploc.theta;
+	dxym.theta = dtheta;
+//	std::cout << "dxyo " << dxy.x << " " << dxy.y << " " << dxy.theta << std::endl;
+	maploc += dxym;
+	maploc.normalizeTheta();
+	currentMapData.setLocation(maploc);
 
 //	std::cout << lastLoc.x << "," << lastLoc.y << "," << lastLoc.theta << " " << 
 //		lastOdometryData.x << "," << lastOdometryData.y << "," << lastOdometryData.theta << std::endl;

@@ -68,9 +68,16 @@ double MapData::getValue(Location xy, ObservationType type) {
 	}
 }
 
+// used to set the location of the robot in meters
+void MapData::setLocation(RobotLocation xyt) {
+	robotLocation = xyt;
+}
+
 // used to set the location of the robot
 void MapData::setGridLocation(RobotLocation xyt) {
-	robotLocation = xyt;
+	GridPoint temp (xyt.x, xyt.y);
+	Location temp2 = grid2loc(temp);
+	setLocation(RobotLocation(temp2.x, temp2.y, xyt.theta));
 }
 
 // trnasform a location to a grid point in map
@@ -93,14 +100,14 @@ Location MapData::grid2loc(GridPoint xy) {
 
 // used to get the robot location in meters from center of map
 RobotLocation MapData::getRobotLocation() {
-	GridPoint temp (robotLocation.x, robotLocation.y);
-	Location temp2 = grid2loc(temp);
-	return RobotLocation(temp2.x, temp2.y, robotLocation.theta);
+	return robotLocation;
 }
 
 // used to get the robot location in the map grid
 RobotLocation MapData::getGridLocation() {
-	return robotLocation;
+	Location temp (robotLocation.x, robotLocation.y);
+	GridPoint temp2 = loc2grid(temp);
+	return RobotLocation(temp2.x, temp2.y, robotLocation.theta);
 }
 
 }

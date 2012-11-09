@@ -91,7 +91,7 @@ GFSJ2B2::GFSJ2B2(std::string configfilename) {
 	// init our laser scanner and define correct parameters
 	int beams = 181; // ok
 	double resolution = 2*3.14/360; // one degree in radians, ok
-	OrientedPoint location = OrientedPoint(0,0,0); // ?
+	OrientedPoint location = OrientedPoint(0.08,0,0); // location of laser relative to robot center??
 	double span = 180; // ?
 	double max_range = 80; // ok?
 	frontLaser = new RangeSensor("FLASER",beams,resolution,location,span,max_range);

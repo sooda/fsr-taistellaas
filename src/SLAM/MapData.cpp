@@ -7,17 +7,12 @@ MapData::MapData(RobotLocation initial)
 	: xdim(gridSize), ydim(gridSize),
 	  xsize(gridSize*unitSize), ysize(gridSize*unitSize),
 	  cellxsize(gridSize), cellysize(gridSize),
-	  robotLocation(initial) 
+	  robotLocation(initial),
+	  map(std::vector<std::vector<std::vector<double>>>(
+				  gridSize, std::vector<std::vector<double>>(
+					  gridSize, std::vector<double>(OBS_TYPE_SIZE, -1.0)))
+			  )
 {
-
-	for (int i = 0; i < gridSize; i++) {
-		for (int j = 0; j < gridSize; j++) {
-			for (int k = 0; k < OBS_TYPE_SIZE; k++) {
-				map[i][j][k] = -1;
-			}
-		}
-	}
-
 }
 
 // used to set the value of one cell of the map to another

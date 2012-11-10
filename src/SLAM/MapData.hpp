@@ -10,6 +10,7 @@ Antti 26.9.
 #define _J2B2_MAPDATA_HPP_
 
 #include <iostream>
+#include <vector>
 #include "SLAMutil.hpp"
 
 namespace SLAM {
@@ -72,7 +73,7 @@ double cellxsize, cellysize;	// size of one cell (meters)
 
 RobotLocation robotLocation;	// robot location in the map
 
-double map [gridSize][gridSize][OBS_TYPE_SIZE];  // map data
+std::vector<std::vector<std::vector<double>>> map;
 
 };
 

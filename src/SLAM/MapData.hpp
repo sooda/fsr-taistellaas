@@ -61,8 +61,8 @@ RobotLocation getRobotLocation();
 RobotLocation getGridLocation();
 	
 
-constexpr static int gridSize = 301;
-constexpr static double unitSize = 0.03;
+const static int gridSize = 301;
+const static double unitSize = 0.03;
 
 private:
 

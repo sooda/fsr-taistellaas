@@ -5,6 +5,7 @@
 #include "SLAM/SLAM.hpp"
 #include "SDL.h"
 #include <list>
+#include <vector>
 
 namespace Motion {
 
@@ -18,7 +19,7 @@ public:
 	void setSpeed(float speed, float angle);
 	void refreshSpeed(void);
 
-	void iterate(SLAM::RobotLocation current);
+	bool iterate(SLAM::RobotLocation current);
 	void avoidObstacle(float obstacleAngle);
 
 	typedef SLAM::RobotLocation Pose;
@@ -27,6 +28,8 @@ public:
 	void setRoute(const PoseList& route);
 	void drawMap(SDL_Surface* screen, int sx, int sy) const;
 	void setPose(Pose pose) ;
+	struct Ctrl;
+	Ctrl getCtrl() { return ctrl; }
 private:
 	MotionControl(const MotionControl&);
 	MotionControl& operator=(const MotionControl&);
@@ -35,12 +38,12 @@ private:
 
 	CJ2B2Client &interface;
 
-	struct {
+	struct Ctrl {
 		float speed, angle;
 	} ctrl;
 
 	struct {
-		float p, a, b;
+		float p, a, b, iiris;
 		float closeEnough;
 	} k;
 
@@ -57,11 +60,15 @@ private:
 	};
 
 	const Pose& currentMidpoint(void) const;
-	void nextMidpoint();
+	bool nextMidpoint();
 	void reloadWaypoint(Pose src);
 	static ArcParams ellipseParams(Pose source, Pose dest);
 	void buildMidpoints(ArcParams ellipse);
 	Pose lastPose;
+
+	// TODO: a nice log of all control settings -- alpha, theta and shit
+	struct HistPoint { Pose pose; Ctrl ctrl; };
+	std::vector<HistPoint> history;
 };
 
 }

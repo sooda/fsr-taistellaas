@@ -93,6 +93,10 @@ private:
 	} statistics;
 
 	struct {
+		float x, y;
+	} slamcalib;
+
+	struct {
 		float speed, angle;
 		bool enabled;
 	} manual;

@@ -8,18 +8,33 @@ using namespace std; // FIXME: remove, after fixing the debug prints
 namespace Motion {
 
 MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0) {
+#if 0
+	// simulator
 	const float max_speed=0.1;
 	const float max_possible_dist=1; // no waypoint >1m away
-	k.p = 4*max_speed/max_possible_dist;
-	k.a = 4*0.32;
-	k.b = 4*0.2;
-	k.closeEnough = 0.05;
+	k.p = 3*max_speed/max_possible_dist;
+	k.a = 3*0.32;
+	k.b = 3*0.2;
+#else
+	k.p = 0.1;
+	k.a = 0.3;
+	k.b = 0.0; // 0.3 (0.1 in sim)
+	k.iiris = k.p / M_PI;
+#endif
+	k.closeEnough = 0.15;
 	interface.iMotionCtrl->SetStop();
 	interface.iBehaviourCtrl->SetStart();
 }
 
 MotionControl::~MotionControl() {
 	interface.iMotionCtrl->SetStop();
+	cout << "--- BEGIN CTRL HISTORY ---" << endl;
+	int i = 0;
+	for (auto it = history.begin(); it != history.end(); ++it) {
+		cout << i << " " << it->pose.x << " " << it->pose.y << " " << it->pose.theta << " " << it->ctrl.speed << " " << it->ctrl.angle << endl;
+		i++;
+	}
+	cout << "--- END CTRL HISTORY ---" << endl;
 }
 
 // Set directional and angular speed to the robot controller immediately
@@ -33,36 +48,55 @@ void MotionControl::refreshSpeed(void) {
 	setSpeed(ctrl.speed, ctrl.angle);
 }
 
+// TODO: decide on how the angles work so that we don't need this shit
+float fixangles(float ang) {
+	if (ang > M_PI) return ang - 2*M_PI;
+	if (ang < -M_PI) return ang + 2*M_PI;
+	return ang; // hope so
+}
+
 // FIXME: initial position before navigating?
 void MotionControl::setPose(Pose pose) {
 	lastPose = pose;
 }
 
 // Main control loop to read current pose and update control values
-void MotionControl::iterate(SLAM::RobotLocation myPose) {
-	if (myPose.theta < 0) myPose.theta += 2*M_PI;
+// return false if no destination available (i.e. routing finished and need a new endpoint)
+bool MotionControl::iterate(SLAM::RobotLocation myPose) {
+	//if (myPose.theta < 0) myPose.theta += 2*M_PI;
+	// you spin me right round
+	cout << "hihii " << myPose.theta;
+	while (myPose.theta > M_PI)
+		myPose.theta -= 2*M_PI;
+	while (myPose.theta < -M_PI)
+		myPose.theta += 2*M_PI;
 	lastPose = myPose;
+	cout << " " << myPose.theta << endl;
+
 	cout << "ITERATE" << endl;
 	cout << midpoints.size() << endl;
 	if (midpoints.size() == 0) { // FIXME: kludge
 		cout << "\tNo midpoints" << endl;
 		ctrl.speed = 0;
 		ctrl.angle = 0;
-		return;
+		return true;
 	}
 	Pose midpdest = currentMidpoint();
 	float dx = midpdest.x - myPose.x;
 	float dy = midpdest.y - myPose.y;
 	// TODO: subtract mod2pi somehow so that almost2pi-littleover0=2pi-almost2pi+littleover0 (?)
-	if (myPose.theta<0.01)myPose.theta=2*M_PI;
+	//if (myPose.theta<0.01)myPose.theta=2*M_PI;
 	float dt = midpdest.theta - myPose.theta; // my_t-dest_t in the lecture slide
+	dt = fixangles(dt);
 	float rho = sqrt(dx * dx + dy * dy);
 	float ata = atan2(dy, dx);
-	if (ata < 0) ata += 2*M_PI;
+	//if (ata < 0) ata += 2*M_PI;
 	float alpha = ata - myPose.theta;
+	alpha = fixangles(alpha);
 	float beta = (dt - alpha);
+	beta = fixangles(beta);
 
-	ctrl.speed = k.p * rho;
+	ctrl.speed = k.p - k.iiris * fabsf(alpha);// * rho;
 	ctrl.angle = k.a * alpha - k.b * beta;
 
 	cout<< "\tdx = " << dx << endl;
@@ -76,11 +110,12 @@ void MotionControl::iterate(SLAM::RobotLocation myPose) {
 	cout<< "\tbeta = " << beta << " " << r2d(beta) << endl;
 	cout<< "\tv = " << ctrl.speed << endl;
 	cout<< "\tw = " << ctrl.angle << " " << r2d(ctrl.angle) << endl;
-
+	history.push_back(HistPoint{lastPose, Ctrl{ctrl.speed, ctrl.angle}});
 	if (rho < k.closeEnough) {
 		cout << "\tCLOSE ENOUGH!" << endl;
-		nextMidpoint();
+		return nextMidpoint();
 	}
+	return true;
 }
 
 
@@ -118,15 +153,17 @@ void MotionControl::drawMap(SDL_Surface* screen, int sx, int sy) const {
 	//cout << endl << "Starting le draw" << endl;
 	if (last != midpoints.end()) {
 		int i=1;
-		auto it = last;
+		auto next = last;
 		lineRGBA(screen, sx + lastPose.x * pxl_per_m, sy - lastPose.y * pxl_per_m, sx + last->x * pxl_per_m, sy - last->y * pxl_per_m, 255, 255, 0, 255);
-		for (++it; it != midpoints.end(); ++it) {
-			//cout << "Le line: " << sx + last->x * pxl_per_m << " " << sy + last->y * pxl_per_m << " " << sx + it->x * pxl_per_m << " " << sy + it->y * pxl_per_m << endl;
-			lineRGBA(screen, sx + last->x * pxl_per_m, sy - last->y * pxl_per_m, sx + it->x * pxl_per_m, sy - it->y * pxl_per_m, 255, 255, 255, 255);
+		for (++next; ; ++next) {
 			float arrowx = cos(last->theta), arrowy = sin(last->theta);
-
 			lineRGBA(screen, sx + last->x * pxl_per_m, sy - last->y * pxl_per_m, sx + (last->x+arrowx) * pxl_per_m, sy - (last->y+arrowy) * pxl_per_m, 255-255*i/midpoints.size(), 255*i/midpoints.size(), 0, 255);
-			last = it;
+
+			if (next == midpoints.end())
+				break;
+
+			lineRGBA(screen, sx + last->x * pxl_per_m, sy - last->y * pxl_per_m, sx + next->x * pxl_per_m, sy - next->y * pxl_per_m, 255, 255, 255, 255);
+			last = next;
 			i++;
 		}
 
@@ -161,35 +198,27 @@ void MotionControl::setRoute(const PoseList& route) {
 void MotionControl::buildMidpoints(ArcParams ellipse) {
 	assert((midpoints.empty() && "One does not simply build midpoints while still old points available"));
 	cout << "Build midpoints." << endl;
-	const int steps = 6;
-	if (!ellipse.horizontal) {
-		const float step = M_PI / 2 / steps;
-		for (float t = 0; t < M_PI / 2 + step*0.5; t += step) {
-			cout << "\tMidpoint " << t << endl;
-			float x = ellipse.ox + ellipse.a * cos(t); // + ox
-			float y = ellipse.oy + ellipse.b * sin(t); // + oy
-			float dx = ellipse.a * -sin(t);
-			float dy = ellipse.b * cos(t);
-			float theta = atan2(dy, dx);
-			if (theta < 0) theta += 2*M_PI;
-			cout << "\t\tAt pos " << x << " " << y << endl;
-			cout << "\t\tAt angle " << theta << endl;
-			midpoints.push_back(SLAM::RobotLocation(x, y, theta));
+	int steps = 6 * sqrt(ellipse.a * ellipse.a + ellipse.b * ellipse.b);
+	const float step = M_PI / 2 / steps;
+	for (float t = 0; t < M_PI / 2 + step*0.5; t += step) {
+		cout << "\tMidpoint " << t << endl;
+		float x, y, dx, dy;
+		if (!ellipse.horizontal) {
+			x = ellipse.ox + ellipse.a * cos(t); // + ox
+			y = ellipse.oy + ellipse.b * sin(t); // + oy
+			dx = ellipse.a * -sin(t);
+			dy = ellipse.b * cos(t);
+		} else {
+			x = ellipse.ox + ellipse.a * sin(t); // + ox
+			y = ellipse.oy + ellipse.b * cos(t); // + oy
+			dx = ellipse.a * cos(t);
+			dy = ellipse.b * -sin(t);
 		}
-	} else {
-		const float step = M_PI / 2 / steps;
-		for (float t = 0; t < M_PI / 2 + step*0.5; t += step) {
-			cout << "\tMidpoint " << t << endl;
-			float x = ellipse.ox + ellipse.a * sin(t); // + ox
-			float y = ellipse.oy + ellipse.b * cos(t); // + oy
-			float dx = ellipse.a * cos(t);
-			float dy = ellipse.b * -sin(t);
-			float theta = atan2(dy, dx);
-			if (theta < 0) theta += 2*M_PI;
-			cout << "\t\tAt pos " << x << " " << y << endl;
-			cout << "\t\tAt angle " << theta << endl;
-			midpoints.push_back(SLAM::RobotLocation(x, y, theta));
-		}
+		float theta = atan2(dy, dx);
+		//if (theta < 0) theta += 2*M_PI;
+		cout << "\t\tAt pos " << x << " " << y << endl;
+		cout << "\t\tAt angle " << theta << endl;
+		midpoints.push_back(SLAM::RobotLocation(x, y, theta));
 	}
 	nextMidpoint(); // FIXME -- this erases the first from the list, we're on that when starting..
 }
@@ -198,7 +227,7 @@ void MotionControl::buildMidpoints(ArcParams ellipse) {
 MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 	cout << "ellipse params from " << source.x << " " << source.y << " " << source.theta << " to " << dest.x << "," << dest.y << "," << dest.theta << endl;
 	ArcParams p;
-	static const float eps = 0.01;
+	static const float eps = 20*M_PI/180;
 	if (floateq(source.theta, DIR_UP, eps) || floateq(source.theta, DIR_DOWN, eps)) {
 		cout << "\tVertical" << endl;
 		// facing up or down
@@ -224,8 +253,9 @@ MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
 
 // Remove the current midpoint and update target waypoint to be the next one
 // Go to next waypoint and update midpoint list if all midpoints have been consumed
-void MotionControl::nextMidpoint(void) {
-	midpoints.pop_front();
+// return false if no midpoint available
+bool MotionControl::nextMidpoint(void) {
+midpoints.pop_front();
 	if (midpoints.empty()) {
 		Pose lastWaypoint = waypoints.front();
 		waypoints.pop_front();
@@ -233,10 +263,11 @@ void MotionControl::nextMidpoint(void) {
 			dPrint(0, "reload new waypoint");
 			reloadWaypoint(lastWaypoint);
 		} else {
-			// TODO: inform the main planner
-			// (note: tried to get next, not yet finished)
+			// finished with current route -- cannot continue
+			return false;
 		}
 	}
+	return true;
 }
 
 // TODO

@@ -48,22 +48,35 @@ Robot::~Robot() {
 void Robot::navigate(void) {
 	// navigation.findRoute(my_final_dest_from_planner); // MIDTERM: not used yet -- navigation has a static route
 	auto route = navigation.getRoute();
+	// FIXME: currently move start point to end - does the route need the starting point if it's always the same as current pose? is it always the same?
+	route.push_back(route.front());
 	route.pop_front();
 	motionControl.setRoute(route);
 }
 
 void Robot::threadMain(void) {
-	while (lastMeas.pose.get().x == 0) ownSleep_ms(1);
-	auto currentPos = lastMeas.pose.get();
-	SLAM::RobotLocation p = SLAM::RobotLocation(currentPos.x, currentPos.y, currentPos.a);
-	motionControl.setPose(p);
+	SLAM::RobotLocation slamloc;
+	while (slamloc.x == 0 && slamloc.y == 0) {
+		slamloc = slam.getCurrentMapData().getRobotLocation();
+		ownSleep_ms(1);
+	}
+	// robot starts in these coordinates in our (simulator's/motioncontrol's) system
+	// slam coordinate is out of sync, but in correct orientation; calibrate only location
+	float startx = 3, starty = 2.7;
+	slamcalib.x = startx - slamloc.x;
+	slamcalib.y = starty - slamloc.y;
+	slamloc.x = startx;
+	slamloc.y = starty;
+	motionControl.setPose(slamloc);
 	navigate(); // MIDTERM: what.
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
 		if (!manual.enabled) {
-			auto currentPos = lastMeas.pose.get();
-			SLAM::RobotLocation p = SLAM::RobotLocation(currentPos.x, currentPos.y, currentPos.a);
-			motionControl.iterate(p);
+			SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
+			p.x += slamcalib.x;
+			p.y += slamcalib.y;
+			if (!motionControl.iterate(p))
+				navigate();
 		}
 		ownSleep_ms(100); // TODO: determine good value to synch with motor control loop
 	}
@@ -192,6 +205,14 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 
 	info.push_back("Frames drawn:      "
 			+ lexical_cast(frameno + 1) + " " + lexical_cast((frameno+1) / secs) + "/s");
+	MaCI::Position::TPose2D pose = lastMeas.pose.get();
+	info.push_back("Odometry pose: " + lexical_cast(pose.x) + " " + lexical_cast(pose.y) + " " + lexical_cast(pose.a));
+	SLAM::RobotLocation slamloc = slam.getCurrentMapData().getRobotLocation();
+	info.push_back("Map pose: " + lexical_cast(slamloc.x) + " " + lexical_cast(slamloc.y) + " " + lexical_cast(slamloc.theta));
+	slamloc.x += slamcalib.x;
+	slamloc.y += slamcalib.y;
+	info.push_back("Map pose corrected: " + lexical_cast(slamloc.x) + " " + lexical_cast(slamloc.y) + " " + lexical_cast(slamloc.theta));
+	info.push_back("Ctrlr: v=" + lexical_cast(motionControl.getCtrl().speed) + ", w=" + lexical_cast(motionControl.getCtrl().angle));
 
 
 	MaCI::Image::CImageContainer image = lastMeas.image.get();
@@ -217,8 +238,8 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 		info.push_back("Manual steering");
 	} else {
 		info.push_back("Automatic steering");
-		motionControl.drawMap(screen, 10, win_height-1-10);
 	}
+	motionControl.drawMap(screen, 10, win_height-1-10);
 
 	int y = 200;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {

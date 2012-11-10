@@ -242,7 +242,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 	if (lastLaserData.size()) {
 		float min_d = 1000;
 		MaCI::Ranging::TDistance min_dist;
-		float scale = 50; // scales from meters to screen pixels
+		float scale = 100; // scales from meters to screen pixels (mulppi saatana)
 		int min_x_end = 0;
 		int min_y_end = 0;
 		int x_origin = window_width/2;

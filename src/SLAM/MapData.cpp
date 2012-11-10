@@ -3,6 +3,9 @@
 
 namespace SLAM {
 
+const int MapData::gridSize = 301;
+const double MapData::unitSize = 0.03;
+
 MapData::MapData(RobotLocation initial)
 	: xdim(gridSize), ydim(gridSize),
 	  xsize(gridSize*unitSize), ysize(gridSize*unitSize),

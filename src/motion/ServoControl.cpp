@@ -9,26 +9,10 @@
 
 using namespace Motion;
 
-ServoControl::ServoControl(MaCI::MachineCtrl::CMachineCtrlClient *machine)
-	: iMachine(machine), iServoCtrl(NULL)
+ServoControl::ServoControl(CJ2B2Client &interface)
+	: interface(interface)
 {
-	// Get component list
-	MaCI::MachineCtrl::TMaCIMachineComponents comp;
-	iMachine->GetMachineComponents(comp);
-
-	// If the list has any components ...
-	if (comp.size() > 0) {
-		iServoCtrl = iMachine->GetJointGroupCtrlClient("ServoCtrl", true);
-	}
-	else {
-		// No components! Propably error connecting.
-		dPrintLCRed(ODERROR,"WARNING: No services found with given parameters!");
-	}
-}
-
-ServoControl::~ServoControl()
-{
-	// TODO Auto-generated destructor stub
+	iServoCtrl = interface.iServoCtrl;
 }
 
 void ServoControl::TestMovement()
@@ -37,8 +21,6 @@ void ServoControl::TestMovement()
 	float ptu_tilt = 0.0;
 	float ptu_pan_delta = 0.0;
 	float ptu_tilt_delta = 0.0;
-
-//	float M_PI =
 
     if (iServoCtrl)
     {

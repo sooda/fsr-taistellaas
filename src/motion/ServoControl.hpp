@@ -1,4 +1,5 @@
 #include "MachineCtrlClient.hpp"
+#include "J2B2-API.hpp"
 
 
 /*
@@ -25,10 +26,8 @@ public:
 	  KServoUserServo_3       ///< User defined servo 3 (on Ch 5)
 	};
 
-	ServoControl(MaCI::MachineCtrl::CMachineCtrlClient*);
-	ServoControl(const ServoControl&); // unimplemented
+	ServoControl(CJ2B2Client&);
 
-	virtual ~ServoControl();
 	void TestMovement();
 	float getPosition(ServoControl::EServo);
 	bool setPosition(ServoControl::EServo, float);
@@ -36,7 +35,7 @@ public:
 	ServoControl operator=(const ServoControl&); // unimplemented
 
 private:
-	MaCI::MachineCtrl::CMachineCtrlClient *iMachine;
+	CJ2B2Client &interface;
 	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl;  ///< PTU of camera
 };
 

@@ -64,7 +64,7 @@ void Camutil::FindBalls (Mat src)
 		circle( src, center, (int)radius * 1.2, color, 2);
 	}
 
-	imshow( "origin", src);
+//	imshow( "origin", src);
 	imshow( "padam", dst);
 
 	waitKey(0);

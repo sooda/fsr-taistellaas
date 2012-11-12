@@ -12,7 +12,7 @@
 #define dPan Motion::ServoControl::KServoCameraPTUPan
 #define dTilt Motion::ServoControl::KServoCameraPTUTilt
 
-#define FOV 50.0
+#define FOV 66.58 // degrees = 1.1621 rads
 
 /*
  * Camera and object recognition module
@@ -35,11 +35,7 @@ public:
 
 	// constructor initialises the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine);
-
-	// copy constructor
-	Camera(const cam::Camera&);
-	Camera operator=(const Camera&);
+	Camera(CJ2B2Client&);
 
 	// destructor
 	~Camera();
@@ -50,19 +46,16 @@ public:
 
 	// updates data from the camera and recognise objects
 	void updateCameraData();
+	MaCI::Image::CImageContainer getCameraImage();
 
 	// Calibrate camera
 	bool calibrateCamera();
 
 
 private:
+	CJ2B2Client &interface;
 
-	MaCI::MachineCtrl::CMachineCtrlClient *machineCtrl;
-	MaCI::Image::CImageClient *cameraClient;
 	MaCI::Image::CImageContainer cameraImage;
-
-
-//	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl
 
 	// distances
 //	MaCI::Ranging::TDistance lastDistance;
@@ -79,8 +72,6 @@ private:
 	void checkCalibration();
 
 	// TODO: add some functions to recognise objects
-
-	void showImage();
 
 	Eigen::Vector2f getCamRotation();
 	Eigen::Matrix3f getObjectRotation(const float, const float);

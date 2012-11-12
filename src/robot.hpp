@@ -6,6 +6,8 @@
 #include "J2B2-API.hpp"
 #include "SLAM/includes.hpp"
 #include "motion/motioncontrol.hpp"
+#include "motion/ServoControl.hpp"
+#include "cam/Camera.hpp"
 #include "navi/navigation.hpp"
 
 // a measurement with a lock for safely transferring data between threads
@@ -75,8 +77,11 @@ private:
 
 	CJ2B2Client& j2b2;
 	Motion::MotionControl motionControl;
+	Motion::ServoControl servoControl;
 	SLAM::SLAM slam;
 	Navi::Navigation navigation;
+	cam::Camera camera;
+
 
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;

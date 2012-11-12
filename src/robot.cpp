@@ -10,9 +10,13 @@ Robot::Robot(CJ2B2Client& j2b2)
 		: CThread(NUM_THREADS), j2b2(j2b2),
 		motionControl(j2b2),
 		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
+		servoControl(j2b2),
+		navigation(),
+		camera(j2b2),
 		lastMeas(),
 		statistics(),
-		manual() {
+		manual()
+	{
 	// sanity check: are the necessary services available?
 	if (!j2b2.iPositionOdometry)
 		throw std::runtime_error("Odometry not found");
@@ -110,6 +114,16 @@ void Robot::threadSense(void) {
 
 		}
 
+		// Fetch image from robot using Camera module
+		try {
+			camera.updateCameraData();
+			lastMeas.image.set(camera.getCameraImage());
+			statistics.camera++;
+		} catch ( ... ) {
+			dPrint(1, "WTF, got image data with no data");
+		}
+
+		/*
 		MaCI::Image::CImageData imgData;
 		if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
 			MaCI::Image::CImageContainer image;
@@ -120,7 +134,8 @@ void Robot::threadSense(void) {
 				dPrint(1, "WTF, got image data with no data");
 			}
 		}
-
+		*/
+		
 		// TODO: actually use the additional data for something
 		// timestamp sounds useful
 		MaCI::Ranging::TDistanceHeader laserHeader;

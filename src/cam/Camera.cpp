@@ -14,22 +14,14 @@
 using namespace MaCI::Image;
 using namespace Eigen;
 using namespace std;
+using namespace cv;
 
 namespace cam {
 
-Camera::Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine)
-	: machineCtrl(machine), cameraClient(NULL),
-	  cameraImage(CImageContainer()), calibrated(false), show_image(true),
-	  servoCtrl(Motion::ServoControl(machine))
+Camera::Camera(CJ2B2Client &interface)
+	: interface(interface), cameraImage(CImageContainer()), calibrated(false),
+	  show_image(false), servoCtrl(interface)
 {
-	// Get component list
-	MaCI::MachineCtrl::TMaCIMachineComponents comp;
-	machineCtrl->GetMachineComponents(comp);
-
-	// If the list has any components ...
-	if (comp.size() > 0) {
-		cameraClient = machineCtrl->GetImageClient("CameraFront", true);
-	}
 }
 
 Camera::~Camera()
@@ -46,8 +38,12 @@ void Camera::updateCameraData()
 {
 	this->checkCalibration();
 	this->getCameraData();
-	// process data from camera
-	this->showImage();
+
+	// show image in separate window
+	if (show_image) {
+		Mat src = Camutil::imgToMat(this->getCameraImage());
+		Camutil::FindBalls(src);
+	}
 }
 
 void Camera::getCameraData()
@@ -57,11 +53,11 @@ void Camera::getCameraData()
 
 	MaCI::Image::CImageData imgData;
 
-	if (!this->cameraClient) {
+	if (!interface.iImageCameraFront) {
 		throw ERR_CAMERA_CLIENT_INITIALIZATION;
 	}
 
-	r = this->cameraClient->GetImageData(imgData, &imgSeq, 0);
+	r = interface.iImageCameraFront->GetImageData(imgData, &imgSeq, 0);
 	if (r) {
 		throw ERR_GET_IMAGE_DATA;
 	}
@@ -76,6 +72,11 @@ void Camera::getCameraData()
 
 }
 
+CImageContainer Camera::getCameraImage()
+{
+	return this->cameraImage;
+}
+
 void Camera::checkCalibration()
 {
 	if (!this->calibrated) calibrateCamera();
@@ -85,65 +86,6 @@ bool Camera::calibrateCamera()
 {
 	// TODO: implement
 	return (calibrated = true);
-}
-void Camera::showImage()
-{
-	using namespace cv;
-	using namespace std;
-
-	Mat src; Mat src_gray;
-	int thresh = 100;
-	RNG rng(12345);
-
-	/// Load source image and convert it to gray
-	src = imread( "floorball.jpg", 1 );
-
-	/// Convert image to gray and blur it
-	cvtColor( src, src_gray, CV_BGR2GRAY );
-	blur( src_gray, src_gray, Size(3,3) );
-
-	/// Create Window
-	string source_window = "Source";
-	namedWindow( source_window, CV_WINDOW_AUTOSIZE );
-	imshow( source_window, src );
-
-	Mat threshold_output;
-	vector<vector<Point> > contours;
-	vector<Vec4i> hierarchy;
-
-	/// Detect edges using Threshold
-	threshold(src_gray, threshold_output, thresh, 255, THRESH_BINARY);
-	/// Find contours
-	findContours(threshold_output, contours, hierarchy, CV_RETR_TREE,
-			CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-
-	/// Approximate contours to polygons + get bounding rects and circles
-	vector<vector<Point> > contours_poly(contours.size());
-//	vector<Rect> boundRect(contours.size());
-	vector<Point2f> center(contours.size());
-	vector<float> radius(contours.size());
-
-	for (size_t i = 0; i < contours.size(); i++) {
-		approxPolyDP(Mat(contours[i]), contours_poly[i], 3, true);
-//		boundRect[i] = boundingRect(Mat(contours_poly[i]));
-		minEnclosingCircle(contours_poly[i], center[i], radius[i]);
-	}
-
-	/// Draw polygonal contour + bonding rects + circles
-	Mat drawing = Mat::zeros(threshold_output.size(), CV_8UC3);
-	for (size_t i = 0; i < contours.size(); i++) {
-		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-		drawContours(drawing, contours_poly, i, color, 1, 8, vector<Vec4i> (), 0, Point());
-
-		// rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0 );
-
-		if (radius[i] < 20) continue;
-		circle(drawing, center[i], (int) radius[i], color, 2, 8, 0);
-	}
-
-	/// Show in a window
-	namedWindow("Contours", CV_WINDOW_AUTOSIZE);
-	imshow("Contours", drawing);
 }
 
 Eigen::Vector2f Camera::getCamRotation()
@@ -217,8 +159,6 @@ void Camera::getPositionOfTargets()
     float distance = sqrt(t.x() * t.x() + t.y() * t.y());
 
     cout << "dist: " << distance << endl;
-
-
 
 }
 

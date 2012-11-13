@@ -79,11 +79,17 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		int ymax = gfsmap->getMapSizeY();
 	
 		if (x0 == -1 && y0 == -1 && x1 == -1 && y1 == -1) {
-			x0 = 0;
+
+			x0 = newLoc.x - MapData::gridSize/2;
+			x1 = newLoc.x + MapData::gridSize/2;
+			y0 = newLoc.y - MapData::gridSize/2;
+			y1 = newLoc.y + MapData::gridSize/2;
+
+/*  		x0 = 0;
 			y0 = 0;
 			x1 = xmax;
 			y1 = ymax;
-	
+ 	
 			for (int x = 0; x < xmax; x++) {
 				for (int y = 0; y < ymax; y++) {
 					if (gfsmap->cell(x,y) > 0.5) {
@@ -140,7 +146,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 				if (y1 < ymax) {
 					y1++;
 				}
-			}
+			}*/
 		}
 	
 		if(x0 != -1 && y0 != -1 && x1 != -1 && y1 != -1) {	

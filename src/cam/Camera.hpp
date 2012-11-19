@@ -70,6 +70,7 @@ private:
 
 	void getCameraData();
 	void checkCalibration();
+	bool ballsInImage();
 
 	// TODO: add some functions to recognise objects
 

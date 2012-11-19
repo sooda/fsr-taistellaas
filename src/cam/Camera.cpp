@@ -46,6 +46,11 @@ void Camera::updateCameraData()
 	}
 }
 
+bool Camera::ballsInImage() {
+	Mat src = Camutil::imgToMat(this->getCameraImage());
+	return Camutil::FindBalls(src);
+}
+
 void Camera::getCameraData()
 {
 	bool r;

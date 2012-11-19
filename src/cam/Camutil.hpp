@@ -24,7 +24,7 @@ public:
 	Camutil();
 
 	static cv::Mat imgToMat (MaCI::Image::CImageContainer);
-	static void FindBalls (cv::Mat);
+	static bool FindBalls (cv::Mat);
 
 private:
 

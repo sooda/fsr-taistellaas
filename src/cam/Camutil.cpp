@@ -26,11 +26,12 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	return img;
 }
 
-void Camutil::FindBalls (Mat src)
+bool Camutil::FindBalls (Mat src)
 {
 	const int limit_h = 10;
 	const int limit_s = 50;
 	const int limit_v = 90;
+	bool found = false;
 
 	Mat dst;
 	cvtColor(src, dst, CV_BGR2HSV);
@@ -52,6 +53,7 @@ void Camutil::FindBalls (Mat src)
 
 	for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
 	{
+		found = true;
 		Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
 
 		Point2f center;
@@ -67,8 +69,9 @@ void Camutil::FindBalls (Mat src)
 //	imshow( "origin", src);
 	imshow( "padam", dst);
 
-	waitKey(0);
+//	waitKey(0);
 
+	return found;
 
 }
 

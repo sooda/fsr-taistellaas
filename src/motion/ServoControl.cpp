@@ -31,6 +31,36 @@ ServoControl::~ServoControl()
 	// TODO Auto-generated destructor stub
 }
 
+void ServoControl::Container(float angle)
+{
+	
+
+    if (iServoCtrl)
+    {
+
+
+		if (angle > M_PI/2) angle = M_PI/2;
+		else if (angle < 0) angle = 0;
+	
+		
+		int success_sent = iServoCtrl->SetPosition(ptu_pan, KServoUserServo_1); //Ch 3
+		
+		// Check if was succesfully sent and print
+		if (succes_sent) {
+			float pos;
+			iServoCtrl->GetPosition(KServiUserServo_1, pos, 500); //Servo, variable, timeout
+			
+			dPrint(3,"Container opening to %.3f, tilt:%.3f", pos);
+
+		
+		} else {
+			// Error
+		}
+    }
+
+}
+
+
 void ServoControl::TestMovement()
 {
 	float ptu_pan = 0.0;

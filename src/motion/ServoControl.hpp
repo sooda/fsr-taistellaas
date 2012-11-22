@@ -29,6 +29,7 @@ public:
 	ServoControl(const ServoControl&); // unimplemented
 
 	virtual ~ServoControl();
+	void Container(float);
 	void TestMovement();
 	float getPosition(ServoControl::EServo);
 	bool setPosition(ServoControl::EServo, float);

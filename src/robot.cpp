@@ -10,6 +10,8 @@ Robot::Robot(CJ2B2Client& j2b2)
 		: CThread(NUM_THREADS), j2b2(j2b2),
 		motionControl(j2b2),
 		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
+		navigation(),
+		servos(*j2b2.iServoCtrl),
 		lastMeas(),
 		statistics(),
 		manual() {
@@ -305,6 +307,14 @@ void Robot::handleKey(int type, SDLKey key) {
 				break;
 			case SDLK_RETURN:
 				manual.enabled = false;
+				break;
+			case SDLK_h:
+				servos.Container(0);
+				dPrint(1, "Omg 1");
+				break;
+			case SDLK_j:
+				servos.Container(M_PI/2-0.01);
+				dPrint(1, "Omg 2");
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

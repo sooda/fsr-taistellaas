@@ -35,7 +35,7 @@ public:
 
 	// constructor initialises the Camera module
 	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine);
+	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine, Motion::ServoControl& servos);
 
 	// copy constructor
 	Camera(const cam::Camera&);
@@ -71,7 +71,7 @@ private:
 	bool calibrated;
 	bool show_image;
 
-	Motion::ServoControl servoCtrl;
+	Motion::ServoControl& servoCtrl;
 
 
 

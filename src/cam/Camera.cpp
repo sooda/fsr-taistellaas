@@ -17,10 +17,10 @@ using namespace std;
 
 namespace cam {
 
-Camera::Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine)
+Camera::Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine, Motion::ServoControl& servos)
 	: machineCtrl(machine), cameraClient(NULL),
 	  cameraImage(CImageContainer()), calibrated(false), show_image(true),
-	  servoCtrl(Motion::ServoControl(machine))
+	  servoCtrl(servos)
 {
 	// Get component list
 	MaCI::MachineCtrl::TMaCIMachineComponents comp;

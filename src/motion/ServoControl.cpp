@@ -9,114 +9,45 @@
 
 using namespace Motion;
 
-ServoControl::ServoControl(MaCI::MachineCtrl::CMachineCtrlClient *machine)
-	: iMachine(machine), iServoCtrl(NULL)
+ServoControl::ServoControl(MaCI::JointGroupCtrl::CJointGroupCtrlClient& servoCtrl) : servoCtrl(servoCtrl)
 {
-	// Get component list
-	MaCI::MachineCtrl::TMaCIMachineComponents comp;
-	iMachine->GetMachineComponents(comp);
-
-	// If the list has any components ...
-	if (comp.size() > 0) {
-		iServoCtrl = iMachine->GetJointGroupCtrlClient("ServoCtrl", true);
-	}
-	else {
-		// No components! Propably error connecting.
-		dPrintLCRed(ODERROR,"WARNING: No services found with given parameters!");
-	}
-}
-
-ServoControl::~ServoControl()
-{
-	// TODO Auto-generated destructor stub
 }
 
 void ServoControl::Container(float angle)
 {
+
+#if 0
+	if (angle > M_PI/2) angle = M_PI/2;
+	else if (angle < 0) angle = 0;
+#endif
 	
-
-    if (iServoCtrl)
-    {
-
-
-		if (angle > M_PI/2) angle = M_PI/2;
-		else if (angle < 0) angle = 0;
+	int success_sent = servoCtrl.SetPosition(angle, KServoUserServo_1); //Ch 3
 	
+	// Check if was succesfully sent and print
+	if (success_sent) {
+		float pos;
+		servoCtrl.GetPosition(KServoUserServo_1, pos, 500); //Servo, variable, timeout
 		
-		int success_sent = iServoCtrl->SetPosition(ptu_pan, KServoUserServo_1); //Ch 3
-		
-		// Check if was succesfully sent and print
-		if (succes_sent) {
-			float pos;
-			iServoCtrl->GetPosition(KServiUserServo_1, pos, 500); //Servo, variable, timeout
-			
-			dPrint(3,"Container opening to %.3f, tilt:%.3f", pos);
+		dPrint(1,"Container opening to %.3f", pos);
 
-		
-		} else {
-			// Error
-		}
-    }
-
-}
-
-
-void ServoControl::TestMovement()
-{
-	float ptu_pan = 0.0;
-	float ptu_tilt = 0.0;
-	float ptu_pan_delta = 0.0;
-	float ptu_tilt_delta = 0.0;
-
-//	float M_PI =
-
-    if (iServoCtrl)
-    {
-
-    	// Do movement
-		ptu_pan += ptu_pan_delta * M_PI/20;
-		ptu_tilt += ptu_tilt_delta * M_PI/20;
-
-		// Do value checking and limiting.
-		if (ptu_pan > M_PI/2) ptu_pan = M_PI/2;
-		else if (ptu_pan < -M_PI/2) ptu_pan = -M_PI/2;
-		if (ptu_tilt > M_PI/2) ptu_tilt = M_PI/2;
-		else if (ptu_tilt < -M_PI/2) ptu_tilt = -M_PI/2;
-
-		// Do control
-		int r = iServoCtrl->SetPosition(ptu_pan, KServoCameraPTUPan);
-		r &= iServoCtrl->SetPosition(ptu_tilt, KServoCameraPTUTilt);
-
-		if (r) {
-			float ppos,tpos;
-			iServoCtrl->GetPosition(KServoCameraPTUPan, ppos, 500);
-			iServoCtrl->GetPosition(KServoCameraPTUTilt, tpos, 500);
-			dPrint(3,"Camera now pointing to pan:%.3f, tilt:%.3f", ppos, tpos);
-
-			// Wait to stabilize
-			// ownSleep_ms(200);
-		} else {
-			// Some failure?
-		}
-    }
-
+	
+	} else {
+		// Error
+		dPrint(1, "fail!");
+	}
 }
 
 float ServoControl::getPosition(ServoControl::EServo servo)
 {
-	if (!iServoCtrl) return 0.0;
-
 	float pos;
 
-	iServoCtrl->GetPosition(servo, pos, 500);
+	servoCtrl.GetPosition(servo, pos, 500);
 	return pos;
 
 }
 
 bool ServoControl::setPosition(ServoControl::EServo servo, float pos)
 {
-	if (iServoCtrl) return false;
-
-	iServoCtrl->SetPosition(pos, servo);
+	servoCtrl.SetPosition(pos, servo);
 	return true;
 }

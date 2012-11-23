@@ -7,6 +7,7 @@
 #include "SLAM/includes.hpp"
 #include "motion/motioncontrol.hpp"
 #include "navi/navigation.hpp"
+#include "motion/ServoControl.hpp"
 
 // a measurement with a lock for safely transferring data between threads
 template <class T>
@@ -77,6 +78,7 @@ private:
 	Motion::MotionControl motionControl;
 	SLAM::SLAM slam;
 	Navi::Navigation navigation;
+	Motion::ServoControl servos;
 
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;

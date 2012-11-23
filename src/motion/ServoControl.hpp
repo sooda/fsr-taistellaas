@@ -25,20 +25,17 @@ public:
 	  KServoUserServo_3       ///< User defined servo 3 (on Ch 5)
 	};
 
-	ServoControl(MaCI::MachineCtrl::CMachineCtrlClient*);
-	ServoControl(const ServoControl&); // unimplemented
+	ServoControl(MaCI::JointGroupCtrl::CJointGroupCtrlClient& servoCtrl);
 
-	virtual ~ServoControl();
 	void Container(float);
-	void TestMovement();
 	float getPosition(ServoControl::EServo);
 	bool setPosition(ServoControl::EServo, float);
 
-	ServoControl operator=(const ServoControl&); // unimplemented
 
 private:
-	MaCI::MachineCtrl::CMachineCtrlClient *iMachine;
-	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl;  ///< PTU of camera
+	ServoControl(const ServoControl&); // unimplemented
+	ServoControl operator=(const ServoControl&); // unimplemented
+	MaCI::JointGroupCtrl::CJointGroupCtrlClient& servoCtrl;
 };
 
 }

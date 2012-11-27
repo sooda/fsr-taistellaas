@@ -32,12 +32,35 @@ bool Camutil::BallsInView (Mat src)
 	return !object.empty();
 }
 
-std::vector<Location> Camutil::FindBalls (Mat src, bool show_image)
-{
-	const int limit_h = 10;
-	const int limit_s = 50;
-	const int limit_v = 90;
+std::vector<Location> Camutil::FindNonTargets (Mat src) {
+	return FindBalls (src, false, false);
+}
 
+std::vector<Location> Camutil::FindBalls (Mat src) {
+	return FindBalls (src, false, true);
+}
+
+std::vector<Location> Camutil::FindBalls (Mat src, bool show_image) {
+	return FindBalls (src, show_image, true);
+}
+
+std::vector<Location> Camutil::FindBalls (Mat src, bool show_image, bool targets)
+{
+	int limit_h = 0;
+	int limit_s = 0;
+	int limit_v = 0;
+
+	if (targets) {
+		limit_h = 10;
+		limit_s = 50;
+		limit_v = 90;
+	}
+	else {
+		// TODO: !!
+		limit_h = 10;
+		limit_s = 50;
+		limit_v = 90;	}
+	
 	Mat dst;
 	cvtColor(src, dst, CV_BGR2HSV);
 	std::vector<Location> objects;

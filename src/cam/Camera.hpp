@@ -61,6 +61,7 @@ private:
 
 	// Position of the balls in a real world
 	std::vector<Location> balls;
+	std::vector<Location> nontargets;
 
 	bool calibrated;
 	bool show_image;

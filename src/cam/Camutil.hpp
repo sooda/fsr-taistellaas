@@ -38,7 +38,10 @@ public:
 
 	static cv::Mat imgToMat (MaCI::Image::CImageContainer);
 	static bool BallsInView (cv::Mat);
+	static std::vector<Location> FindNonTargets (cv::Mat);
+	static std::vector<Location> FindBalls (cv::Mat);
 	static std::vector<Location> FindBalls (cv::Mat, bool show_image);
+	static std::vector<Location> FindBalls (cv::Mat, bool show_image, bool targets);
 
 private:
 

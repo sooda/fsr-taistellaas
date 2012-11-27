@@ -21,8 +21,6 @@
 
 namespace cam {
 
-class Location { };
-
 class Camera {
 
 public:
@@ -40,43 +38,47 @@ public:
 	// destructor
 	~Camera();
 
-	// returns the array of location of the detected objects
-	// TODO: let's make a class for locations instead of array
-	Location* getDistanceToObjects();
-
 	// updates data from the camera and recognise objects
-	void updateCameraData();
+	void updateCameraData(SLAM::RobotLocation);
 	MaCI::Image::CImageContainer getCameraImage();
 
 	// Calibrate camera
 	bool calibrateCamera();
 
+	std::vector<Location> getPositionOfTargets();
+
 
 private:
 	CJ2B2Client &interface;
 
-	MaCI::Image::CImageContainer cameraImage;
+	// image data
+	struct cameradata_t {
+		MaCI::Image::CImageContainer cameraImage;
+		float tilt;
+		float pan;
+		SLAM::RobotLocation robotloc;
+	} cameradata;
 
-	// distances
-//	MaCI::Ranging::TDistance lastDistance;
-//	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
+	// Position of the balls in a real world
+	std::vector<Location> balls;
 
 	bool calibrated;
 	bool show_image;
 
 	Motion::ServoControl servoCtrl;
 
-
-
+	
+	
 	void getCameraData();
 	void checkCalibration();
 	bool ballsInImage();
-
+	
 	// TODO: add some functions to recognise objects
 
-	Eigen::Vector2f getCamRotation();
 	Eigen::Matrix3f getObjectRotation(const float, const float);
-	void getPositionOfTargets();
+	void updateCamServos();
+	void updatePositionOfTargets();
+	
 };
 
 }

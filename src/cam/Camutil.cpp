@@ -26,15 +26,21 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	return img;
 }
 
-bool Camutil::FindBalls (Mat src)
+bool Camutil::BallsInView (Mat src)
+{
+	std::vector<Location> object = FindBalls(src, false);
+	return !object.empty();
+}
+
+std::vector<Location> Camutil::FindBalls (Mat src, bool show_image)
 {
 	const int limit_h = 10;
 	const int limit_s = 50;
 	const int limit_v = 90;
-	bool found = false;
 
 	Mat dst;
 	cvtColor(src, dst, CV_BGR2HSV);
+	std::vector<Location> objects;
 
 	// tresholding
 	inRange(dst, Scalar(0, limit_s, limit_v), Scalar(limit_h, 255, 255), dst);
@@ -53,7 +59,6 @@ bool Camutil::FindBalls (Mat src)
 
 	for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
 	{
-		found = true;
 		Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
 
 		Point2f center;
@@ -64,14 +69,16 @@ bool Camutil::FindBalls (Mat src)
 		std::cout << idx << ": " << center << " " << radius << std::endl;
 
 		circle( src, center, (int)radius * 1.2, color, 2);
+		
+		objects.push_back(Location(center.x, center.y));
 	}
 
-//	imshow( "origin", src);
-	imshow( "padam", dst);
+	if (show_image)
+		imshow( "padam", dst);
 
 //	waitKey(0);
 
-	return found;
+	return objects;
 
 }
 

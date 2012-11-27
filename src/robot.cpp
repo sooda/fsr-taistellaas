@@ -9,8 +9,8 @@
 Robot::Robot(CJ2B2Client& j2b2)
 		: CThread(NUM_THREADS), j2b2(j2b2),
 		motionControl(j2b2),
-		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
 		servoControl(j2b2),
+		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
 		navigation(),
 		camera(j2b2),
 		lastMeas(),
@@ -116,9 +116,14 @@ void Robot::threadSense(void) {
 
 		// Fetch image from robot using Camera module
 		try {
-			camera.updateCameraData();
+			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
+
+			/* 
+			updateSLAM(...);
+			*/
+			
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");
 		}

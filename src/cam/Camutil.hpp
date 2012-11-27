@@ -16,6 +16,19 @@
 
 namespace cam {
 
+class Location {
+
+public:
+	// location in real world or object in an image
+
+	Location(double x_val, double y_val) 
+		: x(x_val), y(y_val) { }
+
+	double x;
+	double y;
+
+};
+
 class Camutil {
 
 public:
@@ -24,7 +37,8 @@ public:
 	Camutil();
 
 	static cv::Mat imgToMat (MaCI::Image::CImageContainer);
-	static bool FindBalls (cv::Mat);
+	static bool BallsInView (cv::Mat);
+	static std::vector<Location> FindBalls (cv::Mat, bool show_image);
 
 private:
 

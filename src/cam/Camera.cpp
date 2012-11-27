@@ -19,7 +19,7 @@ using namespace cv;
 namespace cam {
 
 Camera::Camera(CJ2B2Client &interface)
-	: interface(interface), cameraImage(CImageContainer()), calibrated(false),
+	: interface(interface), calibrated(false),
 	  show_image(false), servoCtrl(interface)
 {
 }
@@ -29,26 +29,21 @@ Camera::~Camera()
 	// empty
 }
 
-Location* Camera::getDistanceToObjects()
+void Camera::updateCameraData(SLAM::RobotLocation robloc)
 {
-	return new Location();
-}
-
-void Camera::updateCameraData()
-{
+	cameradata.robotloc = robloc;
+	this->updateCamServos();
 	this->checkCalibration();
 	this->getCameraData();
-
-	// show image in separate window
-	if (show_image) {
-		Mat src = Camutil::imgToMat(this->getCameraImage());
-		Camutil::FindBalls(src);
-	}
+	this->updatePositionOfTargets();
+	
+//	Mat src = Camutil::imgToMat(this->getCameraImage());
+//	Camutil::FindBalls(src, show_image);
 }
 
 bool Camera::ballsInImage() {
 	Mat src = Camutil::imgToMat(this->getCameraImage());
-	return Camutil::FindBalls(src);
+	return Camutil::BallsInView(src);
 }
 
 void Camera::getCameraData()
@@ -68,7 +63,7 @@ void Camera::getCameraData()
 	}
 
 	// Lock();
-	r = imgData.GetImage(cameraImage, NULL, true);
+	r = imgData.GetImage(cameradata.cameraImage, NULL, true);
 	// Unlock();
 
 	if (!r) {
@@ -79,7 +74,7 @@ void Camera::getCameraData()
 
 CImageContainer Camera::getCameraImage()
 {
-	return this->cameraImage;
+	return this->cameradata.cameraImage;
 }
 
 void Camera::checkCalibration()
@@ -93,14 +88,10 @@ bool Camera::calibrateCamera()
 	return (calibrated = true);
 }
 
-Eigen::Vector2f Camera::getCamRotation()
+void Camera::updateCamServos()
 {
-	float tilt = servoCtrl.getPosition(dTilt);
-	float pan = servoCtrl.getPosition(dPan);
-
-	Vector2f angles (tilt, pan);
-
-	return angles;
+	cameradata.tilt = servoCtrl.getPosition(dTilt);
+	cameradata.pan  = servoCtrl.getPosition(dPan);
 
 }
 
@@ -111,9 +102,8 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
     const float height = 480;
 
     // servos
-	Vector2f angles = getCamRotation();
-    const float tilt = angles(0);
-    const float pan = angles(1);
+    const float tilt = cameradata.tilt;
+    const float pan = cameradata.pan;
 
     const float fov = FOV / 360.0 * M_PI;
 
@@ -141,30 +131,42 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 
 }
 
-void Camera::getPositionOfTargets()
+void Camera::updatePositionOfTargets()
 {
-    // object
-    const int left = 320;
-    const int top = 240;
+	// find the objects in the current camera data
+	std::vector<Location> objects = Camutil::FindBalls(Camutil::imgToMat(this->getCameraImage()), show_image);
+	
+	balls.clear();
 
-	Matrix3f R = getObjectRotation(left, top);
+	for (int i = 0; i < objects.size(); i++) {
 
-	Vector3f T(0, 0, 1); // floor
-    Vector3f p(5, 0, 50); // position of the camera
-    Vector3f v(1, 0, 0); // direction of the view of the camera
-    Vector3f t(0,0,0);
+		Location ball = objects.at(i);
+	
+		Matrix3f R = getObjectRotation(ball.x, ball.y);
 
-    v = R.transpose() * v;
-    cout << v << endl;
+		Vector3f T(0, 0, 1); // floor
+		Vector3f p(5, 0, 50); // position of the camera
+		Vector3f v(1, 0, 0); // direction of the view of the camera
+		Vector3f t(0,0,0);
 
-    t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
+		v = R.transpose() * v;
+		cout << v << endl;
 
-    cout << "pallo: " << t << endl;
+		t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
 
-    float distance = sqrt(t.x() * t.x() + t.y() * t.y());
+		cout << "pallo: " << t << endl;
+		balls.push_back(Location(t.x(), t.y()));
 
-    cout << "dist: " << distance << endl;
+		float distance = sqrt(t.x() * t.x() + t.y() * t.y());
+		cout << "dist: " << distance << endl;
 
+	}
 }
+
+std::vector<Location> Camera::getPositionOfTargets()
+{
+	return balls;
+}
+
 
 }

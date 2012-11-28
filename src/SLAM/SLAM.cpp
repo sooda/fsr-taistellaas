@@ -189,6 +189,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
 	double dtheta = scaleDownDeltas*MapData::unitSize/(data.viewWidth*data.maxDist);
+	double r0 = 0.2;
 	double rMin = data.minDist;
 	double rMax = data.maxDist;	
 	double dr = scaleDownDeltas*MapData::unitSize;
@@ -200,10 +201,9 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "loc = " << data.location << std::endl;
 
 	for (double theta = thetaMin; theta < thetaMax; theta += dtheta) {
-		for (double r = rMin; r < rMax; r += dr) {
+		for (double r = r0; r < rMax; r += dr) {
 			double x = data.location.x + r*cos(theta);
 			double y = data.location.y + r*sin(theta);
-	//		std::cout << "x = " << x << " y = " << y << std::endl;
 			double wall = currentMapData.getValue(Location(x,y), MapData::WALL);
 			if (wall > 0.5) {
 				currentMapData.setValue(Location(x,y), type, -1.0); // occlusion
@@ -213,7 +213,9 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 			if (wall < -0.5) {
 				break; // unknown area
 			}
-			currentMapData.setValue(Location(x,y), type, 0.0); // empty
+			if (r > rMin) {
+				currentMapData.setValue(Location(x,y), type, 0.0); // empty
+			}
 		}
 	}
 

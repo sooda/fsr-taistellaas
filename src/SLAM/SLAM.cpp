@@ -292,20 +292,21 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		return;
 	}
 
-	for (int type = 0; type < 4; type++) {
+	for (int type_ = MapData::WALL; type_ != MapData::OBS_TYPE_SIZE; type_++) {
+		MapData::ObservationType type = (MapData::ObservationType)type_;
 
 		int x0 = 0;
 		int y0 = MapData::gridSize;
 
-		if (type == 1) {
+		if (type == MapData::TARGET) {
 			x0 = window_width - MapData::gridSize;
 			y0 = MapData::gridSize;
 		}
-		if (type == 2) {
+		if (type == MapData::OBSTACLE) {
 			x0 = 0;
 			y0 = window_height;
 		}
-		if (type == 3) {
+		if (type == MapData::GOAL) {
 			x0 = window_width - MapData::gridSize;
 			y0 = window_height;
 		}
@@ -313,15 +314,14 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		// draw the map
 		for (int x = 0; x < MapData::gridSize; x++) {
 			for (int y = 0; y < MapData::gridSize; y++) {
-				double wall = currentMapData.getCellValue(GridPoint(x,y), 
-					(MapData::ObservationType)type);
+				double wall = currentMapData.getCellValue(GridPoint(x,y), type);
 				int colorR = (int)(150+wall*100);
 				int colorG = (int)(150+wall*100);
 				int colorB = (int)(150+wall*100);
 
-				if (type == 1) colorR = 0;
-				if (type == 2) colorG = 0;
-				if (type == 3) colorB = 0;
+				if (type == MapData::TARGET) colorR = 0;
+				if (type == MapData::OBSTACLE) colorG = 0;
+				if (type == MapData::GOAL) colorB = 0;
 
 				pixelRGBA(screen, 
 					x0 + x, 

@@ -30,9 +30,9 @@ SLAM::SLAM(RobotLocation initial)
 
 // destructor
 SLAM::~SLAM() {
-	if (gfsmap) {
-		delete gfsmap;
-	}
+	//if (gfsmap) {
+	//	delete gfsmap;
+	//}
 }
 
 // can be called to get the current map data object
@@ -101,13 +101,13 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			}
 		}
 
-		/* testing
+		/*testing
 		ImageData test1(std::vector<std::pair<double,double> >(), 
-			currentMapData.getRobotLocation(), 1, 2, 1);
+			currentMapData.getRobotLocation(), 0.2, 0.5, 1);
 		updateImageData(test1, MapData::TARGET);
   
 		ImageData test2(std::vector<std::pair<double,double> >(), 
-			currentMapData.getRobotLocation(), 2, 4, 0.5);
+		currentMapData.getRobotLocation(), 0.5, 3, M_PI*66/180);
 		updateImageData(test2, MapData::OBSTACLE);
 
 		ImageData test3(std::vector<std::pair<double,double> >(), 
@@ -185,20 +185,21 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 // inform slam of some object at some location
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
-	double scaleDownDeltas = 0.9;
+	double scaleDownDeltas = 0.8;
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
-	double dtheta = scaleDownDeltas*MapData::unitSize/(data.viewWidth*data.maxDist);
+	double dtheta = scaleDownDeltas*MapData::unitSize/data.maxDist;
 	double r0 = 0.2;
 	double rMin = data.minDist;
-	double rMax = data.maxDist;	
+	double rMax = data.maxDist;
 	double dr = scaleDownDeltas*MapData::unitSize;
 
-	std::cout << "ImageData " << type << std::endl;
+/*	std::cout << "this = " << this << std::endl;
+	std::cout << "ImageData, type = " << type << std::endl;
 	std::cout << "thetaMin = " << thetaMin << " thetaMax = " << thetaMax << std::endl;
 	std::cout << "rmin = " << rMin << " rMax = " << rMax << std::endl;
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
-	std::cout << "loc = " << data.location << std::endl;
+	std::cout << "loc = " << data.location << std::endl; */
 
 	for (double theta = thetaMin; theta < thetaMax; theta += dtheta) {
 		for (double r = r0; r < rMax; r += dr) {

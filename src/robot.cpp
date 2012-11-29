@@ -98,7 +98,7 @@ void Robot::threadSense(void) {
 	// FIXME: separate events could be in different threads as they all have a timeout setting.
 	// It's maybe fine to poll them very fast (with a small timeout), though
 	int positionSeq = -1, laserSeq = -1, bumperSeq = -1;
-	unsigned int cameraSeq = 0;
+//	unsigned int cameraSeq = 0;
 	while (!IsRequestTermination()) {
 		// TODO: call motionControl.pollPosition(); or something here
 		MaCI::Position::CPositionData pd;
@@ -117,12 +117,10 @@ void Robot::threadSense(void) {
 		// Fetch image from robot using Camera module
 		try {
 			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
-			//MaCI::Image::CImageData imgData;
-			//if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) std::cout << "true" << std::endl;
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
 
-//			camera.updateToSLAM(slam);
+			camera.updateToSLAM(slam);
 
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");

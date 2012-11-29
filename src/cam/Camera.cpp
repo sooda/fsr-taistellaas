@@ -75,19 +75,38 @@ void Camera::getCameraData()
 
 }
 
-void Camera::updateToSLAM(SLAM::SLAM slam) {
+void Camera::updateToSLAM(SLAM::SLAM &slam) {
 
-	MapData::ObservationType type = MapData::TARGET; // object type
+	using namespace SLAM;
 
 	RobotLocation location = cameradata.robotloc; // location image was taken
 	double minDist = 0.5; // image front in m
 	double maxDist = 3; // image back in m
 	double viewWidth = M_PI*FOV/180; // image fov in rad
 
-	SLAM::ImageData data (std::vector<std::pair<double,double> >(), 
-			location, minDist, maxDist, viewWidth);
+	for (int type_ = MapData::TARGET; type_ != MapData::OBS_TYPE_SIZE; type_++) {
 
-	slam.void updateImageData(data, type);
+		MapData::ObservationType type = (MapData::ObservationType)type_;
+		std::vector<std::pair<double,double> > objects;
+
+		if (type == MapData::TARGET) {
+			// target locations in (dx,dy) from location robot was when image was taken
+		}
+		else if (type == MapData::OBSTACLE) {
+			// as above
+		}
+		else if (type == MapData::GOAL) {
+			// daa
+		}
+
+		ImageData data (objects, location, minDist, maxDist, viewWidth);
+
+		slam.updateImageData(data, type);
+
+	}
+
+
+
 
 }
 

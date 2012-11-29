@@ -5,7 +5,7 @@
 
 #include "MachineCtrlClient.hpp"
 #include "../J2B2-API.hpp"
-#include "../SLAM/SLAMutil.hpp"
+#include "../SLAM/includes.hpp"
 #include "../motion/ServoControl.hpp"
 #include "Camutil.hpp"
 
@@ -46,7 +46,7 @@ public:
 	bool calibrateCamera();
 
 	// update camera data to SLAM
-	void updateToSLAM(SLAM::SLAM slam);
+	void updateToSLAM(SLAM::SLAM &slam);
 
 	std::vector<Location> getPositionOfTargets();
 

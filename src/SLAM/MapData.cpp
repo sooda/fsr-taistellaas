@@ -42,28 +42,14 @@ double MapData::getCellValue(GridPoint xy, ObservationType type) {
 
 // used to set the value at some location of the map to another (from nearest cell)
 void MapData::setValue(Location xy, ObservationType type, double value) {
-	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
-		std::cerr << "MapData::setValue called with out of bouds value" << std::endl;
-		return;
-	}
-	else {
-		int x = xy.x/cellxsize;
-		int y = xy.y/cellysize;
-		map[x][y][type] = value;
-	}
+	GridPoint xyg = loc2grid(xy);
+	setCellValue(xyg, type, value);	
 }
 
 // used to get the value at some location of the map (goes to nearest cell)
 double MapData::getValue(Location xy, ObservationType type) {
-	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
-		std::cerr << "MapData::getValue called with out of bouds value" << std::endl;
-		return -1;
-	}
-	else {
-		int x = xy.x/cellxsize;
-    	int y = xy.y/cellysize;
-		return map[x][y][type];
-	}
+	GridPoint xyg = loc2grid(xy);
+	return getCellValue(xyg, type);
 }
 
 // used to set the location of the robot in meters

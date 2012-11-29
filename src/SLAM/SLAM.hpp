@@ -48,7 +48,7 @@ void updateOdometryData(RobotLocation delta);
 
 // inform slam of some object at some location
 // x and y are in meters in current map coordinates
-void informOfObservation(MapData::ObservationType type, Location xy); 
+void updateImageData(ImageData data, MapData::ObservationType type); 
 
 #ifndef _DONT_USE_SDL_
 // draws the laser scan on screen

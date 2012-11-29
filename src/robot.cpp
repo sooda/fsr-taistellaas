@@ -115,20 +115,18 @@ void Robot::threadSense(void) {
 		}
 
 		// Fetch image from robot using Camera module
+/*
 		try {
 			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
 
-			/* 
-			updateSLAM(...);
-			*/
-			
+//			updateSLAM(...);
+
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");
 		}
-
-		/*
+*/
 		MaCI::Image::CImageData imgData;
 		if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
 			MaCI::Image::CImageContainer image;
@@ -139,8 +137,7 @@ void Robot::threadSense(void) {
 				dPrint(1, "WTF, got image data with no data");
 			}
 		}
-		*/
-		
+
 		// TODO: actually use the additional data for something
 		// timestamp sounds useful
 		MaCI::Ranging::TDistanceHeader laserHeader;

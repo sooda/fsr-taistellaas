@@ -48,7 +48,7 @@ public:
 	// update camera data to SLAM
 	void updateToSLAM(SLAM::SLAM &slam);
 
-	std::vector<Location> getPositionOfTargets();
+	std::vector<SLAM::Location> getPositionOfTargets();
 
 
 private:
@@ -63,8 +63,8 @@ private:
 	} cameradata;
 
 	// Position of the balls in a real world
-	std::vector<Location> balls;
-	std::vector<Location> nontargets;
+	std::vector<SLAM::Location> balls;
+	std::vector<SLAM::Location> nontargets;
 
 	bool calibrated;
 	bool show_image;

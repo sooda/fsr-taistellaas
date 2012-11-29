@@ -139,13 +139,13 @@ class ImageData {
 
 public:
 
-	ImageData(std::vector<std::pair<double, double> > targets_,
+	ImageData(std::vector<Location> targets_,
 		RobotLocation location_, double minDist_, 
 		double maxDist_, double viewWidth_)
 		: targets(targets_), location(location_), minDist(minDist_),
 		  maxDist(maxDist_), viewWidth(viewWidth_) { }
 
-	std::vector<std::pair<double, double> > targets; 
+	std::vector<Location> targets;
 	// identified targets relative to the place where the image was taken
 	RobotLocation location; // where the image was taken
 	double minDist; // distance to the earer edge of the image in m

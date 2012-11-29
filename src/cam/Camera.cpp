@@ -22,6 +22,7 @@ Camera::Camera(CJ2B2Client &interface)
 	: interface(interface), calibrated(false),
 	  show_image(true), servoCtrl(interface)
 {
+	servoCtrl.TestMovement();
 }
 
 Camera::~Camera()
@@ -77,29 +78,27 @@ void Camera::getCameraData()
 
 void Camera::updateToSLAM(SLAM::SLAM &slam) {
 
-	using namespace SLAM;
-
-	RobotLocation location = cameradata.robotloc; // location image was taken
+	SLAM::RobotLocation location = cameradata.robotloc; // location image was taken
 	double minDist = 0.5; // image front in m
 	double maxDist = 3; // image back in m
 	double viewWidth = M_PI*FOV/180; // image fov in rad
 
-	for (int type_ = MapData::TARGET; type_ != MapData::OBS_TYPE_SIZE; type_++) {
+	for (int type_ = SLAM::MapData::TARGET; type_ != SLAM::MapData::OBS_TYPE_SIZE; type_++) {
 
-		MapData::ObservationType type = (MapData::ObservationType)type_;
-		std::vector<std::pair<double,double> > objects;
+		SLAM::MapData::ObservationType type = (SLAM::MapData::ObservationType)type_;
+		std::vector<SLAM::Location> objects;
 
-		if (type == MapData::TARGET) {
-			// target locations in (dx,dy) from location robot was when image was taken
+		if (type == SLAM::MapData::TARGET) {
+			objects = balls; // target locations in (dx,dy) from location robot was when image was taken
 		}
-		else if (type == MapData::OBSTACLE) {
-			// as above
+		else if (type == SLAM::MapData::OBSTACLE) {
+			objects= nontargets; // as above
 		}
-		else if (type == MapData::GOAL) {
+		else if (type == SLAM::MapData::GOAL) {
 			// daa
 		}
 
-		ImageData data (objects, location, minDist, maxDist, viewWidth);
+		SLAM::ImageData data (objects, location, minDist, maxDist, viewWidth);
 
 		slam.updateImageData(data, type);
 
@@ -131,6 +130,8 @@ void Camera::updateCamServos()
 	cameradata.tilt = servoCtrl.getPosition(dTilt);
 	cameradata.pan  = servoCtrl.getPosition(dPan);
 
+	std::cout << "tilt " << dTilt << " : " << cameradata.tilt << std::endl;
+	std::cout << "pan " << dPan << " : " << cameradata.pan << std::endl;
 }
 
 Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
@@ -183,7 +184,7 @@ void Camera::updatePositionOfTargets()
 		Matrix3f R = getObjectRotation(ball.x, ball.y);
 
 		Vector3f T(0, 0, 1); // floor
-		Vector3f p(5, 0, 50); // position of the camera
+		Vector3f p(0.17, 0, 0.76); // position of the camera
 		Vector3f v(1, 0, 0); // direction of the view of the camera
 		Vector3f t(0,0,0);
 
@@ -192,8 +193,14 @@ void Camera::updatePositionOfTargets()
 
 		t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
 
+		double theta = cameradata.robotloc.theta;
+		double x = t.x() * cos(theta) + t.y() * sin(theta);
+		double y = t.x() * sin(theta) - t.y() * sin(theta);
+
 		cout << "pallo: " << t << endl;
-		balls.push_back(Location(t.x(), t.y()));
+		balls.push_back(SLAM::Location(x, y));
+
+		cout << "Cam: Target at " << x << ", " << y << endl;
 
 		float distance = sqrt(t.x() * t.x() + t.y() * t.y());
 		cout << "dist: " << distance << endl;
@@ -201,7 +208,7 @@ void Camera::updatePositionOfTargets()
 	}
 }
 
-std::vector<Location> Camera::getPositionOfTargets()
+std::vector<SLAM::Location> Camera::getPositionOfTargets()
 {
 	return balls;
 }

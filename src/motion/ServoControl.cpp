@@ -6,6 +6,7 @@
  */
 
 #include "ServoControl.hpp"
+# include <iostream>
 
 using namespace Motion;
 
@@ -43,11 +44,12 @@ void ServoControl::TestMovement()
 			float ppos,tpos;
 			iServoCtrl->GetPosition(KServoCameraPTUPan, ppos, 500);
 			iServoCtrl->GetPosition(KServoCameraPTUTilt, tpos, 500);
-			dPrint(3,"Camera now pointing to pan:%.3f, tilt:%.3f", ppos, tpos);
+			std::cout << "Camera now pointing to pan:" << ppos << ", tilt:" << tpos << std::endl;
 
 			// Wait to stabilize
 			// ownSleep_ms(200);
 		} else {
+			std::cout << "Camera control error" << std::endl;
 			// Some failure?
 		}
     }
@@ -60,7 +62,7 @@ float ServoControl::getPosition(ServoControl::EServo servo)
 
 	float pos;
 
-	iServoCtrl->GetPosition(servo, pos, 500);
+	iServoCtrl->GetPosition(servo, pos, 100);
 	return pos;
 
 }

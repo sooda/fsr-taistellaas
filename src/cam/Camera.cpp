@@ -36,7 +36,7 @@ void Camera::updateCameraData(SLAM::RobotLocation robloc)
 	this->updateCamServos();
 	this->checkCalibration();
 	this->getCameraData();
-	//this->updatePositionOfTargets();
+	this->updatePositionOfTargets();
 	
 //Mat src = Camutil::imgToMat(this->getCameraImage());
 //Camutil::FindBalls(src, show_image);
@@ -173,13 +173,14 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 void Camera::updatePositionOfTargets()
 {
 	// find the objects in the current camera data
-	std::vector<Location> objects = Camutil::FindBalls(Camutil::imgToMat(this->getCameraImage()), show_image);
+	std::vector<SLAM::Location> objects = Camutil::FindBalls(Camutil::imgToMat(this->getCameraImage()), show_image);
+	std::cout << "puhtailla vesillä ollaan" << std::endl;	
 	
 	balls.clear();
 
 	for (size_t i = 0; i < objects.size(); i++) {
 
-		Location ball = objects.at(i);
+		SLAM::Location ball = objects.at(i);
 	
 		Matrix3f R = getObjectRotation(ball.x, ball.y);
 

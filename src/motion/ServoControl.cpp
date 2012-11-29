@@ -62,7 +62,7 @@ float ServoControl::getPosition(ServoControl::EServo servo)
 
 	float pos;
 
-	iServoCtrl->GetPosition(servo, pos, 100);
+	iServoCtrl->GetPosition(servo, pos, 10);
 	return pos;
 
 }

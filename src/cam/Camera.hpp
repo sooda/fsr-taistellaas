@@ -45,6 +45,9 @@ public:
 	// Calibrate camera
 	bool calibrateCamera();
 
+	// update camera data to SLAM
+	void updateToSLAM(SLAM::SLAM slam);
+
 	std::vector<Location> getPositionOfTargets();
 
 

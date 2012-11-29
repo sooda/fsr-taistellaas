@@ -66,7 +66,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 	RobotLocation newLoc = RobotLocation(0,0,0);
 
 	slamThingy.updateMap(lastLaserData, lastOdometryData, new_gfsmap, newLoc);
-	
+
 	if (new_gfsmap != 0) {
 		// map was updated
 
@@ -101,7 +101,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			}
 		}
 
-		// testing
+		/* testing
 		ImageData test1(std::vector<std::pair<double,double> >(), 
 			currentMapData.getRobotLocation(), 1, 2, 1);
 		updateImageData(test1, MapData::TARGET);
@@ -112,7 +112,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 		ImageData test3(std::vector<std::pair<double,double> >(), 
 			currentMapData.getRobotLocation(), 0.5, 1, 1.5);
-		updateImageData(test3, MapData::GOAL);
+		updateImageData(test3, MapData::GOAL);*/
 	
 		gim::time duration(true);
 
@@ -239,7 +239,7 @@ void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int 
 	if (lastLaserData.size()) {
 		float min_d = 1000;
 		MaCI::Ranging::TDistance min_dist;
-		float scale = 100; // scales from meters to screen pixels (mulppi saatana)
+		float scale = 50; // scales from meters to screen pixels
 		int min_x_end = 0;
 		int min_y_end = 0;
 		int x_origin = window_width/2;

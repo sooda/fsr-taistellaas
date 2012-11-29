@@ -20,7 +20,7 @@ namespace cam {
 
 Camera::Camera(CJ2B2Client &interface)
 	: interface(interface), calibrated(false),
-	  show_image(false), servoCtrl(interface)
+	  show_image(true), servoCtrl(interface)
 {
 }
 
@@ -35,10 +35,10 @@ void Camera::updateCameraData(SLAM::RobotLocation robloc)
 	this->updateCamServos();
 	this->checkCalibration();
 	this->getCameraData();
-	this->updatePositionOfTargets();
+	//this->updatePositionOfTargets();
 	
-//	Mat src = Camutil::imgToMat(this->getCameraImage());
-//	Camutil::FindBalls(src, show_image);
+//Mat src = Camutil::imgToMat(this->getCameraImage());
+//Camutil::FindBalls(src, show_image);
 }
 
 bool Camera::ballsInImage() {
@@ -48,17 +48,19 @@ bool Camera::ballsInImage() {
 
 void Camera::getCameraData()
 {
-	bool r;
+	bool r = false;
 	unsigned int imgSeq = 0;
 
 	MaCI::Image::CImageData imgData;
 
 	if (!interface.iImageCameraFront) {
+		cout << "error 1" << endl;
 		throw ERR_CAMERA_CLIENT_INITIALIZATION;
 	}
 
-	r = interface.iImageCameraFront->GetImageData(imgData, &imgSeq, 0);
-	if (r) {
+	r = interface.iImageCameraFront->GetImageData(imgData, &imgSeq);
+	if (!r) {
+		cout << "error 2" << endl;
 		throw ERR_GET_IMAGE_DATA;
 	}
 
@@ -67,8 +69,25 @@ void Camera::getCameraData()
 	// Unlock();
 
 	if (!r) {
+		cout << "error 3" << endl;
 		throw ERR_GET_IMAGE;
 	}
+
+}
+
+void Camera::updateToSLAM(SLAM::SLAM slam) {
+
+	MapData::ObservationType type = MapData::TARGET; // object type
+
+	RobotLocation location = cameradata.robotloc; // location image was taken
+	double minDist = 0.5; // image front in m
+	double maxDist = 3; // image back in m
+	double viewWidth = M_PI*FOV/180; // image fov in rad
+
+	SLAM::ImageData data (std::vector<std::pair<double,double> >(), 
+			location, minDist, maxDist, viewWidth);
+
+	slam.void updateImageData(data, type);
 
 }
 
@@ -138,7 +157,7 @@ void Camera::updatePositionOfTargets()
 	
 	balls.clear();
 
-	for (int i = 0; i < objects.size(); i++) {
+	for (size_t i = 0; i < objects.size(); i++) {
 
 		Location ball = objects.at(i);
 	

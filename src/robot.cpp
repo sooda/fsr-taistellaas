@@ -72,7 +72,7 @@ void Robot::threadMain(void) {
 	slamloc.x = startx;
 	slamloc.y = starty;
 	motionControl.setPose(slamloc);
-	navigate(); // MIDTERM: what.
+//	navigate(); // MIDTERM: what.
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
 		if (!manual.enabled) {
@@ -115,19 +115,20 @@ void Robot::threadSense(void) {
 		}
 
 		// Fetch image from robot using Camera module
-/*
 		try {
 			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
+			//MaCI::Image::CImageData imgData;
+			//if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) std::cout << "true" << std::endl;
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
 
-//			updateSLAM(...);
+//			camera.updateToSLAM(slam);
 
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");
 		}
-*/
-		MaCI::Image::CImageData imgData;
+
+/*		MaCI::Image::CImageData imgData;
 		if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
 			MaCI::Image::CImageContainer image;
 			if (imgData.GetImage(image, NULL, true)) {
@@ -137,7 +138,7 @@ void Robot::threadSense(void) {
 				dPrint(1, "WTF, got image data with no data");
 			}
 		}
-
+*/
 		// TODO: actually use the additional data for something
 		// timestamp sounds useful
 		MaCI::Ranging::TDistanceHeader laserHeader;
@@ -256,9 +257,9 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 	} else {
 		info.push_back("Automatic steering");
 	}
-	motionControl.drawMap(screen, 10, win_height-1-10);
+//	motionControl.drawMap(screen, 10, win_height-1-10);
 
-	int y = 200;
+	int y = 310;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {
 		stringRGBA(screen, 0, y, it->c_str(), 0, 255, 0, 255);
 		y += 10;

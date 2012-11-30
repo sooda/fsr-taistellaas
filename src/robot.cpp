@@ -27,11 +27,14 @@ Robot::Robot(CJ2B2Client& j2b2)
 
 	// for fps calculation
 	statistics.startTime = ownTime_get_ms();
+	statistics.taskStartTime = 0;
 
 	manual.enabled = true;
 	
 	// Initialize the state machine for high level planner
 	taskState = EXPLORE;
+	// Initialze the number of targets
+	numberOfPickUps = 0;
 
 	// returns a joystick structure that we don't use for anything
 	// don't bother cleaning up, will do that later if necessary
@@ -60,24 +63,51 @@ void Robot::navigate(void) {
 }
 
 void Robot::planAction(void) {
+	ownTime_ms_delta_t hurryUp = 1000*60*13; // If it's time to abandon everything else and get current targets to the goal 
 	if (!manual.enabled) {
+		if(statistics.taskStartTime == 0)
+			statistics.taskStartTime = ownTime_get_ms();
 		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
 		p.x += slamcalib.x;
 		p.y += slamcalib.y;
+		bool succeeded = false;
 		switch (taskState) {
 			case EXPLORE:
 				if (!motionControl.iterate(p))
 					navigate();
 				break;
 			case PICK_UP:
+				// TODO: 1. Ask slam, where is closest ball
+				// 2. Make navigation navigate close to it
+				// 3. Open hatch
+				// 4. Make navigation navigate over it
+				// 5. Close hatch
+				if(succeeded)
+					numberOfPickUps++;
+				if(numberOfPickUps >= 10 || ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
+					taskState = RETURN_TO_GOAL;
 				break;
 			case RETURN_TO_GOAL:
+				// TODO: Check with slam, how to get goal location
+				//SLAM::RobotLocation goalLocation = slam.getCurrentMapData().getGoalLocation()
+				// TODO: move this to navigation module
+				/* auto route = navigation.findRoute(goalLocation);
+				route.push_back(route.front());
+				route.pop_front();
+				motionControl.setRoute(route);
+				if(!motionControl.iterate(p))
+					taskState = RELEASE_TARGETS;*/
 				break;
-			case TIME_UP:
+			case RELEASE_TARGETS:
+				// TODO: implement: open hatch, ask navigation to navigate backwards, see results
+				break;
+			case END_STATE:
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}
-	}	
+		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
+			taskState = RETURN_TO_GOAL;
+	}
 }
 
 void Robot::threadMain(void) {

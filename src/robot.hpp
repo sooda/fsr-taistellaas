@@ -64,7 +64,8 @@ private:
 		EXPLORE,
 		PICK_UP,
 		RETURN_TO_GOAL,
-		TIME_UP,
+		RELEASE_TARGETS,
+		END_STATE,
 		
 		NUM_TASK_STATES
 	};
@@ -102,6 +103,7 @@ private:
 		int camera;
 		int slam;
 		ownTime_ms_t startTime;
+		ownTime_ms_t taskStartTime; // time when the automatic task is started (in final demo 15min is calculated from this moment)
 	} statistics;
 
 	struct {
@@ -114,6 +116,7 @@ private:
 	} manual;
 	
 	TaskState taskState;
+	int numberOfPickUps;
 
 	static const int win_width = 1024, win_height = 768;
 };

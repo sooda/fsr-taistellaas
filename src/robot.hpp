@@ -59,6 +59,15 @@ private:
 
 		NUM_THREADS
 	};
+	
+	enum TaskState {
+		EXPLORE,
+		PICK_UP,
+		RETURN_TO_GOAL,
+		TIME_UP,
+		
+		NUM_TASK_STATES
+	};
 
 	int ThreadFunction(const int num);
 
@@ -69,6 +78,7 @@ private:
 	void threadUser(void);
 
 	void navigate(void);
+	void planAction(void);
 
 	void pollEvents(void);
 	void handleKey(int, SDLKey);
@@ -102,6 +112,8 @@ private:
 		float speed, angle;
 		bool enabled;
 	} manual;
+	
+	TaskState taskState;
 
 	static const int win_width = 1024, win_height = 768;
 };

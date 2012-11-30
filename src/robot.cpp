@@ -29,6 +29,9 @@ Robot::Robot(CJ2B2Client& j2b2)
 	statistics.startTime = ownTime_get_ms();
 
 	manual.enabled = true;
+	
+	// Initialize the state machine for high level planner
+	taskState = EXPLORE;
 
 	// returns a joystick structure that we don't use for anything
 	// don't bother cleaning up, will do that later if necessary
@@ -56,6 +59,27 @@ void Robot::navigate(void) {
 	motionControl.setRoute(route);
 }
 
+void Robot::planAction(void) {
+	if (!manual.enabled) {
+		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
+		p.x += slamcalib.x;
+		p.y += slamcalib.y;
+		switch (taskState) {
+			case EXPLORE:
+				if (!motionControl.iterate(p))
+					navigate();
+				break;
+			case PICK_UP:
+				break;
+			case RETURN_TO_GOAL:
+				break;
+			case TIME_UP:
+				break;
+			default: throw std::runtime_error("Bad task state number"); break;
+		}
+	}	
+}
+
 void Robot::threadMain(void) {
 	SLAM::RobotLocation slamloc;
 	while (slamloc.x == 0 && slamloc.y == 0) {
@@ -73,13 +97,7 @@ void Robot::threadMain(void) {
 	navigate(); // MIDTERM: what.
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
-		if (!manual.enabled) {
-			SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
-			p.x += slamcalib.x;
-			p.y += slamcalib.y;
-			if (!motionControl.iterate(p))
-				navigate();
-		}
+		planAction();
 		ownSleep_ms(100); // TODO: determine good value to synch with motor control loop
 	}
 }

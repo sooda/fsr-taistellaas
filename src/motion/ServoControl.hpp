@@ -37,6 +37,7 @@ public:
 private:
 	CJ2B2Client &interface;
 	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl;  ///< PTU of camera
+	std::map<Motion::ServoControl::EServo, float> servopos;
 };
 
 }

@@ -19,7 +19,7 @@ ServoControl::ServoControl(CJ2B2Client &interface)
 void ServoControl::TestMovement()
 {
 	float ptu_pan = 0.0;
-	float ptu_tilt = 0.0;
+	float ptu_tilt = -0.15;
 	float ptu_pan_delta = 0.0;
 	float ptu_tilt_delta = 0.0;
 
@@ -37,13 +37,13 @@ void ServoControl::TestMovement()
 		else if (ptu_tilt < -M_PI/2) ptu_tilt = -M_PI/2;
 
 		// Do control
-		int r = iServoCtrl->SetPosition(ptu_pan, KServoCameraPTUPan);
-		r &= iServoCtrl->SetPosition(ptu_tilt, KServoCameraPTUTilt);
+		int r = this->setPosition(KServoCameraPTUPan, ptu_pan);
+		r &= this->setPosition(KServoCameraPTUTilt, ptu_tilt);
 
 		if (r) {
 			float ppos,tpos;
-			iServoCtrl->GetPosition(KServoCameraPTUPan, ppos, 500);
-			iServoCtrl->GetPosition(KServoCameraPTUTilt, tpos, 500);
+			ppos = this->getPosition(KServoCameraPTUPan);
+			tpos = this->getPosition(KServoCameraPTUTilt);
 			std::cout << "Camera now pointing to pan:" << ppos << ", tilt:" << tpos << std::endl;
 
 			// Wait to stabilize
@@ -58,19 +58,27 @@ void ServoControl::TestMovement()
 
 float ServoControl::getPosition(ServoControl::EServo servo)
 {
+	if (servopos.find(servo) == servopos.end())
+		return 0.0;
+	else
+		return servopos[servo];
+
+/*
 	if (!iServoCtrl) return 0.0;
 
 	float pos;
 
 	iServoCtrl->GetPosition(servo, pos, 10);
 	return pos;
-
+*/
 }
 
 bool ServoControl::setPosition(ServoControl::EServo servo, float pos)
 {
-	if (iServoCtrl) return false;
+	if (!iServoCtrl) return false;
 
 	iServoCtrl->SetPosition(pos, servo);
+	this->servopos[servo] = pos;
+
 	return true;
 }

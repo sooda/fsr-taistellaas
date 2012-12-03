@@ -208,8 +208,8 @@ void Camera::updatePositionOfTargets()
 
 		double theta = cameradata.robotloc.theta;
 		// TODO: Check the rotation!
-		double x = t.x() * cos(theta) + t.y() * sin(theta);
-		double y = t.x() * sin(theta) - t.y() * cos(theta);
+		double x = t.x() * cos(theta) - t.y() * sin(theta);
+		double y = t.x() * sin(theta) + t.y() * cos(theta);
 
 		// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
 		// causes segfault, 'cos are not in mapData area

@@ -153,20 +153,20 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 
     const float fov = M_PI*FOV/180;
 
-    // yksi pikseli vastaa radiaaneja (pystysuunnassa) (pixel per degree) (voidaanko käyttää myös vaakasuunnassa?)
-    const float ppd = fov/height;
+    // yksi pikseli vastaa radiaaneja (vaakasuunnassa??) (pixel per degree)
+    const float ppd = fov/width;
 
     // kohteen etäisyys keskipisteestä
     float ydist = height/2 - top;
-    float xdist = width/2 - left;
+    float xdist = (width/2 - left)*-1;
 
     // tarkoittaa kulmina xangl radiaania
     float yangl = ppd*ydist;
     float xangl = ppd*xdist;
 
     // tällöin kulma
-    float ya = tilt + yangl;
-    float xa = pan + xangl;
+    float ya = -1*(tilt + yangl); // positiivinen alaspäin
+    float xa = pan + xangl;  // positiivinen oikealle
 
 
 	Matrix3f rotation;
@@ -207,10 +207,12 @@ void Camera::updatePositionOfTargets()
 		t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
 
 		double theta = cameradata.robotloc.theta;
+		// TODO: Check the rotation!
 		double x = t.x() * cos(theta) + t.y() * sin(theta);
-		double y = t.x() * sin(theta) - t.y() * sin(theta);
+		double y = t.x() * sin(theta) - t.y() * cos(theta);
 
 		// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
+		// causes segfault, 'cos are not in mapData area
 		if (x > 3) x = 3;
 		if (y > 3) y = 3;
 

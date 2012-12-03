@@ -116,23 +116,10 @@ void Robot::threadSense(void) {
 
 		// Fetch image from robot using Camera module
 		try {
-			gim::time start(true);
 			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
-			gim::time mid1(true);
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
-			gim::time mid2(true);
 			camera.updateToSLAM(slam);
-			gim::time end(true);
-
-			end -= mid2;
-			mid2 -= mid1;
-			mid1 -= start;
-
-			std::cout << "cam1: " << mid1.getTimeInSeconds() << 
-				" cam2: " << mid2.getTimeInSeconds() <<
-				" slam: " << end.getTimeInSeconds() << std::endl;
-
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");
 		}

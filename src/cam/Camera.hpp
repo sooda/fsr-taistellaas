@@ -35,9 +35,6 @@ public:
 	// takes CImageClient and ServoPosition as parameter
 	Camera(CJ2B2Client&);
 
-	// destructor
-	~Camera();
-
 	// updates data from the camera and recognise objects
 	void updateCameraData(SLAM::RobotLocation);
 	MaCI::Image::CImageContainer getCameraImage();
@@ -71,7 +68,8 @@ private:
 
 	Motion::ServoControl servoCtrl;
 
-	
+	ownTime_ms_t lastrun;
+
 	
 	void getCameraData();
 	void checkCalibration();

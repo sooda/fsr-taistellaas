@@ -23,11 +23,7 @@ Camera::Camera(CJ2B2Client &interface)
 	  show_image(true), servoCtrl(interface)
 {
 	servoCtrl.TestMovement();
-}
-
-Camera::~Camera()
-{
-	// empty
+	lastrun = ownTime_get_ms();
 }
 
 void Camera::updateCameraData(SLAM::RobotLocation robloc)
@@ -36,10 +32,10 @@ void Camera::updateCameraData(SLAM::RobotLocation robloc)
 	this->updateCamServos();
 	this->checkCalibration();
 	this->getCameraData();
-	this->updatePositionOfTargets();
+
+	// find balls from image only when updating SLAM
+	// this->updatePositionOfTargets();
 	
-//Mat src = Camutil::imgToMat(this->getCameraImage());
-//Camutil::FindBalls(src, show_image);
 }
 
 bool Camera::ballsInImage() {
@@ -77,6 +73,15 @@ void Camera::getCameraData()
 }
 
 void Camera::updateToSLAM(SLAM::SLAM &slam) {
+
+	if (ownTime_get_ms_since(lastrun) < 1000) {
+		return;
+	}
+
+	lastrun = ownTime_get_ms();
+	updatePositionOfTargets();
+
+	std::cout << "Cam: Update SLAM data" << std::endl;
 
 	SLAM::RobotLocation location = cameradata.robotloc; // location image was taken
 	double minDist = 0.5; // image front in m
@@ -121,30 +126,32 @@ void Camera::checkCalibration()
 
 bool Camera::calibrateCamera()
 {
-	// TODO: implement
+	// TODO: implement or remove
 	return (calibrated = true);
 }
 
 void Camera::updateCamServos()
 {
+	// TODO: not working!
 	cameradata.tilt = servoCtrl.getPosition(dTilt);
 	cameradata.pan  = servoCtrl.getPosition(dPan);
-
-	std::cout << "tilt " << dTilt << " : " << cameradata.tilt << std::endl;
-	std::cout << "pan " << dPan << " : " << cameradata.pan << std::endl;
 }
 
 Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 {
-	// image
-    const float width = 640;
-    const float height = 480;
+    // image
+    const MaCI::Image::TImageInfo imginfo = cameradata.cameraImage.GetImageInfoRef();
+    const float height = (float)imginfo.imageheight;
+    const float width = (float)imginfo.imagewidth;
+
+//    const float width = 640;
+//    const float height = 480;
 
     // servos
     const float tilt = cameradata.tilt;
     const float pan = cameradata.pan;
 
-    const float fov = FOV / 360.0 * M_PI;
+    const float fov = M_PI*FOV/180;
 
     // yksi pikseli vastaa radiaaneja (pystysuunnassa) (pixel per degree) (voidaanko käyttää myös vaakasuunnassa?)
     const float ppd = fov/height;
@@ -172,12 +179,18 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 
 void Camera::updatePositionOfTargets()
 {
+
+	balls.clear();
+/*
+	if (ownTime_get_ms_since(lastrun) < 1000) {
+		return;
+	}
+	lastrun = ownTime_get_ms();
+*/
+
 	// find the objects in the current camera data
 	std::vector<SLAM::Location> objects = Camutil::FindBalls(Camutil::imgToMat(this->getCameraImage()), show_image);
-	std::cout << "puhtailla vesill� ollaan" << std::endl;	
 	
-	balls.clear();
-
 	for (size_t i = 0; i < objects.size(); i++) {
 
 		SLAM::Location ball = objects.at(i);
@@ -190,7 +203,6 @@ void Camera::updatePositionOfTargets()
 		Vector3f t(0,0,0);
 
 		v = R.transpose() * v;
-		cout << v << endl;
 
 		t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
 
@@ -198,13 +210,15 @@ void Camera::updatePositionOfTargets()
 		double x = t.x() * cos(theta) + t.y() * sin(theta);
 		double y = t.x() * sin(theta) - t.y() * sin(theta);
 
-		cout << "pallo: " << t << endl;
+		// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
+		if (x > 3) x = 3;
+		if (y > 3) y = 3;
+
+//		cout << "pallo: " << t << endl;
 		balls.push_back(SLAM::Location(x, y));
 
-		cout << "Cam: Target at " << x << ", " << y << endl;
-
 		float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-		cout << "dist: " << distance << endl;
+		cout << "Cam: Target at (" << x << ", " << y << ") " << "dist: " << distance << endl;
 
 	}
 }

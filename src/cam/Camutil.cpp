@@ -21,30 +21,22 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	const MaCI::Image::TImageInfo imginfo = srcimg.GetImageInfoRef();
 	const unsigned int rows = imginfo.imageheight;
 	const unsigned int cols = imginfo.imagewidth;
-
-//	std::cout << "datatype: " << MaCI::Image::GetImageDataTypeDescription((MaCI::Image::EImageDataType)imginfo.imagedatatype) << std::endl;
-
-//	Mat img = Mat(rows, cols, CV_8UC3, (unsigned char*)srcimg.GetImageDataPtr());
-//	Mat img = imdecode((Mat&)srcimg.GetImageDataPtr(),1);
-/*
-        if (srcimg.GetImageDataType() == MaCI::Image::KImageDataJPEG && srcimg.GetImageDataPtr() != NULL) {
-
-                SDL_RWops *rw;
-                rw = SDL_RWFromConstMem(static_cast<const void*>(srcimg.GetImageDataPtr()), srcimg.GetImageDataSize());
-                SDL_Surface *image = IMG_LoadJPG_RW(rw);
-
-		Mat img = Mat(rows, cols, CV_8UC3, (unsigned char*)image->pixels);
-//		Mat rtn = img.clone();
-
-                SDL_FreeRW(rw);
-                SDL_FreeSurface(image);
+	Mat img = Mat(rows, cols, CV_8UC1);
+	
+	if (srcimg.GetImageDataType() != MaCI::Image::EImageDataType::KImageDataJPEG) {
+		std::cout << "ImgDataType not JPEG!!!" << std::endl;;
 		return img;
-
-        } else {
-
 	}
-*/
-	return Mat();
+
+	bool success = srcimg.ConvertTo(MaCI::Image::EImageDataType::KImageDataRGB);
+	if (success) {
+		img = Mat(rows, cols, CV_8UC3, (unsigned char*)srcimg.GetImageDataPtr());
+	}
+	else {
+		std::cout << "Error converting image to Mat" << std::endl;
+	}
+
+	return img.clone();
 }
 
 bool Camutil::BallsInView (Mat src)
@@ -67,6 +59,9 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image) {
 
 std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool targets)
 {
+
+	std::vector<SLAM::Location> objects;
+
 	int limit_h = 0;
 	int limit_s = 0;
 	int limit_v = 0;
@@ -85,12 +80,10 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	
 	Mat dst;
 
-	imshow("jeejee", dst);
-	waitKey(0);
-	
-	cvtColor(src, dst, CV_BGR2HSV);
-	std::vector<SLAM::Location> objects;
-	
+	cvtColor(src, dst, CV_RGB2HSV);
+
+	namedWindow("src", CV_WINDOW_AUTOSIZE);
+
 	// tresholding
 	inRange(dst, Scalar(0, limit_s, limit_v), Scalar(limit_h, 255, 255), dst);
 
@@ -106,12 +99,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	vector<Vec4i> hierarchy;
 	findContours(dst, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
-	std::cout << "ollaanks tääl?" << std::endl;
-
-	imshow("jeejee", dst);
-	waitKey(0);
-
-	for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
+	for( int idx = 0; idx < contours.size(); idx++ )
 	{
 		Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
 
@@ -120,17 +108,17 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 		minEnclosingCircle(contours[idx], center, radius);
 
 		if (radius < 15) continue;
-		std::cout << idx << ": " << center << " " << radius << std::endl;
+//		std::cout << idx << ": " << center << " " << radius << std::endl;
 
 		circle( src, center, (int)radius * 1.2, color, 2);
 		
 		objects.push_back(SLAM::Location(center.x, center.y));
 	}
 	
-	if (show_image)
-		imshow( "padam", dst);
-
-//	waitKey(0);
+	if (show_image) {
+		imshow( "src", src);
+		waitKey(10);
+	}
 
 	return objects;
 

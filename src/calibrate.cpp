@@ -28,8 +28,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	Robot robot(j2b2);
-	robot.wait();
+	CameraCalibration c(j2b2);
 
 	SDL_Quit();
 

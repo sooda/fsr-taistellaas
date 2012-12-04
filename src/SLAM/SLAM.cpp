@@ -225,7 +225,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 		double y = data.location.y + it->y;
 		for (int i = -1; i < 2; i++) {
 			for (int j = -1; j < 2; j++) {
-				currentMapData.setValue(Location(x+i,y+j), type, 1.0); // target
+				currentMapData.setValue(Location(x+i*MapData::unitSize,y+j*MapData::unitSize), type, 1.0); // target
 			}
 		}
 	}

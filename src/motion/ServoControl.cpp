@@ -19,7 +19,7 @@ ServoControl::ServoControl(CJ2B2Client &interface)
 void ServoControl::TestMovement()
 {
 	float ptu_pan = 0.0;
-	float ptu_tilt = -0.15;
+	float ptu_tilt = -1.25;
 	float ptu_pan_delta = 0.0;
 	float ptu_tilt_delta = 0.0;
 
@@ -77,7 +77,8 @@ bool ServoControl::setPosition(ServoControl::EServo servo, float pos)
 {
 	if (!iServoCtrl) return false;
 
-	iServoCtrl->SetPosition(pos, servo);
+	// don't ask why we have to scale it, we just have to
+	iServoCtrl->SetPosition(pos/M_PI, servo);
 	this->servopos[servo] = pos;
 
 	return true;

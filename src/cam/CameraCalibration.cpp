@@ -14,10 +14,9 @@ Mat CameraCalibration::getImage() {
 	unsigned int cameraSeq = 0;
 	
 	if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
-		MaCI::Image::CImageContainer image;
-		if (imgData.GetImage(image, NULL, true)) {
-			lastMeas.image.set(image);
-			statistics.camera++;
+		MaCI::Image::CImageContainer srcimg;
+		if (imgData.GetImage(srcimg, NULL, true)) {
+			std::cout << "GetImage() success" << std::endl;
 		} else {
 			dPrint(1, "WTF, got image data with no data");
 		}
@@ -47,11 +46,13 @@ Mat CameraCalibration::getImage() {
 
 void CameraCalibration::runCalibration() {
 	// http://www.aishack.in/2010/07/calibrating-undistorting-with-opencv-in-c-oh-yeah/
-
-    int numBoards = 0;
-    int numCornersHor;
-    int numCornersVer;
+	// http://opencv.willowgarage.com/documentation/cpp/camera_calibration_and_3d_reconstruction.html
 	
+    int numBoards = 20;
+    int numCornersHor = 6;
+    int numCornersVer = 7;
+
+/*	
 	printf("Enter number of corners along width: ");
     scanf("%d", &numCornersHor);
  
@@ -60,6 +61,7 @@ void CameraCalibration::runCalibration() {
  
     printf("Enter number of boards: ");
     scanf("%d", &numBoards);
+*/
 	
 	int numSquares = numCornersHor * numCornersVer;
     Size board_sz = Size(numCornersHor, numCornersVer);
@@ -120,6 +122,7 @@ void CameraCalibration::runCalibration() {
     intrinsic.ptr<float>(0)[0] = 1;
     intrinsic.ptr<float>(1)[1] = 1;
 	
+	// double calibrateCamera(const vector<vector<Point3f> >& objectPoints, const vector<vector<Point2f> >& imagePoints, Size imageSize, Mat& cameraMatrix, Mat& distCoeffs, vector<Mat>& rvecs, vector<Mat>& tvecs, int flags=0)¶
 	calibrateCamera(object_points, image_points, image.size(), intrinsic, distCoeffs, rvecs, tvecs);	
 
 	
@@ -128,6 +131,8 @@ void CameraCalibration::runCalibration() {
     {
         image = getImage();
         undistort(image, imageUndistorted, intrinsic, distCoeffs);
+ 
+		std::cout << intrinsic << distCoeffs << std::endl;
  
         imshow("win1", image);
         imshow("win2", imageUndistorted);

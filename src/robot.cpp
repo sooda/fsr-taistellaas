@@ -102,6 +102,7 @@ void Robot::planAction(void) {
 				// TODO: implement: open hatch, ask navigation to navigate backwards, see results
 				break;
 			case END_STATE:
+				manual.enabled = true;
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}

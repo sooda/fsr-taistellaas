@@ -18,153 +18,148 @@ const int gw = ww/sz, gh = wh/sz; // grid size
 
 using namespace std;
 
-template <class Grid>
-class gridgraph {
+class gridvertex {
 	public:
-		gridgraph(Grid& grid) : grid(grid) {}
+		int x, y; // const
+		gridvertex() : x(-1), y(-1) {}
+		gridvertex(int x, int y) : x(x), y(y) {}
 
-		class vertex_descriptor {
-			public:
-				int x, y; // const
-				vertex_descriptor() : x(-1), y(-1) {}
-				vertex_descriptor(int x, int y) : x(x), y(y) {}
+		friend std::ostream& operator<<(std::ostream& os, const gridvertex& u) {
+			os << "(" << u.x << ", " << u.y << ")";
+		}
+		bool operator==(const gridvertex& other) const {
+			return x == other.x && y == other.y;
+		}
+		bool operator!=(const gridvertex& other) const {
+			return !(*this == other);
+		}
+		// for std::map
+		bool operator<(const gridvertex& other) const {
+			return id(*this) < id(other);
+		}
+	private:
+		static int id(const gridvertex& v) {
+			return v.y * gw + v.x;
+		}
+};
 
-				friend std::ostream& operator<<(std::ostream& os, const vertex_descriptor& u) {
-					os << "(" << u.x << ", " << u.y << ")";
-				}
+typedef std::pair<gridvertex, gridvertex> gridedge;
 
-				bool operator==(const vertex_descriptor& other) const {
-					return x == other.x && y == other.y;
-				}
-				bool operator!=(const vertex_descriptor& other) const {
-					return !(*this == other);
-				}
-				// for std::map
-				bool operator<(const vertex_descriptor& other) const {
-					return id(*this) < id(other);
-				}
-			private:
-				static int id(const vertex_descriptor& v) {
-					return v.y * gw + v.x;
-				}
-		};
-		bool free_at(const vertex_descriptor& v) const {
+std::ostream& operator<<(std::ostream& os, const gridedge e) {
+	os << e.first << "-" << e.second;
+}
+
+class Grid {
+public:
+	virtual bool free_at(const gridvertex& v) const = 0;
+};
+class grid_out_edge_iterator
+	: public boost::iterator_facade<
+	  grid_out_edge_iterator,
+	  gridedge,
+	  std::forward_iterator_tag> {
+public:
+	grid_out_edge_iterator() : graph(NULL), dir(-1), vertex(), edge(vertex, vertex) {}
+	grid_out_edge_iterator(const Grid* g, gridvertex vert = gridvertex())
+			: graph(g), dir(42), vertex(vert), edge(vert, vert) {
+		cout << "outedge ctor at " << vert << endl;
+		if (vert.x == -1 && vert.y == -1) {
+			dir = -1;
+			cout << "singular" << endl;
+		} else {
+			cout << "jee" << endl;
+			increment();
+		}
+	}
+private:
+	friend class boost::iterator_core_access;
+	gridedge& dereference() const {
+		cout << "deref " << edge << endl;
+		return edge;
+	}
+	bool equal(const grid_out_edge_iterator& other) const {
+		if (graph == NULL || other.graph == NULL)
+			throw std::runtime_error("Bad things");
+		bool b =
+			graph == other.graph
+			&& ((dir == other.dir && dir == -1) || edge == other.edge);
+		cout << "equal:" << b << " :: " << edge << other.edge << " " << dir << "/" << other.dir << endl;
+		return b;
+	}
+	void increment() {
+		cout << "whee incr" << endl;
+		cout << "before: " << dir << edge << endl;
+		if (dir == -1) {
+			throw std::runtime_error("incrementing singular out edge iterator");
+		}
+		if (dir == 42) {
+			dir = -1;
+		}
+		gridvertex dest;
+		while (++dir != 8) {
+			static const int deltas[] = {
+				 1,  0,
+				 1,  1,
+				 0,  1,
+				-1,  1,
+				-1,  0,
+				-1, -1,
+				 0, -1,
+				 1, -1
+			};
+			int dx = deltas[2*dir];
+			int dy = deltas[2*dir + 1];
+			dest = gridvertex(vertex.x + dx, vertex.y + dy);
+			//cout << "try " << dir << ":" << dest << endl;
+			if (graph->free_at(dest))
+				break;
+		}
+		if (dir == 8) {
+			dir = -1;
+			dest = vertex;
+		}
+		edge = gridedge(vertex, dest);
+		cout << "after: " << dir << edge << endl;
+	}
+	const Grid* graph;
+	int dir;
+	gridvertex vertex;
+	mutable gridedge edge;
+};
+
+
+template <class GridData>
+class gridgraph : public Grid {
+	public:
+		gridgraph(GridData& data) : data(data) {}
+		bool free_at(const gridvertex& v) const {
 			if (v.x < 0 || v.y < 0 || v.x >= gw || v.y >= gh)
 				return false;
-			if (grid[v.y][v.x])
+			if (data[v.y][v.x])
 				return false;
 			return true;
 		}
-
-		class edge_descriptor { // TODO: pair
-			public:
-				vertex_descriptor u, v; // const
-				edge_descriptor(vertex_descriptor u, vertex_descriptor v)
-					: u(u), v(v) {}
-				edge_descriptor() {}
-
-				bool operator==(const edge_descriptor& other) const {
-					return u == other.u && v == other.v;
-				}
-				bool operator!=(const edge_descriptor& other) const {
-					return !(*this == other);
-				}
-				friend std::ostream& operator<<(std::ostream& os, const edge_descriptor& e) {
-					os << e.u << "-" << e.v;
-				}
-		};
-
+		typedef gridvertex vertex_descriptor;
+		typedef gridedge edge_descriptor;
 		typedef boost::undirected_tag directed_category;
 		typedef boost::disallow_parallel_edge_tag edge_parallel_category;
 		typedef boost::incidence_graph_tag traversal_category;
-
-		class out_edge_iterator
-			: public boost::iterator_facade<
-			  out_edge_iterator,
-			  edge_descriptor,
-			  std::forward_iterator_tag> {
-		public:
-			out_edge_iterator() : graph(NULL), dir(-1), vertex(), edge(vertex, vertex) {}
-			out_edge_iterator(const gridgraph* g, vertex_descriptor vert = vertex_descriptor())
-					: graph(g), dir(42), vertex(vert), edge(vert, vert) {
-				cout << "outedge ctor at " << vert << endl;
-				if (vert.x == -1 && vert.y == -1) {
-					dir = -1;
-					cout << "singular" << endl;
-				} else {
-					cout << "jee" << endl;
-					increment();
-				}
-			}
-		private:
-			friend class boost::iterator_core_access;
-			edge_descriptor& dereference() const {
-				cout << "deref " << edge << endl;
-				return edge;
-			}
-			bool equal(const out_edge_iterator& other) const {
-				if (graph == NULL || other.graph == NULL)
-					throw std::runtime_error("Bad things");
-				bool b =
-					graph == other.graph
-					&& ((dir == other.dir && dir == -1) || edge == other.edge);
-				cout << "equal:" << b << " :: " << edge << other.edge << " " << dir << "/" << other.dir << endl;
-				return b;
-			}
-			void increment() {
-				cout << "whee incr" << endl;
-				cout << "before: " << dir << edge << endl;
-				if (dir == -1) {
-					throw std::runtime_error("incrementing singular out edge iterator");
-				}
-				if (dir == 42) {
-					dir = -1;
-				}
-				vertex_descriptor dest;
-				while (++dir != 8) {
-					static const int deltas[] = {
-						 1,  0,
-						 1,  1,
-						 0,  1,
-						-1,  1,
-						-1,  0,
-						-1, -1,
-						 0, -1,
-						 1, -1
-					};
-					int dx = deltas[2*dir];
-					int dy = deltas[2*dir + 1];
-					dest = vertex_descriptor(vertex.x + dx, vertex.y + dy);
-					//cout << "try " << dir << ":" << dest << endl;
-					if (graph->free_at(dest))
-						break;
-				}
-				if (dir == 8) {
-					dir = -1;
-					dest = vertex;
-				}
-				edge = edge_descriptor(vertex, dest);
-				cout << "after: " << dir << edge << endl;
-			}
-			const gridgraph* graph;
-			int dir;
-			vertex_descriptor vertex;
-			mutable edge_descriptor edge;
-		};
+		typedef grid_out_edge_iterator out_edge_iterator;
 		typedef size_t degree_size_type;
 		typedef size_t edges_size_type;
 		typedef size_t vertices_size_type;
+
+		// the following ones not needed
 		typedef void in_edge_iterator;
 		typedef void vertex_iterator;
 		typedef void edge_iterator;
 		typedef void adjacency_iterator;
 		//typedef typename boost::adjacency_iterator_generator<gridgraph<Grid>, vertex_descriptor, out_edge_iterator>::type adjacency_iterator; // FIXME: needed?
-		//
 		typedef void edge_property_type;
 		typedef void vertex_property_type;
 
 	private:
-		Grid& grid;
+		GridData& data;
 };
 
 template <class Graph, class Cost>
@@ -229,12 +224,12 @@ degree_size_type out_degree(vertex_descriptor u, const graph&) {
 	return 0;  // number of out-edges
 }
 vertex_descriptor source(edge_descriptor e, const graph&) {
-	cout << "sourke " << e << "=" << e.u << endl;
-	return e.u;
+	cout << "sourke " << e << "=" << e.first << endl;
+	return e.first;
 }
 vertex_descriptor target(edge_descriptor e, const graph&) {
-	cout << "tarket " << e << "=" << e.v << endl;
-	return e.v;
+	cout << "tarket " << e << "=" << e.second << endl;
+	return e.second;
 }
 // ??
 size_t num_vertices(const graph& g) {
@@ -261,7 +256,7 @@ struct edge_weight_map {
 
 	reference operator[](key_type e) const {
 		cout << "edgeweight map []" << e << endl;
-		if (e.u.x == e.v.x || e.u.y == e.v.y)
+		if (e.first.x == e.second.x || e.first.y == e.second.y)
 			return 1.0;
 		return 1.41;
 	}

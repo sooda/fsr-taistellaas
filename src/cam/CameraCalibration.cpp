@@ -1,4 +1,4 @@
-#include "CameraCalibation.hpp"
+#include "CameraCalibration.hpp"
 
 using namespace cv;
 
@@ -7,14 +7,12 @@ namespace cam {
 CameraCalibration::CameraCalibration(CJ2B2Client& j2b2) : j2b2(j2b2) {
 }
 
-}
-
 Mat CameraCalibration::getImage() {
 	MaCI::Image::CImageData imgData;
 	unsigned int cameraSeq = 0;
+	MaCI::Image::CImageContainer srcimg;
 	
 	if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
-		MaCI::Image::CImageContainer srcimg;
 		if (imgData.GetImage(srcimg, NULL, true)) {
 			std::cout << "GetImage() success" << std::endl;
 		} else {
@@ -48,9 +46,9 @@ void CameraCalibration::runCalibration() {
 	// http://www.aishack.in/2010/07/calibrating-undistorting-with-opencv-in-c-oh-yeah/
 	// http://opencv.willowgarage.com/documentation/cpp/camera_calibration_and_3d_reconstruction.html
 	
-    int numBoards = 20;
+    int numBoards = 25;
     int numCornersHor = 6;
-    int numCornersVer = 7;
+    int numCornersVer = 9;
 
 /*	
 	printf("Enter number of corners along width: ");
@@ -82,13 +80,14 @@ void CameraCalibration::runCalibration() {
     while(successes<numBoards)
     {
 	    cvtColor(image, gray_image, CV_BGR2GRAY);
-		
+	
         bool found = findChessboardCorners(image, board_sz, corners, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
  
         if(found)
         {
             cornerSubPix(gray_image, corners, Size(11, 11), Size(-1, -1), TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));
             drawChessboardCorners(gray_image, board_sz, corners, found);
+		std::cout << "found chessboard" << std::endl;
         }
 		
         imshow("win1", image);
@@ -96,16 +95,16 @@ void CameraCalibration::runCalibration() {
  
         image = getImage();
  
-        int key = waitKey(1);
+        int key = waitKey(1000);
 
         if(key==27)
-            return 0;
+            return;
  
-        if(key==' ' && found!=0)
+        if(/*key==' ' && */found!=0)
         {
             image_points.push_back(corners);
             object_points.push_back(obj);
-            printf("Snap stored!\n");
+            std::cout << "Snap stored!" << std::endl;
  
             successes++;
  
@@ -132,11 +131,13 @@ void CameraCalibration::runCalibration() {
         image = getImage();
         undistort(image, imageUndistorted, intrinsic, distCoeffs);
  
-		std::cout << intrinsic << distCoeffs << std::endl;
+		std::cout << intrinsic << std::endl << distCoeffs << std::endl;
  
         imshow("win1", image);
         imshow("win2", imageUndistorted);
  
-        waitKey(1);
+        waitKey(100);
     }
 } 
+
+}

@@ -4,10 +4,11 @@
 #include <iostream>
 
 #include "MachineCtrlClient.hpp"
-#include "../J2B2-API.hpp"
-#include "../SLAM/includes.hpp"
-#include "../motion/ServoControl.hpp"
-#include "Camutil.hpp"
+#include "J2B2-API.hpp"
+#include "SLAM/includes.hpp"
+#include "motion/ServoControl.hpp"
+#include "cam/Camutil.hpp"
+#include "cam/CameraCalibration.hpp"
 
 #define dPan Motion::ServoControl::KServoCameraPTUPan
 #define dTilt Motion::ServoControl::KServoCameraPTUTilt
@@ -70,6 +71,8 @@ private:
 
 	ownTime_ms_t lastrun;
 
+	cv::Mat cameraMatrix;
+	cv::Mat distCoeffs;
 	
 	void getCameraData();
 	void checkCalibration();

@@ -1,8 +1,9 @@
-#ifndef _J2B2_CAMERA_HPP_
-#define _J2B2_CAMERA_HPP_
+#ifndef _J2B2_CAMERACALIBRATION_HPP_
+#define _J2B2_CAMERACALIBRATION_HPP_
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
 #include <iostream>
 
 #include "MachineCtrlClient.hpp"
@@ -17,7 +18,7 @@ public:
 
 	CameraCalibration(CJ2B2Client& j2b2);
 	
-	Mat getImage();
+	cv::Mat getImage();
 	void runCalibration();
 
 private:

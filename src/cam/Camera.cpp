@@ -28,11 +28,15 @@ using namespace cv;
 namespace cam {
 
 Camera::Camera(CJ2B2Client &interface)
-	: interface(interface), calibrated(false),
+	: interface(interface), calibrated(true),
 	  show_image(true), servoCtrl(interface)
 {
 	servoCtrl.TestMovement();
 	lastrun = ownTime_get_ms();
+
+	this->cameraMatrix = (Mat_<double>(3,3) << 447.7679638984855, 0, 309.9314941852911, 0, 442.5677667837122, 245.2180309042916, 0, 0, 1);
+	this->distCoeffs   = (Mat_<double>(1,5) << 0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765);
+
 }
 
 void Camera::updateCameraData(SLAM::RobotLocation robloc)
@@ -136,11 +140,29 @@ CImageContainer Camera::getCameraImage()
 void Camera::checkCalibration()
 {
 	if (!this->calibrated) calibrateCamera();
+
+//undistort(image, imageUndistorted, intrinsic, distCoeffs);
+
+//Mat cameraMatrix = (Mat_<double>(3,3) << 447.7679638984855, 0, 309.9314941852911, 0, 442.5677667837122, 245.2180309042916, 0, 0, 1);
+//Mat distCoeffs   = (Mat_<double>(1,5) << 0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765);
+
+	/*
+cameraMatrix:
+[447.7679638984855, 0, 309.9314941852911;
+  0, 442.5677667837122, 245.2180309042916;
+  0, 0, 1]
+
+distCoeffs:
+[0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765]
+	*/
+
 }
 
 bool Camera::calibrateCamera()
 {
-	// TODO: implement or remove
+	CameraCalibration calibration(interface);
+	calibration.runCalibration();
+
 	return (calibrated = true);
 }
 
@@ -207,7 +229,12 @@ void Camera::updatePositionOfTargets()
 */
 
 	// find the objects in the current camera data
-	std::vector<SLAM::Location> objects = Camutil::FindBalls(Camutil::imgToMat(this->getCameraImage()), show_image);
+
+	Mat image = Camutil::imgToMat(this->getCameraImage());
+	Mat temp;
+	undistort(image, temp, this->cameraMatrix, this->distCoeffs);
+
+	std::vector<SLAM::Location> objects = Camutil::FindBalls(temp, show_image);
 	
 	for (size_t i = 0; i < objects.size(); i++) {
 

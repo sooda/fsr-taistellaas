@@ -13,7 +13,7 @@
 #include <stdexcept>
 
 const int ww = 1024, wh = 768; // win wid, hei
-const int sz = 16;
+const int sz = 32;
 const int gw = ww/sz, gh = wh/sz; // grid size
 
 using namespace std;
@@ -49,7 +49,7 @@ class gridgraph {
 				}
 		};
 		bool free_at(const vertex_descriptor& v) const {
-			if (v.x < 0 || v.y < 0 || v.x >= gw || v.y >= gw)
+			if (v.x < 0 || v.y < 0 || v.x >= gw || v.y >= gh)
 				return false;
 			if (grid[v.y][v.x])
 				return false;
@@ -529,12 +529,17 @@ pair<list<vertex_descriptor>, my_pred_map> mysearch(vector<vector<bool>>& grid, 
 #if 1
 	cout << "shbbu" << endl;
 	list<vertex_descriptor> shortest_path;
-	for(vertex_descriptor v = goal;; v = p[v]) {
-		shortest_path.push_front(v);
-		/* if(p[v] == v) // HOX HOX TODO FIXME tolleen se kuuluis koodaa, alku -> alku
-			break; */
-		if(v == start)
-			break;
+	if (p[goal] == vertex_descriptor()) {
+		cout << "NOT FOUND" << endl;
+	} else {
+		for(vertex_descriptor v = goal;; v = p[v]) {
+			cout << "zingzong " << v << endl;
+			shortest_path.push_front(v);
+			/* if(p[v] == v) // HOX HOX TODO FIXME tolleen se kuuluis koodaa, alku -> alku
+				break; */
+			if(v == start)
+				break;
+		}
 	}
 #endif
 #endif
@@ -566,11 +571,13 @@ int main()
 	list<vertex_descriptor> l;
 	my_pred_map p;
 	sf::RenderWindow App(sf::VideoMode(ww, wh), "mouse buttons for walls, space for routing");
+#if 0
 	mysearch(grid0, vertex_descriptor(4, 1));
 	mysearch(grid1, vertex_descriptor(5, 2));
 	mysearch(grid2, vertex_descriptor(5, 3));
 #if 0
 	return 0;
+#endif
 #endif
 	vector<vector<bool>> grid(gh, vector<bool>(gw));
 	int asdx=1;

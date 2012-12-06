@@ -13,6 +13,7 @@
 #define dPan Motion::ServoControl::KServoCameraPTUPan
 #define dTilt Motion::ServoControl::KServoCameraPTUTilt
 
+// TODO: oiskoha kuitenki 54?
 #define FOV 66.58 // degrees = 1.1621 rads
 
 /*

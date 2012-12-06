@@ -216,6 +216,33 @@ Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
 	return rotation;
 
 }
+Matrix3f rotx(double alpha) {
+	double c = cos(alpha), s = sin(alpha);
+	Matrix3f ret;
+	ret <<
+			1, 0, 0,
+			0, c, -s,
+			0, s, c;
+	return ret;
+}
+Matrix3f roty(double alpha) {
+	double c = cos(alpha), s = sin(alpha);
+	Matrix3f ret;
+	ret <<
+			c, 0, s,
+			0, 1, 0,
+			-s, 0, c;
+	return ret;
+}
+Matrix3f rotz(double alpha) {
+	double c = cos(alpha), s = sin(alpha);
+	Matrix3f ret;
+	ret <<
+			c, -s, 0,
+			s, c, 0,
+			0, 0, 1;
+	return ret;
+}
 
 void Camera::updatePositionOfTargets()
 {
@@ -240,6 +267,7 @@ void Camera::updatePositionOfTargets()
 
 		SLAM::Location ball = objects.at(i);
 	
+#if 0
 		Matrix3f R = getObjectRotation(ball.x, ball.y);
 
 		Vector3f T(0, 0, 1); // floor
@@ -265,8 +293,34 @@ void Camera::updatePositionOfTargets()
 		if (x < -3) x = -3;
 		if (y < -3) y = -3;
 
+#else
+	double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
+	cout << "target at (no ei mut tilt=" << theta_cam << endl;
+	double theta_rob = -cameradata.robotloc.theta;
+	cout << "target at (no ei mut rob=" << theta_rob << endl;
+	double f = 0.0037; // as it reads in the lens
+	double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
+	double m = f / pxlsz;
+
+	Matrix3f K;
+	K << m, 0, 320, 0, m, 240, 0, 0, 1;
+	Matrix3f Ki = K.inverse();
+
+	Vector3f P_cam(0, 0.72, -0.27);
+	Vector3f P_rob(cameradata.robotloc.y, 0, -cameradata.robotloc.x); // minuses?
+	Matrix3f R_cam(rotx(theta_cam));
+	Matrix3f R_rob(roty(theta_rob));
+	Vector3f p(ball.x, ball.y, 1);
+	Vector3f v = R_rob * R_cam * Ki * p;
+	double l = -P_cam(1) / v(1);
+	Vector3f P0 = P_rob + R_rob * P_cam;
+	Vector3f P = P0 + l * v;
+	cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
+	cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
+	Vector3f t(-P(2), P(0), 0);
+#endif
 		float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-		cout << "Cam: Target at (" << x << ", " << y << ") " << "dist: " << distance << endl;
+		cout << "Cam: Target at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
 
 		double minDist = MIN_DIST_FAR; // image front in m
 		double maxDist = MAX_DIST_FAR; // image back in m
@@ -281,8 +335,9 @@ void Camera::updatePositionOfTargets()
 			continue;
 		}
 
+		// TODO: filter only those that are in the kartio
 //		cout << "pallo: " << t << endl;
-		balls.push_back(SLAM::Location(x, y));
+		balls.push_back(SLAM::Location(t.x(), t.y()));
 
 	}
 }

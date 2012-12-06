@@ -19,7 +19,7 @@ ServoControl::ServoControl(CJ2B2Client &interface)
 void ServoControl::TestMovement()
 {
 	float ptu_pan = 0.0;
-	float ptu_tilt = -0.80;
+	float ptu_tilt = -0.8;//-1.25;
 	float ptu_pan_delta = 0.0;
 	float ptu_tilt_delta = 0.0;
 

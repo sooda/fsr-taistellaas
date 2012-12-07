@@ -247,7 +247,8 @@ Matrix3f rotz(double alpha) {
 void Camera::updatePositionOfTargets()
 {
 
-	balls.clear();
+	this->balls.clear();
+	this->nontargets.clear();
 /*
 	if (ownTime_get_ms_since(lastrun) < 1000) {
 		return;
@@ -261,84 +262,99 @@ void Camera::updatePositionOfTargets()
 	Mat temp;
 	undistort(image, temp, this->cameraMatrix, this->distCoeffs);
 
-	std::vector<SLAM::Location> objects = Camutil::FindBalls(temp, show_image);
+	std::vector<SLAM::Location> targets = Camutil::FindBalls(temp, show_image);
+	std::vector<SLAM::Location> non_targets = Camutil::FindBalls(temp, show_image, false);
 	
-	for (size_t i = 0; i < objects.size(); i++) {
+	for (size_t type = 0; type <= 1; type++) {
+	
+		std::vector<SLAM::Location> objects;
+		
+		if (type == 0)
+			objects = targets;
+		else if (type == 1)
+			objects = non_targets;
+			
+		
+		for (size_t i = 0; i < objects.size(); i++) {
 
-		SLAM::Location ball = objects.at(i);
-	
+			SLAM::Location ball = objects.at(i);
+		
 #if 0
-		Matrix3f R = getObjectRotation(ball.x, ball.y);
+			Matrix3f R = getObjectRotation(ball.x, ball.y);
 
-		Vector3f T(0, 0, 1); // floor
-		Vector3f p(0.24, 0, 0.73); // position of the camera
-		Vector3f v(1, 0, 0); // direction of the view of the camera
-		Vector3f t(0,0,0);
+			Vector3f T(0, 0, 1); // floor
+			Vector3f p(0.24, 0, 0.73); // position of the camera
+			Vector3f v(1, 0, 0); // direction of the view of the camera
+			Vector3f t(0,0,0);
 
-		v = R.transpose() * v;
+			v = R.transpose() * v;
 
-		t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
+			t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
 
-		std::cout << t << std::endl;
+			std::cout << t << std::endl;
 
-		double theta = cameradata.robotloc.theta;
-		// TODO: Check the rotation!
-		double x = t.x() * cos(theta) - t.y() * sin(theta);
-		double y = t.x() * sin(theta) + t.y() * cos(theta);
+			double theta = cameradata.robotloc.theta;
+			// TODO: Check the rotation!
+			double x = t.x() * cos(theta) - t.y() * sin(theta);
+			double y = t.x() * sin(theta) + t.y() * cos(theta);
 
-		// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
-		// causes segfault, 'cos are not in mapData area
-		if (x > 3) x = 3;
-		if (y > 3) y = 3;
-		if (x < -3) x = -3;
-		if (y < -3) y = -3;
+			// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
+			// causes segfault, 'cos are not in mapData area
+			if (x > 3) x = 3;
+			if (y > 3) y = 3;
+			if (x < -3) x = -3;
+			if (y < -3) y = -3;
 
 #else
-	double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
-	cout << "target at (no ei mut tilt=" << theta_cam << endl;
-	double theta_rob = -cameradata.robotloc.theta;
-	cout << "target at (no ei mut rob=" << theta_rob << endl;
-	double f = 0.0037; // as it reads in the lens
-	double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
-	double m = f / pxlsz;
+		double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
+//		cout << "target at (no ei mut tilt=" << theta_cam << endl;
+		double theta_rob = -cameradata.robotloc.theta;
+//		cout << "target at (no ei mut rob=" << theta_rob << endl;
+		double f = 0.0037; // as it reads in the lens
+		double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
+		double m = f / pxlsz;
 
-	Matrix3f K;
-	K << m, 0, 320, 0, m, 240, 0, 0, 1;
-	Matrix3f Ki = K.inverse();
+		Matrix3f K;
+		K << m, 0, 320, 0, m, 240, 0, 0, 1;
+		Matrix3f Ki = K.inverse();
 
-	Vector3f P_cam(0, 0.72, -0.27);
-	Vector3f P_rob(cameradata.robotloc.y, 0, -cameradata.robotloc.x); // minuses?
-	Matrix3f R_cam(rotx(theta_cam));
-	Matrix3f R_rob(roty(theta_rob));
-	Vector3f p(ball.x, ball.y, 1);
-	Vector3f v = R_rob * R_cam * Ki * p;
-	double l = -P_cam(1) / v(1);
-	Vector3f P0 = P_rob + R_rob * P_cam;
-	Vector3f P = P0 + l * v;
-	cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
-	cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
-	Vector3f t(-P(2), P(0), 0);
+		Vector3f P_cam(0, 0.72, -0.27);
+		Vector3f P_rob(cameradata.robotloc.y, 0, -cameradata.robotloc.x); // minuses?
+		Matrix3f R_cam(rotx(theta_cam));
+		Matrix3f R_rob(roty(theta_rob));
+		Vector3f p(ball.x, ball.y, 1);
+		Vector3f v = R_rob * R_cam * Ki * p;
+		double l = -P_cam(1) / v(1);
+		Vector3f P0 = P_rob + R_rob * P_cam;
+		Vector3f P = P0 + l * v;
+//		cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
+//		cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
+		Vector3f t(-P(2), P(0), 0);
 #endif
-		float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-		cout << "Cam: Target at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
+			float distance = sqrt(t.x() * t.x() + t.y() * t.y());
+			cout << "Cam: " << (type==0?"Target":"nontarget") << " at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
 
-		double minDist = MIN_DIST_FAR; // image front in m
-		double maxDist = MAX_DIST_FAR; // image back in m
-		if (abs(cameradata.tilt-ANGLE_NEAR) < abs(cameradata.tilt-ANGLE_FAR)) {
-			// near position
-			minDist = MIN_DIST_NEAR; // image front in m
-			maxDist = MAX_DIST_NEAR; // image back in m
-		}
+			double minDist = MIN_DIST_FAR; // image front in m
+			double maxDist = MAX_DIST_FAR; // image back in m
+			if (abs(cameradata.tilt-ANGLE_NEAR) < abs(cameradata.tilt-ANGLE_FAR)) {
+				// near position
+				minDist = MIN_DIST_NEAR; // image front in m
+				maxDist = MAX_DIST_NEAR; // image back in m
+			}
 
-		if ((distance > maxDist) || (distance < minDist)) {
-			std::cout << "Cam: ball omitted" << std::endl;
-			continue;
-		}
+			if ((distance > maxDist) || (distance < minDist)) {
+				std::cout << "Cam: ball omitted" << std::endl;
+				continue;
+			}
 
-		// TODO: filter only those that are in the kartio
-//		cout << "pallo: " << t << endl;
-		balls.push_back(SLAM::Location(t.x(), t.y()));
+			// TODO: filter only those that are in the kartio
+	//		cout << "pallo: " << t << endl;
+			if (type == 0)
+				this->balls.push_back(SLAM::Location(t.x(), t.y()));
+			else if (type == 1)
+				this->nontargets.push_back(SLAM::Location(t.x(), t.y()));
 
+	}
 	}
 }
 

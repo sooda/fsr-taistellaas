@@ -62,20 +62,22 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	std::vector<SLAM::Location> objects;
 
-	int limit_h = 0;
+	int limit_h_max = 0;
+	int limit_h_min = 0;
 	int limit_s = 0;
 	int limit_v = 0;
 
 	if (targets) {
-		limit_h = 10;
+		limit_h_min = 0;
+		limit_h_max = 10;
 		limit_s = 50;
 		limit_v = 90;
 	}
 	else {
-		// TODO: !!
-		limit_h = 10;
-		limit_s = 50;
-		limit_v = 90;
+		limit_h_min = 45;
+		limit_h_max = 70;
+		limit_s = 120;
+		limit_v = 120;
 	}
 	
 	Mat dst;
@@ -85,7 +87,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	namedWindow("src", CV_WINDOW_AUTOSIZE);
 
 	// tresholding
-	inRange(dst, Scalar(0, limit_s, limit_v), Scalar(limit_h, 255, 255), dst);
+	inRange(dst, Scalar(limit_h_min, limit_s, limit_v), Scalar(limit_h_max, 255, 255), dst);
 
 	// dilation
 	int dilation_size = 2;
@@ -101,13 +103,15 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	for( int idx = 0; idx < contours.size(); idx++ )
 	{
-		Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
-
+		//Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
+		Scalar color(0,0,255);
+		if (!targets) { color = Scalar(0,255,0); }
+		
 		Point2f center;
 		float radius;
 		minEnclosingCircle(contours[idx], center, radius);
 
-		if (radius < 15) continue;
+		if (radius < 13) continue;
 //		std::cout << idx << ": " << center << " " << radius << std::endl;
 
 		circle( src, center, (int)radius * 1.2, color, 2);

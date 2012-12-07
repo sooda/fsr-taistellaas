@@ -7,7 +7,7 @@ using namespace std; // FIXME: remove, after fixing the debug prints
 // (TODO: write a cool modern c++-raii-style logging mechanism with modular and named levels)
 namespace Motion {
 
-MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0) {
+MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0), routeStarting(0) {
 #if 0
 	// simulator
 	const float max_speed=0.1;
@@ -96,6 +96,19 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 	float beta = (dt - alpha);
 	beta = fixangles(beta);
 
+	// When new route is gotten, first rotate to orientation of first waypoint.
+	static const float eps = 20*M_PI/180;
+	if (routeStarting) {
+		if (floateq(myPose.theta, midpdest.theta, eps)) {
+			routeStarting = 0;
+			return nextMidpoint();
+		}
+		else {
+			ctrl.speed = 0;
+			ctrl.angle = k.a * dt;
+			return true;
+		}
+	}
 	ctrl.speed = k.p - k.iiris * fabsf(alpha);// * rho;
 	ctrl.angle = k.a * alpha - k.b * beta;
 
@@ -192,6 +205,7 @@ void MotionControl::setRoute(const PoseList& route) {
 	waypoints = route;
 	dPrint(0, "reload waypoint from current location");
 	reloadWaypoint(lastPose);
+	routeStarting = 1;
 }
 
 // Rebuild the midpoint list from the arc parameter specification
@@ -220,7 +234,8 @@ void MotionControl::buildMidpoints(ArcParams ellipse) {
 		cout << "\t\tAt angle " << theta << endl;
 		midpoints.push_back(SLAM::RobotLocation(x, y, theta));
 	}
-	nextMidpoint(); // FIXME -- this erases the first from the list, we're on that when starting..
+	if (!routeStarting)
+		nextMidpoint(); // FIXME -- this erases the first from the list, we're on that when starting..
 }
 
 // Derive an ellipse arc to drive on, from current location to a destination

@@ -65,6 +65,7 @@ private:
 	static ArcParams ellipseParams(Pose source, Pose dest);
 	void buildMidpoints(ArcParams ellipse);
 	Pose lastPose;
+	bool routeStarting;
 
 	// TODO: a nice log of all control settings -- alpha, theta and shit
 	struct HistPoint { Pose pose; Ctrl ctrl; };

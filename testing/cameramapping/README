@@ -1,0 +1,7 @@
+The camera looks always downwards, and it sees a trapezoid. We need to map a pixel coordinate of a found goal on the picture to the location on the floor in global coordinates.
+
+We use the camera's intrisic parameter matrix, camera location and rotation in world coordinates (calculated from robot location and rotation, and camera location and rotation relative to the robot). It's sure that the goal is always on the floor, i.e. its y coordinate is 0.
+
+A parameterized vector (a+l*v) from the camera through the picture plane is built, and the parameter t is derived so that its y is 0. We get x and z, and the location is known.
+
+The python program cameramapping.py draws the corner points of the trapezoid. It was written to debug the transformation matrices. It also contains some hand-measured numbers to double-check that the calculations are correct.

@@ -62,19 +62,15 @@ public:
 	grid_out_edge_iterator() : graph(NULL), dir(-1), vertex(), edge(vertex, vertex) {}
 	grid_out_edge_iterator(const Grid* g, gridvertex vert = gridvertex())
 			: graph(g), dir(42), vertex(vert), edge(vert, vert) {
-		cout << "outedge ctor at " << vert << endl;
 		if (vert.x == -1 && vert.y == -1) {
 			dir = -1;
-			cout << "singular" << endl;
 		} else {
-			cout << "jee" << endl;
 			increment();
 		}
 	}
 private:
 	friend class boost::iterator_core_access;
 	gridedge& dereference() const {
-		cout << "deref " << edge << endl;
 		return edge;
 	}
 	bool equal(const grid_out_edge_iterator& other) const {
@@ -83,12 +79,9 @@ private:
 		bool b =
 			graph == other.graph
 			&& ((dir == other.dir && dir == -1) || edge == other.edge);
-		cout << "equal:" << b << " :: " << edge << other.edge << " " << dir << "/" << other.dir << endl;
 		return b;
 	}
 	void increment() {
-		cout << "whee incr" << endl;
-		cout << "before: " << dir << edge << endl;
 		if (dir == -1) {
 			throw std::runtime_error("incrementing singular out edge iterator");
 		}
@@ -110,7 +103,6 @@ private:
 			int dx = deltas[2*dir];
 			int dy = deltas[2*dir + 1];
 			dest = gridvertex(vertex.x + dx, vertex.y + dy);
-			//cout << "try " << dir << ":" << dest << endl;
 			if (graph->free_at(dest))
 				break;
 		}
@@ -119,7 +111,6 @@ private:
 			dest = vertex;
 		}
 		edge = gridedge(vertex, dest);
-		cout << "after: " << dir << edge << endl;
 	}
 	const Grid* graph;
 	int dir;
@@ -172,7 +163,6 @@ class grid_heuristic { // : public astar_heuristic<Graph, Cost>
 			Cost dx = goal.x - u.x;
 			Cost dy = goal.y - u.y;
 			float f = sqrt(dx * dx + dy * dy); // FIXME, does not work with grid exactly like this?
-			cout << "heuristic " << u << " -- " << goal << ":: " << f << endl;
 			return f;
 		}
 
@@ -188,17 +178,15 @@ class grid_visitor : public boost::default_astar_visitor {
 		grid_visitor(Vertex goal) : goal(goal) {}
 		template <class Graph>
 			void examine_vertex(Vertex u, const Graph& g) {
-				cout << "Examining " << u << " (goal " << goal << ")" << endl;
+				// TODO: keep track of vertices visited; if too much, report "not reachable"
+				// cout << "Examining " << u << " (goal " << goal << ")" << endl;
 				if (u == goal) {
 					throw found_goal();
-				} else {
-					cout << "no: " << u.x << "," << u.y << " -- " << goal.x << "," << goal.y << endl;
 				}
 			}
-			template <class Graph>
-			void discover_vertex(Vertex u, const Graph& g) {
-				cout << "Discovered " << u << " (goal " << goal << ")" << endl;
-			}
+			//template <class Graph>
+			//void discover_vertex(Vertex u, const Graph& g) {
+			//}
 	private:
 		Vertex goal;
 };
@@ -215,29 +203,24 @@ typedef boost::graph_traits<graph>::degree_size_type degree_size_type;
 
 // incidencegraph
 std::pair<out_edge_iterator, out_edge_iterator> out_edges(vertex_descriptor u, const graph& g) {
-	cout << "out_edges " << u << endl;
-	return make_pair(out_edge_iterator(&g, u), out_edge_iterator(&g)); // TODO
+	return make_pair(out_edge_iterator(&g, u), out_edge_iterator(&g));
 }
 degree_size_type out_degree(vertex_descriptor u, const graph&) {
 	throw std::runtime_error("shouldn't call this");
-	cout << "outdegree" << endl;
-	return 0;  // number of out-edges
+	return 0;
 }
 vertex_descriptor source(edge_descriptor e, const graph&) {
-	cout << "sourke " << e << "=" << e.first << endl;
 	return e.first;
 }
 vertex_descriptor target(edge_descriptor e, const graph&) {
-	cout << "tarket " << e << "=" << e.second << endl;
 	return e.second;
 }
 // ??
 size_t num_vertices(const graph& g) {
-	cout << "nverts" << endl;
-	return gw*gh;
+	return gw * gh;
 }
 
-
+// TODO: traits?
 class edge_weight_map;
 namespace boost {
 	template <>
@@ -247,7 +230,6 @@ namespace boost {
 	};
 }
 
-
 struct edge_weight_map {
 	typedef float value_type;
 	typedef float reference;
@@ -255,45 +237,36 @@ struct edge_weight_map {
 	typedef boost::readable_property_map_tag category;
 
 	reference operator[](key_type e) const {
-		cout << "edgeweight map []" << e << endl;
 		if (e.first.x == e.second.x || e.first.y == e.second.y)
 			return 1.0;
 		return 1.41;
 	}
 };
+
 typedef boost::property_map<graph, boost::edge_weight_t>::const_type const_edge_weight_map;
 typedef boost::property_traits<const_edge_weight_map>::reference edge_weight_map_value_type;
 typedef boost::property_traits<const_edge_weight_map>::key_type edge_weight_map_key;
-// PropertyMap valid expressions
+
+// PropertyMap
 edge_weight_map_value_type get(const_edge_weight_map& pmap, edge_weight_map_key e) {
-	cout << "edge map weight " << e << " == " << endl;
 	edge_weight_map_value_type v = pmap[e];
-	cout << "edge map weight " << e << ": " << v << endl;
 	return v;
 }
 
-// ReadablePropertyGraph valid expressions
+// ReadablePropertyGraph
 // WeightMap weightmap = get(boost::edge_weight, grappi);
 const_edge_weight_map get(boost::edge_weight_t, const graph&) {
-	cout << "new edge weight map" << endl;
 	return const_edge_weight_map();
 }
-/*
-edge_weight_map_value_type get(boost::edge_weight_t tag, const graph& g, edge_weight_map_key e) {
-	cout << "index edge weight omg" << endl;
-	return get(tag, g)[e];
-}
-*/
-
+// TODO: use this and a big vector instead of std::map
 struct vertexindexasdmap;
 namespace boost {
 	template <>
 	struct property_map<gridgraph<vector<vector<bool>>>, boost::vertex_index_t> {
 		typedef vertexindexasdmap type;
-		typedef const vertexindexasdmap const_type;
+		typedef const type const_type;
 	};
 }
-
 
 struct vertexindexasdmap {
 	typedef int value_type;
@@ -303,7 +276,6 @@ struct vertexindexasdmap {
 
 	reference operator[](key_type k) const {
 		int v = k.y * gw + k.x; // TODO: magic width somewhere
-		cout << "indexasd map []" << k << ":" << v << endl;
 		return v;
 	}
 };
@@ -319,107 +291,15 @@ vertex_index_map_value_type get(const my_vertex_index_map& pmap, vertex_index_ma
 	return pmap[e];
 }
 
-
 // ReadablePropertyGraph valid expressions
 // WeightMap weightmap = get(boost::vertex_index, grappi);
 my_vertex_index_map get(boost::vertex_index_t, const graph&) {
-	cout << "new vertex index map" << endl;
 	return my_vertex_index_map();
 }
 
-/*
-void put(vertexindexasdmap& map, const vertex_index_map_key& key, vertex_index_map_value_type value) {
-	cout << "WRONG" << endl;
-	//map[key] = value;
-}*/
-
-
-#if 0
-
-struct vertexcolormaplol;
-namespace boost {
-	template <>
-		struct property_map<gridgraph<vector<vector<bool>>>, boost::vertex_color_t> {
-			typedef vertexcolormaplol type;
-			typedef vertexcolormaplol const_type;
-		};
-}
-
-
-struct vertexcolormaplol {
-	typedef int value_type;
-	typedef int reference;
-	typedef vertex_descriptor key_type;
-	typedef boost::read_write_property_map_tag category;
-
-	reference operator[](key_type e) const {
-		return 42; // TODO: indices by x,y values, TODO: real reference
-	}
-};
-
-//XXX: ::const_type
-typedef boost::property_map<graph, boost::vertex_color_t>::type my_vertex_color_map_lol;
-typedef boost::property_traits<my_vertex_color_map_lol>::reference vertex_color_map_value_type;
-typedef boost::property_traits<my_vertex_color_map_lol>::key_type vertex_color_map_key;
-
-
-// PropertyMap valid expressions
-vertex_color_map_value_type get(my_vertex_color_map_lol pmap, vertex_color_map_key e) {
-	return pmap[e];
-}
-
-
-// ReadablePropertyGraph valid expressions
-// WeightMap weightmap = get(boost::vertex_index, grappi);
-my_vertex_color_map_lol get(boost::vertex_index_t, const graph&) {
-	return my_vertex_color_map_lol();
-}
-
-void put(vertexcolormaplol& map, const vertex_color_map_key& key, vertex_color_map_value_type value) {
-	map[key];// = value;
-}
-
-
-
-typedef boost::property_map<graph, boost::vertex_color_t>::type color_map_t;
-#endif
-
-
-/*
-   void put(vertexindexasdmap& map, const vertex_index_map_key& key, boost::default_color_type value) {
-   map[key];// = value;
-   }
-   */
-
-/*
-   vertex_index_map_value_type get(boost::vertex_index_t tag, const graph& g, vertex_index_map_key e) {
-   return get(tag, g)[e];
-   }
-
-
-
-*/
-
-
-
-// get vertex index map
-// mapping K = gridgraph<std::vector<std::vector<bool> > >::vertex_descriptor, V = boost::default_color_type]
-// or: no known conversion for argument 1 from ‘gridgraph<std::vector<std::vector<bool> > >::vertex_descriptor’ to ‘const key_type& {aka const long unsigned int&}’
-// FIXME TODO XXX: vissiinki verteksi -> size_t -propertyjuttu
-// IN: vertex_index_map(VertexIndexMap i_map)
-// This maps each vertex to an integer in the range [0, num_vertices(g))
-// Note: if you use this default, make sure your graph has an internal vertex_index property.
-//boost::identity_property_map get(boost::vertex_index_t, const graph&) {
-//const_vertex_weight_map get(boost::vertex_index_t, const graph&) {
-//	return const_vertex_index_map();
-//}
-
-#if 1
 class my_pred_map : public map<vertex_descriptor, vertex_descriptor> {};
-#if 1
 template <class lol>
 void put(my_pred_map& m, lol k, lol v) {
-	cout << "LOL PUT LOL" << endl;
 	m[k] = v;
 }
 namespace boost {
@@ -431,18 +311,13 @@ namespace boost {
 			typedef boost::read_write_property_map_tag category;
 		};
 }
-#endif
-#endif
-#if 1
+
 class my_dist_map : public map<vertex_descriptor, cost> {
 	public:
 	cost & operator[](const vertex_descriptor& v) {
-		cout << "PENIS " << v << endl;
 		auto it = this->find(v);
 		if (it == this->end()) {
-			cout << "no benis" << endl;
-				this->insert(make_pair(v, 9999));
-			//this->insert(make_pair(v, std::numeric_limits<cost>::max()));
+			this->insert(make_pair(v, std::numeric_limits<cost>::max()));
 		}
 		return self::operator[](v);
 	}
@@ -450,9 +325,7 @@ class my_dist_map : public map<vertex_descriptor, cost> {
 	typedef map<vertex_descriptor, cost> self;
 };
 
-template <class lol, class foo>
-void put(my_dist_map& m, lol k, foo v) {
-	cout << "ROFL PUT " << &m << k << ":" << v << endl;
+void put(my_dist_map& m, gridvertex k, float v) {
 	m[k] = v;
 }
 namespace boost {
@@ -464,123 +337,70 @@ namespace boost {
 			typedef boost::read_write_property_map_tag category;
 		};
 }
-template <class zing>
-cost get(my_dist_map& m, zing k) {
-	cout << "ROFL GETDIST " << k << endl;
-	cout << m[k] << endl;
+cost get(my_dist_map& m, gridvertex k) {
 	return m[k];
 }
-#endif
-#if 0
 namespace boost {
 	template <>
-		struct property_map<gridgraph<vector<vector<bool>>>, boost::edge_weight_t> {
-			typedef edge_weight_map type;
-			typedef edge_weight_map const_type;
-		};
+	struct property_traits<boost::reference_wrapper<my_dist_map> > {
+		typedef cost value_type;
+	};
 }
-#endif
+
 pair<list<vertex_descriptor>, my_pred_map> mysearch(vector<vector<bool>>& grid, vertex_descriptor goal) {
 	graph g(grid);
 	vertex start(0, 0);
 	grid_heuristic<graph, cost> heuristic(goal);
 	grid_visitor<vertex> visitor(goal);
-#if 1
-	my_pred_map p; //(num_vertices(g));
-#endif
-#if 1
-	my_dist_map d;//(num_vertices(g));
-	cout << "ROFL TISSIT " << &d << endl;
-	d[start] = 0;
-	map<vertex_descriptor, boost::default_color_type> duus;
-#endif
+	my_pred_map p; // vec(num_vertices(g)); (vector is faster if indexed with my index map, but it uses more memory)
+	my_dist_map d; // vec(num_vertices(g));
+	d[start] = 0; // mandatory for some magic reason
+	map<vertex_descriptor, boost::default_color_type> colors;
 	try {
-	astar_search_no_init(g, start, heuristic,
-			boost::visitor(visitor)
-#if 1
-			.predecessor_map(boost::ref(p))
-#endif
-#if 1
-#if 0
-			.distance_map(d)
-#else
-			.distance_map(boost::ref(d))
-#endif
-#endif
-			.color_map(boost::associative_property_map<map<vertex_descriptor, boost::default_color_type>>(duus))
-			);
+		astar_search_no_init(g, start, heuristic,
+				boost::visitor(visitor)
+				.predecessor_map(boost::ref(p))
+				.distance_map(boost::ref(d))
+				.color_map(boost::associative_property_map<map<vertex_descriptor, boost::default_color_type>>(colors))
+		);
 	} catch (found_goal&) {
 		cout << "HURRAA" << endl;
 	}
-#if 1
-	cout << "loLolOLOL" << endl;
 	for (auto it = p.begin(); it != p.end(); ++it) {
 		cout << it->first << " pred is " << it->second << endl;
 	}
-	cout << "ashdisahifhifahfdi" << endl;
 	for (auto it = d.begin(); it != d.end(); ++it) {
 		cout << it->first << " - " << it->second << endl;
 	}
-#if 1
-	cout << "shbbu" << endl;
 	list<vertex_descriptor> shortest_path;
 	if (p[goal] == vertex_descriptor()) {
 		cout << "NOT FOUND" << endl;
 	} else {
 		for(vertex_descriptor v = goal;; v = p[v]) {
-			cout << "zingzong " << v << endl;
 			shortest_path.push_front(v);
-			/* if(p[v] == v) // HOX HOX TODO FIXME tolleen se kuuluis koodaa, alku -> alku
-				break; */
 			if(v == start)
 				break;
 		}
 	}
-#endif
-#endif
-#if 1
 	cout << "Shortest path:";
 	list<vertex_descriptor>::iterator spi = shortest_path.begin();
 	cout << *spi;
 	for(++spi; spi != shortest_path.end(); ++spi)
 		cout << " -> " << *spi;
-#endif
-#if 1
 	cout << endl << "Total travel time: " << d[goal] << endl;
-#endif
 	cout << "search finished" << endl;
 	return make_pair(shortest_path, p);
-}
-namespace boost {
-	template <>
-	struct property_traits<boost::reference_wrapper<my_dist_map> > {
-		typedef cost value_type ;
-	};
 }
 int main()
 {
 	using std::vector;
-	vector<vector<bool>> grid0(gh, vector<bool>(gw));
-	vector<vector<bool>> grid1(gh, vector<bool>(gw));
-	vector<vector<bool>> grid2(gh, vector<bool>(gw));
 	list<vertex_descriptor> l;
 	my_pred_map p;
 	sf::RenderWindow App(sf::VideoMode(ww, wh), "mouse buttons for walls, space for routing");
-#if 0
-	mysearch(grid0, vertex_descriptor(4, 1));
-	mysearch(grid1, vertex_descriptor(5, 2));
-	mysearch(grid2, vertex_descriptor(5, 3));
-#if 0
-	return 0;
-#endif
-#endif
 	vector<vector<bool>> grid(gh, vector<bool>(gw));
-	int asdx=1;
-	// Create main window
 
 	int lastx = 0;
 	int lasty = 0;
-	// Start game loop
 	while (App.IsOpened())
 	{
 		// Process events
@@ -612,9 +432,6 @@ int main()
 		}
 
 		if (!(lastx == mgx && lasty == mgy) && !grid[mgy][mgx] && inp.IsKeyDown(sf::Key::Space)) {
-			cout << "ASD ASD ASD " << lastx << " " << lasty << "||" << mgx << " " << mgy << endl;
-			//vector<vector<bool>> grid(gh, vector<bool>(gw));
-
 			boost::tie(l, p) = mysearch(grid, vertex_descriptor(mgx, mgy));
 			lastx = mgx;
 			lasty = mgy;

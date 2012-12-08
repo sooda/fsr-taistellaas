@@ -8,6 +8,7 @@
 #include <utility> // need for pair?
 #include <stdexcept>
 #include "gridsearch.hpp"
+#include "getturns.hpp"
 
 const int ww = 1024, wh = 768; // win wid, hei
 const int sz = 32;
@@ -15,10 +16,15 @@ const int gw = ww/sz, gh = wh/sz; // grid size
 
 using namespace std;
 
+void box(sf::RenderWindow& app, int x, int y, const sf::Color& color) {
+	app.Draw(sf::Shape::Rectangle(x * sz, y * sz, (x + 1) * sz, (y + 1) * sz, color));
+}
+
 int main()
 {
 	using std::vector;
 	list<gridvertex> l;
+	vector<pair<vertex, vertex>> corners;
 	my_pred_map p;
 	sf::RenderWindow App(sf::VideoMode(ww, wh), "mouse buttons for walls, space for routing");
 	vector<vector<bool>> grid(gh, vector<bool>(gw));
@@ -58,16 +64,23 @@ int main()
 
 		if (!(lastx == mgx && lasty == mgy) && !grid[mgy][mgx] && inp.IsKeyDown(sf::Key::Space)) {
 			boost::tie(l, p) = gridsearch(grid, gridvertex(mgx, mgy, &container));
+			corners = get_turns(l.begin(), l.end());
 			lastx = mgx;
 			lasty = mgy;
 		}
 		for (auto it = p.begin(); it != p.end(); ++it) {
-			gridvertex& v = it->second;
-		App.Draw(sf::Shape::Rectangle(v.x * sz, v.y * sz, (v.x + 1) * sz, (v.y + 1) * sz, sf::Color::Yellow));
+			const gridvertex& v = it->second;
+			box(App, v.x, v.y, sf::Color::Yellow);
 		}
 		for (auto it = l.begin(); it != l.end(); ++it) {
-			gridvertex& v = *it;
-		App.Draw(sf::Shape::Rectangle(v.x * sz, v.y * sz, (v.x + 1) * sz, (v.y + 1) * sz, sf::Color::Blue));
+			const gridvertex& v = *it;
+			box(App, v.x, v.y, sf::Color::Blue);
+		}
+		for (auto it = corners.begin(); it != corners.end(); ++it) {
+			vertex& v = it->first;
+			vertex& d = it->second;
+			box(App, v.x, v.y, sf::Color::Magenta);
+			App.Draw(sf::Shape::Line((v.x+0.5)*sz, (v.y+0.5)*sz, (v.x+d.x+0.5)*sz, (v.y+d.y+0.5)*sz, 2, sf::Color::Cyan));
 		}
 		App.Draw(sf::Shape::Rectangle(mx, my, mx+sz-1, my+sz-1, sf::Color::Green));
 
@@ -80,7 +93,7 @@ int main()
 		for (int y = 0; y < gh; y++) {
 			for (int x = 0; x < gw; x++) {
 				if (grid[y][x]) {
-					App.Draw(sf::Shape::Rectangle(x*sz, y*sz, (x+1)*sz, (y+1)*sz, sf::Color::Red));
+					box(App, x, y, sf::Color::Red);
 				}
 			}
 		}

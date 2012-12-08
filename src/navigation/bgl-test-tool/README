@@ -4,4 +4,6 @@ prerequisites: boost, sfml
 
 running: simply 'make'
 
-using: left mouse button creates walls, right deletes, space searches. red=wall, green=mouse, blue=route, yellow=searched area
+using: left mouse button creates walls, right deletes, space searches.
+
+display: red=wall, green=mouse, blue=route, yellow=searched area, magenta=corners, cyan=corner directions

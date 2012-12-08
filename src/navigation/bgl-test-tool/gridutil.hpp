@@ -22,21 +22,28 @@ public:
 	virtual int height() const = 0;
 };
 
-class gridvertex {
+class vertex {
 	public:
 		int x, y; // const/mutable
-		gridvertex() : x(-1), y(-1), grid(NULL) {}
-		gridvertex(int x, int y, const Grid* grid) : x(x), y(y), grid(grid) {}
+		vertex() : x(-1), y(-1) {}
+		vertex(int x, int y) : x(x), y(y) {}
 
-		friend std::ostream& operator<<(std::ostream& os, const gridvertex& u) {
+		friend std::ostream& operator<<(std::ostream& os, const vertex& u) {
 			os << "(" << u.x << ", " << u.y << ")";
 		}
-		bool operator==(const gridvertex& other) const {
+		bool operator==(const vertex& other) const {
 			return x == other.x && y == other.y;
 		}
-		bool operator!=(const gridvertex& other) const {
+		bool operator!=(const vertex& other) const {
 			return !(*this == other);
 		}
+};
+
+class gridvertex : public vertex {
+	public:
+		gridvertex() : vertex(), grid(NULL) {}
+		gridvertex(int x, int y, const Grid* grid) : vertex(x, y), grid(grid) {}
+
 		// for std::map
 		bool operator<(const gridvertex& other) const {
 			return id() < other.id();

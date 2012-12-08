@@ -1,5 +1,5 @@
 SRC := sfmldemo.cpp gridsearch.cpp
-HDR := gridsearch.hpp gridutil.hpp gridgraph.hpp
+HDR := gridsearch.hpp gridutil.hpp gridgraph.hpp getturns.hpp
 
 all: run
 

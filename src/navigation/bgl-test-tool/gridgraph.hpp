@@ -121,10 +121,12 @@ class grid_heuristic { // : public astar_heuristic<Graph, Cost>
 
 		grid_heuristic(Vertex goal) : goal(goal) {}
 		Cost operator()(Vertex u) {
-			Cost dx = goal.x - u.x;
-			Cost dy = goal.y - u.y;
-			float f = sqrt(dx * dx + dy * dy); // FIXME, does not work with grid exactly like this? first diagonally, then in straight line
-			return f;
+			Cost dx = abs(goal.x - u.x);
+			Cost dy = abs(goal.y - u.y);
+			// first diagonally, then the remaining steps in a straight line
+			int diagonal_steps = std::min(dx, dy);
+			int straight_steps = std::max(dx, dy) - diagonal_steps;
+			return diagonal_steps * sqrt(2) + straight_steps;
 		}
 
 	private:

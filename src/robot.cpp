@@ -54,12 +54,17 @@ Robot::~Robot() {
 }
 
 void Robot::navigate(void) {
-	// navigation.findRoute(my_final_dest_from_planner); // MIDTERM: not used yet -- navigation has a static route
-	auto route = navigation.getRoute();
-	// FIXME: currently move start point to end - does the route need the starting point if it's always the same as current pose? is it always the same?
-	route.push_back(route.front());
-	route.pop_front();
-	motionControl.setRoute(route);
+	motionControl.setRoute(navigation.getRoute());
+}
+
+void Robot::explore() {
+	// TODO: write code to search the largest unknown area
+	// currently, in this state, someone should click the destination with a mouse
+	std::cout << "Hey user, click somewhere to explore!" << std::endl;
+}
+
+void Robot::updateTargets() {
+	// TODO: ask the locations from SLAM
 }
 
 void Robot::planAction(void) {
@@ -73,8 +78,16 @@ void Robot::planAction(void) {
 		bool succeeded = false;
 		switch (taskState) {
 			case EXPLORE:
-				if (!motionControl.iterate(p))
-					navigate();
+				updateTargets();
+				if (targets.size()) {
+					if (motionControl.running())
+						motionControl.stop();
+					taskState = PICK_UP;
+				} else {
+					if (!motionControl.iterate(p)) {
+						explore();
+					}
+				}
 				break;
 			case PICK_UP:
 				// TODO: 1. Ask slam, where is closest ball
@@ -125,7 +138,6 @@ void Robot::threadMain(void) {
 	slamloc.x = startx;
 	slamloc.y = starty;
 	motionControl.setPose(slamloc);
-	navigate(); // MIDTERM: what.
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
 		planAction();

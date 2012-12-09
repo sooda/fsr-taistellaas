@@ -60,6 +60,20 @@ void MotionControl::setPose(Pose pose) {
 	lastPose = pose;
 }
 
+
+bool MotionControl::running() const {
+	// TODO: write a lock for the midpoint vector to avoid race conditions with planner thread
+	return !midpoints.empty();
+}
+void MotionControl::stop() {
+	// FIXME: again a race condition, with control parameters (is a big lock for the whole class enough?)
+	ctrl.speed = 0;
+	ctrl.angle = 0;
+	interface.iMotionCtrl->SetStop();
+	midpoints.clear();
+	waypoints.clear();
+}
+
 // Main control loop to read current pose and update control values
 // return false if no destination available (i.e. routing finished and need a new endpoint)
 bool MotionControl::iterate(SLAM::RobotLocation myPose) {
@@ -75,11 +89,11 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 
 	cout << "ITERATE" << endl;
 	cout << midpoints.size() << endl;
-	if (midpoints.size() == 0) { // FIXME: kludge
+	if (midpoints.size() == 0) {
 		cout << "\tNo midpoints" << endl;
 		ctrl.speed = 0;
 		ctrl.angle = 0;
-		return true;
+		return false;
 	}
 	Pose midpdest = currentMidpoint();
 	float dx = midpdest.x - myPose.x;

@@ -79,7 +79,9 @@ private:
 	void threadUser(void);
 
 	void navigate(void);
+	void explore(void);
 	void planAction(void);
+	void updateTargets(void);
 
 	void pollEvents(void);
 	void handleKey(int, SDLKey);
@@ -117,6 +119,7 @@ private:
 	
 	TaskState taskState;
 	int numberOfPickUps;
+	std::vector<SLAM::Location> targets;
 
 	static const int win_width = 1024, win_height = 768;
 };

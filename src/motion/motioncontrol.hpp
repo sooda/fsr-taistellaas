@@ -30,6 +30,8 @@ public:
 	void setPose(Pose pose) ;
 	struct Ctrl;
 	Ctrl getCtrl() { return ctrl; }
+	void stop();
+	bool running() const;
 private:
 	MotionControl(const MotionControl&);
 	MotionControl& operator=(const MotionControl&);

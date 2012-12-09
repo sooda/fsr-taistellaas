@@ -1,6 +1,6 @@
 astar_search.hpp: slightly modified from boost; i believe boost has a bug
 
-prerequisites: boost, sfml
+prerequisites: boost and sdl for the algo, sfml for visualization
 
 running: simply 'make'
 

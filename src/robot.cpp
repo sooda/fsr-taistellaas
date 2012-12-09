@@ -36,6 +36,9 @@ Robot::Robot(CJ2B2Client& j2b2)
 	// don't bother cleaning up, will do that later if necessary
 	SDL_JoystickOpen(0);
 
+	// need initial empty data before doing anything
+	navigation.refreshMap(slam.getCurrentMapData());
+
 	// start other threads, return immediately to caller
 	RunThread(THREAD_MAIN);
 	RunThread(THREAD_SENSE);
@@ -260,8 +263,11 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 	} else {
 		info.push_back("Automatic steering");
 	}
+
 	const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
-	motionControl.drawMap(screen, slamGridEnd, win_height-1-10);
+
+	navigation.draw(screen, slamGridEnd, slamGridEnd);
+	//motionControl.drawMap(screen, slamGridEnd, win_height-1-10);
 
 	int y = slamGridEnd;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {
@@ -302,6 +308,21 @@ void Robot::pollEvents(void) {
 				manual.angle = 0;
 				manual.speed = 0;
 				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_RIGHT) {
+					const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
+					int x = event.button.x - slamGridEnd, y = event.button.y - slamGridEnd;
+					if (y >= 0 && y < SLAM::MapData::gridSize) {
+						y = SLAM::MapData::gridSize - 1 - y;
+						if (x >= SLAM::MapData::gridSize)
+							x -= SLAM::MapData::gridSize;
+						if (x >= 0 && x < SLAM::MapData::gridSize) {
+							std::cout << "Find route: " << x << " " << y << std::endl;
+							navigation.solveGrid(x, y);
+						}
+					}
+				}
+				break;
 			default:
 				break;
 		}
@@ -327,6 +348,9 @@ void Robot::handleKey(int type, SDLKey key) {
 				break;
 			case SDLK_RETURN:
 				manual.enabled = false;
+				break;
+			case SDLK_n:
+				navigation.refreshMap(slam.getCurrentMapData());
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

@@ -106,7 +106,7 @@ private:
 		bool enabled;
 	} manual;
 
-	static const int win_width = 310 + 310 + 640, win_height = 310 + 310 + 300;
+	static const int win_width = 310 + 310 + 640, win_height = 310 + 310 + 310;
 };
 
 #endif

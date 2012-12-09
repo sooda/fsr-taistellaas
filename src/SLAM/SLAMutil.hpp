@@ -9,6 +9,8 @@ Utility stuff and such
 
 #include <cmath>
 #include <utility>
+#include <iostream>
+#include <vector>
 
 namespace SLAM {
 

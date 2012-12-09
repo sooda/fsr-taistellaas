@@ -29,13 +29,13 @@ enum ObservationType {
 };
 
 // constructor
-MapData(RobotLocation initial);
+MapData(RobotLocation initial = RobotLocation());
 
 // used to set the value of one cell of the map to another
 void setCellValue(GridPoint xy, ObservationType type, double value);
 
 // used to get the value of one cell of the map
-double getCellValue(GridPoint xy, ObservationType type);
+double getCellValue(GridPoint xy, ObservationType type) const;
 
 // used to set the value at some location of the map to another (from nearest cell)
 void setValue(Location xy, ObservationType type, double value);
@@ -59,7 +59,7 @@ void setGridLocation(RobotLocation xyt);
 RobotLocation getRobotLocation();
 	
 // used to get the robot location in the map grid
-RobotLocation getGridLocation();
+RobotLocation getGridLocation() const;
 	
 
 static const int gridSize;

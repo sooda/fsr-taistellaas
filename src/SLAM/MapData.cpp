@@ -30,7 +30,7 @@ void MapData::setCellValue(GridPoint xy, ObservationType type, double value) {
 }
 
 // used to get the value of one cell of the map
-double MapData::getCellValue(GridPoint xy, ObservationType type) {
+double MapData::getCellValue(GridPoint xy, ObservationType type) const {
 	if (xy.x > gridSize || xy.x < 0 || xy.y > gridSize || xy.y < 0) {
 		std::cerr << "MapData::getCellValue called with out of bouds value" << std::endl;
 		return -1;
@@ -88,7 +88,7 @@ RobotLocation MapData::getRobotLocation() {
 }
 
 // used to get the robot location in the map grid
-RobotLocation MapData::getGridLocation() {
+RobotLocation MapData::getGridLocation() const {
 	Location temp (robotLocation.x, robotLocation.y);
 	GridPoint temp2 = loc2grid(temp);
 	return RobotLocation(temp2.x, temp2.y, robotLocation.theta);

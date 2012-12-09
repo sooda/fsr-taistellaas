@@ -236,7 +236,6 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 }
 
 
-#ifndef _DONT_USE_SDL_
 // draws the laser scan on screen
 void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int window_height) {
   
@@ -296,28 +295,32 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		return;
 	}
 
+	const int gridsz = MapData::gridSize;
 	for (int type_ = MapData::WALL; type_ != MapData::OBS_TYPE_SIZE; type_++) {
 		MapData::ObservationType type = (MapData::ObservationType)type_;
 
 		int x0 = 0;
-		int y0 = MapData::gridSize;
+		int y0 = 0;
 
 		if (type == MapData::TARGET) {
-			x0 = window_width - MapData::gridSize;
-			y0 = MapData::gridSize;
+			x0 = gridsz + 10;
 		}
 		if (type == MapData::OBSTACLE) {
-			x0 = 0;
-			y0 = window_height;
+			y0 = gridsz + 10;
 		}
 		if (type == MapData::GOAL) {
-			x0 = window_width - MapData::gridSize;
-			y0 = window_height;
+			x0 = gridsz + 10;
+			y0 = gridsz + 10;
 		}
 
 		// draw the map
-		for (int x = 0; x < MapData::gridSize; x++) {
-			for (int y = 0; y < MapData::gridSize; y++) {
+		lineRGBA(screen, x0, y0, x0 + gridsz + 1, y0, 255, 255, 255, 255);
+		lineRGBA(screen, x0, y0 + gridsz + 1, x0 + gridsz + 1, y0 + gridsz + 1, 255, 255, 255, 255);
+		lineRGBA(screen, x0, y0, x0, y0 + gridsz + 1, 255, 255, 255, 255);
+		lineRGBA(screen, x0 + gridsz + 1, y0, x0 + gridsz + 1, y0 + gridsz + 1, 255, 255, 255, 255);
+		x0++; y0++;
+		for (int x = 0; x < gridsz; x++) {
+			for (int y = 0; y < gridsz; y++) {
 				double wall = currentMapData.getCellValue(GridPoint(x,y), type);
 				int colorR = (int)(150+wall*100);
 				int colorG = (int)(150+wall*100);
@@ -327,10 +330,10 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 				if (type == MapData::OBSTACLE) colorG = 0;
 				if (type == MapData::GOAL) colorB = 0;
 
-				pixelRGBA(screen, 
-					x0 + x, 
-					y0 - y, 
-					colorR, colorG, colorB, 100);	
+				pixelRGBA(screen,
+					x0 + x,
+					y0 + gridsz-1 - y,
+					colorR, colorG, colorB, 255);
 			}
 		}
 	
@@ -338,21 +341,20 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		RobotLocation loc = currentMapData.getGridLocation();
 		filledCircleRGBA(screen, 
 			x0 + loc.x, 
-			y0 - loc.y, 
+			y0 + gridsz-1 - loc.y, 
 			(int)(0.4 / MapData::unitSize / 2), 0, 255, 255, 255);
 
 		// draw robot direction line
 	    for (int i = 0; i < 10; i++) { 
 			pixelRGBA(screen, 
 				x0 + loc.x+i*cos(loc.theta), 
-				y0 - loc.y-i*sin(loc.theta),
+				y0 + gridsz-1 - loc.y-i*sin(loc.theta),
 				255, 0, 0, 255);
 		}  
 
 	}
    
 }
-#endif
 
 MaCI::Ranging::TDistance SLAM::getNearest() const {
 	return lastNearest;

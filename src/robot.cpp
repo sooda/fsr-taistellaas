@@ -245,7 +245,7 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 				image.GetImageDataSize());
 		SDL_Surface *image = IMG_LoadJPG_RW(rw);
 		SDL_FreeRW(rw);
-		SDL_Rect rcDest = {0,0,0,0}; // or NULL?
+		SDL_Rect rcDest = {static_cast<Sint16>(2 * (SLAM::MapData::gridSize + 10)), 0, 0, 0};
 		SDL_BlitSurface(image, NULL, screen, &rcDest);
 		SDL_FreeSurface(image);
 	} else {
@@ -260,9 +260,10 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 	} else {
 		info.push_back("Automatic steering");
 	}
-//	motionControl.drawMap(screen, 10, win_height-1-10);
+	const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
+	motionControl.drawMap(screen, slamGridEnd, win_height-1-10);
 
-	int y = 310;
+	int y = slamGridEnd;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {
 		stringRGBA(screen, 0, y, it->c_str(), 0, 255, 0, 255);
 		y += 10;

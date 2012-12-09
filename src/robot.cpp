@@ -59,11 +59,18 @@ void Robot::navigate(void) {
 }
 
 void Robot::threadMain(void) {
+	// TODO(mulppi&sooda): is there a need for calibration anymore?
+	// is the slam origin at robot location after starting, every time?
+	// (hung in this loop if haven't moved anywhere)
 	SLAM::RobotLocation slamloc;
+#if 0
 	while (slamloc.x == 0 && slamloc.y == 0) {
 		slamloc = slam.getCurrentMapData().getRobotLocation();
 		ownSleep_ms(1);
+		if (IsRequestTermination())
+			return;
 	}
+#endif
 	// robot starts in these coordinates in our (simulator's/motioncontrol's) system
 	// slam coordinate is out of sync, but in correct orientation; calibrate only location
 	float startx = 3, starty = 2.7;

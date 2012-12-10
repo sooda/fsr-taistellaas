@@ -17,11 +17,13 @@ public:
 	void draw(SDL_Surface* surface, int posx, int posy) const;
 	bool solveGrid(int x, int y);
 	LocList getRoute(void) const;
+	void updateLocation(SLAM::RobotLocation pos);
 private:
 	SLAM::MapData map;
 	GridMap wallmap_orig;
 	GridMap wallmap_dila;
 	std::list<gridvertex> current_route;
+	SLAM::RobotLocation roboPos;
 };
 
 }

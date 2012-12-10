@@ -183,7 +183,7 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 // inform slam of some object at some location
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
-	double scaleDownDeltas = 0.8;
+	double scaleDownDeltas = 0.8; // FIXME TODO XXX read this from servos
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
 	double dtheta = scaleDownDeltas*MapData::unitSize/data.maxDist;

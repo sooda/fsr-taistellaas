@@ -34,7 +34,7 @@ Robot::Robot(CJ2B2Client& j2b2)
 	manual.enabled = true;
 	
 	// Initialize the state machine for high level planner
-	taskState = EXPLORE;
+	taskState = START;
 	// Initialze the number of targets
 	numberOfPickUps = 0;
 
@@ -78,8 +78,13 @@ void Robot::planAction(void) {
 		if(statistics.taskStartTime == 0)
 			statistics.taskStartTime = ownTime_get_ms();
 		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
+		std::cout << "ROBOT LOCATION IN PLANNER: " << p.x << " " << p.y << " " << p.theta << std::endl;
 		bool succeeded = false;
 		switch (taskState) {
+			case START:
+				if (!motionControl.rollStart(p))
+					taskState = EXPLORE;
+				break;
 			case EXPLORE:
 				updateTargets();
 				if (targets.size()) {
@@ -116,7 +121,11 @@ void Robot::planAction(void) {
 					taskState = RELEASE_TARGETS;
 				break;
 			case RELEASE_TARGETS:
-				// TODO: implement: open hatch, ask navigation to navigate backwards, see results
+				servoControl.setHatch(false);
+				if (!motionControl.backFromGoal(p)) {
+					taskState = END_STATE;
+				}
+				// TODO: examine your balls
 				break;
 			case END_STATE:
 				manual.enabled = true;
@@ -130,6 +139,7 @@ void Robot::planAction(void) {
 		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
 			taskState = RETURN_TO_GOAL;
 	}
+	std::cout << "CURRENT TASK: " << taskdescr[taskState] << std::endl;
 }
 
 void Robot::threadMain(void) {
@@ -166,6 +176,7 @@ void Robot::threadSense(void) {
 			if (pose) {
 				lastMeas.pose.set(*pose);
 				slam.updateOdometryData(SLAM::RobotLocation(pose->x, pose->y, pose->a));
+				navigation.updateLocation(slam.getCurrentMapData().getGridLocation());
 			} else {
 				dPrint(1, "WTF, got position event with no pose");
 			}
@@ -418,6 +429,27 @@ void Robot::handleKey(int type, SDLKey key) {
 				taskState = GO_RETURN_TO_GOAL;
 				taskLock.Unlock();
 				break;
+			case SDLK_h:
+				j2b2.iTextToSpeech->SendText("Hello world");
+				break;
+			case SDLK_1:
+				servoControl.setHatch(true);
+				break;
+			case SDLK_0:
+				servoControl.setHatch(false);
+				break;
+			case SDLK_PAGEUP: {
+				float tilt = servoControl.getPosition(Motion::ServoControl::KServoCameraPTUTilt) - 0.05;
+				std::cout << "CAM TILT AT: " << tilt << std::endl;
+				servoControl.setPosition(Motion::ServoControl::KServoCameraPTUTilt, tilt);
+				}
+				break;
+			case SDLK_PAGEDOWN: {
+				float tilt = servoControl.getPosition(Motion::ServoControl::KServoCameraPTUTilt) + 0.05;
+				std::cout << "CAM TILT AT: " << tilt << std::endl;
+				servoControl.setPosition(Motion::ServoControl::KServoCameraPTUTilt, tilt);
+				}
+				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",
 						key,
@@ -453,3 +485,13 @@ int Robot::ThreadFunction(int threadId) {
 	}
 	return 0;
 }
+const char* Robot::taskdescr[] = {
+	"Start",
+	"Explore",
+	"Pick up",
+	"Go return to goal",
+	"Return to goal",
+	"Release targets",
+	"End state",
+	"Back off"
+};

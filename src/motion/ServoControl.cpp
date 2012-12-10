@@ -48,6 +48,10 @@ void ServoControl::resetServos()
     }
 }
 
+void ServoControl::setHatch(bool state) {
+	setPosition(KServoUserServo_0, state ? 0 : 1);
+}
+
 float ServoControl::getPosition(ServoControl::EServo servo) const
 {
 	if (servopos.find(servo) == servopos.end())

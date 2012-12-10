@@ -31,8 +31,7 @@ public:
 	void resetServos();
 	float getPosition(ServoControl::EServo) const;
 	bool setPosition(ServoControl::EServo, float);
-
-
+	void setHatch(bool state); // true = closed
 private:
 	ServoControl(const ServoControl&);
 	ServoControl operator=(const ServoControl&);

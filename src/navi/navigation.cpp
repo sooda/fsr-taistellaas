@@ -23,6 +23,9 @@ void Navigation::refreshMap(const SLAM::MapData& data) {
 	}
 	wallmap_dila = dilate(wallmap_orig, 5); // TODO: correct amount
 }
+void Navigation::updateLocation(SLAM::RobotLocation pos) {
+	roboPos = pos;
+}
 
 void drawGrid(const GridMap& grid, SDL_Surface* screen, int x0, int y0) {
 	const int gridsz = MapData::gridSize;
@@ -59,19 +62,18 @@ void Navigation::draw(SDL_Surface* screen, int posx, int posy) const {
 	drawGrid(wallmap_dila, screen, x0 + MapData::gridSize, y0);
 
 	// draw the robot
-	SLAM::RobotLocation loc = map.getGridLocation();
 	filledCircleRGBA(screen, 
-		x0 + loc.x, 
-		y0 + gridsz-1 - loc.y, 
+		x0 + roboPos.x, 
+		y0 + gridsz-1 - roboPos.y, 
 		(int)(0.4 / MapData::unitSize / 2), 0, 255, 255, 255);
 
 	for (int i = 0; i < 10; i++) {
 		pixelRGBA(screen,
-			x0 + loc.x+i*cos(loc.theta),
-			y0 + gridsz-1 - loc.y-i*sin(loc.theta),
+			x0 + roboPos.x+i*cos(roboPos.theta),
+			y0 + gridsz-1 - roboPos.y-i*sin(roboPos.theta),
 			255, 0, 0, 255);
 	}  
-	pixelRGBA(screen, x0 + MapData::gridSize + loc.x, y0 + gridsz-1 - loc.y, 255, 0, 0, 255);
+	pixelRGBA(screen, x0 + MapData::gridSize + roboPos.x, y0 + gridsz-1 - roboPos.y, 255, 0, 0, 255);
 
 	for (auto it = current_route.begin(); it != current_route.end(); ++it) {
 		pixelRGBA(screen, x0 + it->x, y0 + gridsz-1 - it->y, 0, 255, 0, 255);

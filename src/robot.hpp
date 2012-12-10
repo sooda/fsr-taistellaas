@@ -63,6 +63,7 @@ private:
 	};
 	
 	enum TaskState {
+		START,
 		EXPLORE,
 		PICK_UP,
 		GO_RETURN_TO_GOAL,
@@ -73,6 +74,7 @@ private:
 		
 		NUM_TASK_STATES
 	};
+	static const char* taskdescr[];
 
 	int ThreadFunction(const int num);
 

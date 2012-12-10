@@ -119,6 +119,7 @@ public:
 
 	Location(double x_val, double y_val) 
 		: x(x_val), y(y_val) { }
+	Location() : x(0), y(0) {}
 
 	double x;	// in meters
 	double y;	// in meters

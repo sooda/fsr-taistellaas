@@ -8,8 +8,8 @@ using namespace std; // FIXME: remove, after fixing the debug prints
 namespace Motion {
 
 MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0), routeStarting(false) {
-	k.p = 0.1;
-	k.a = 0.3;
+	k.p = 0.05;
+	k.a = 0.2;
 	k.iiris = k.p / M_PI;
 	k.closeEnough = 0.15;
 	interface.iMotionCtrl->SetStop();
@@ -50,6 +50,18 @@ void MotionControl::setPose(Pose pose) {
 	lastPose = pose;
 }
 
+bool MotionControl::rollStart(Pose pose) {
+	static bool rotated = false;
+	if (floateq(pose.theta, M_PI, 20*M_PI/180))
+		rotated = true;
+	bool finished = rotated && floateq(pose.theta, 0, 20*M_PI/180);
+	if (finished) {
+		ctrl.angle = 0;
+	} else {
+		ctrl.angle = 1 / 10.0 * M_PI;
+	}
+	return !finished;
+}
 
 bool MotionControl::running() const {
 	// TODO: write a lock for the midpoint vector to avoid race conditions with planner thread
@@ -226,6 +238,18 @@ void MotionControl::backOff() {
 	// ??!?
 	interface.iBehaviourCtrl->SetStop();
 	interface.iMotionCtrl->SetSpeed(-0.5, 0, -acceleration);
+}
+
+bool MotionControl::backFromGoal(SLAM::RobotLocation current) {
+	const float farFromTarget = 0.5;
+	if (sqrt(current.x * current.x + current.y * current.y) >= farFromTarget) {
+		ctrl.speed = 0;
+		ctrl.angle = 0;
+		return false;
+	}
+	ctrl.speed = -0.1;
+	ctrl.angle = 0;
+	return true;
 }
 
 const float MotionControl::acceleration = 0.3;

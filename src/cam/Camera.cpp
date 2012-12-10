@@ -114,13 +114,13 @@ void Camera::updateToSLAM(SLAM::SLAM &slam) {
 		std::vector<SLAM::Location> objects;
 
 		if (type == SLAM::MapData::TARGET) {
-			objects = balls; // target locations in (dx,dy) from location robot was when image was taken
+			objects = balls;
 		}
 		else if (type == SLAM::MapData::OBSTACLE) {
-			objects= nontargets; // as above
+			objects= nontargets;
 		}
 		else if (type == SLAM::MapData::GOAL) {
-			// daa
+			objects = goalarea;
 		}
 
 		SLAM::ImageData data (objects, location, minDist, maxDist, viewWidth);

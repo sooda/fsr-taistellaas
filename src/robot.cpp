@@ -101,18 +101,19 @@ void Robot::planAction(void) {
 				if(succeeded)
 					numberOfPickUps++;
 				if(numberOfPickUps >= 10 || ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
+					taskState = GO_RETURN_TO_GOAL;
+				break;
+			case GO_RETURN_TO_GOAL:
+				if (navigation.solveGrid(SLAM::MapData::gridSize / 2, SLAM::MapData::gridSize / 2)) {
+					navigate();
 					taskState = RETURN_TO_GOAL;
+				} else {
+					taskState = EXPLORE;
+				}
 				break;
 			case RETURN_TO_GOAL:
-				// TODO: Check with slam, how to get goal location
-				//SLAM::RobotLocation goalLocation = slam.getCurrentMapData().getGoalLocation()
-				// TODO: move this to navigation module
-				/* auto route = navigation.findRoute(goalLocation);
-				route.push_back(route.front());
-				route.pop_front();
-				motionControl.setRoute(route);
-				if(!motionControl.iterate(p))
-					taskState = RELEASE_TARGETS;*/
+				if (!motionControl.iterate(p))
+					taskState = RELEASE_TARGETS;
 				break;
 			case RELEASE_TARGETS:
 				// TODO: implement: open hatch, ask navigation to navigate backwards, see results
@@ -411,6 +412,11 @@ void Robot::handleKey(int type, SDLKey key) {
 				break;
 			case SDLK_n:
 				navigation.refreshMap(slam.getCurrentMapData());
+				break;
+			case SDLK_r:
+				taskLock.Lock();
+				taskState = GO_RETURN_TO_GOAL;
+				taskLock.Unlock();
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

@@ -211,6 +211,8 @@ bool MotionControl::nextMidpoint(void) {
 	midpoints.pop_front();
 	if (midpoints.empty()) {
 		// finished with current route -- cannot continue
+		ctrl.speed = 0;
+		ctrl.angle = 0;
 		return false;
 	}
 	return true;

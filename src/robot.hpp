@@ -65,6 +65,7 @@ private:
 	enum TaskState {
 		EXPLORE,
 		PICK_UP,
+		GO_RETURN_TO_GOAL,
 		RETURN_TO_GOAL,
 		RELEASE_TARGETS,
 		END_STATE,

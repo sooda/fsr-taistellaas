@@ -68,7 +68,6 @@ void MotionControl::stop() {
 bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 	//if (myPose.theta < 0) myPose.theta += 2*M_PI;
 	// you spin me right round
-	cout << "hihii " << myPose.theta;
 	while (myPose.theta > M_PI)
 		myPose.theta -= 2*M_PI;
 	while (myPose.theta < -M_PI)
@@ -217,13 +216,14 @@ bool MotionControl::nextMidpoint(void) {
 	return true;
 }
 
-// TODO
-void MotionControl::avoidObstacle(float obstacleAngle) {
-	dPrint(1, "Too close -- avoiding obstacle");
-	// just go back as fast as possible.
-	// TODO: reverse a bit, turn 90 degrees and go forward
-	interface.iMotionCtrl->SetSpeed(-1, 0, acceleration);
-	// interface.iMotionCtrl->SetStop();
+void MotionControl::stopBackingOff() {
+	interface.iBehaviourCtrl->SetStart();
+}
+
+void MotionControl::backOff() {
+	// ??!?
+	interface.iBehaviourCtrl->SetStop();
+	interface.iMotionCtrl->SetSpeed(-0.5, 0, -acceleration);
 }
 
 const float MotionControl::acceleration = 0.3;

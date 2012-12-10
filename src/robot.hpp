@@ -68,6 +68,7 @@ private:
 		RETURN_TO_GOAL,
 		RELEASE_TARGETS,
 		END_STATE,
+		BACK_OFF,
 		
 		NUM_TASK_STATES
 	};
@@ -121,6 +122,7 @@ private:
 	} manual;
 	
 	TaskState taskState;
+	gim::CSync taskLock;
 	int numberOfPickUps;
 	std::vector<SLAM::Location> targets;
 

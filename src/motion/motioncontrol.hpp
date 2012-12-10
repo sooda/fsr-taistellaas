@@ -20,7 +20,8 @@ public:
 	void refreshSpeed(void);
 
 	bool iterate(SLAM::RobotLocation current);
-	void avoidObstacle(float obstacleAngle);
+	void backOff();
+	void stopBackingOff();
 
 	typedef SLAM::RobotLocation Pose;
 	typedef std::list<SLAM::Location> LocList;

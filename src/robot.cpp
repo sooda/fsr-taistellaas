@@ -120,6 +120,10 @@ void Robot::planAction(void) {
 			case END_STATE:
 				manual.enabled = true;
 				break;
+			case BACK_OFF:
+				std::cout << "DYNDYNDYY" << std::endl;
+				motionControl.backOff();
+				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}
 		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
@@ -132,7 +136,9 @@ void Robot::threadMain(void) {
 	motionControl.setPose(slamloc);
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
+		taskLock.Lock();
 		planAction();
+		taskLock.Unlock();
 		ownSleep_ms(100); // TODO: determine good value to synch with motor control loop
 	}
 }
@@ -201,9 +207,19 @@ void Robot::threadSense(void) {
 		MaCI::Ranging::TDistanceArray bumperDistance;
 		if (j2b2.iRangingBumpers->GetDistanceArray(bumperDistance, &bumperHeader, &bumperTimestamp, &bumperSeq, 10)) {
 			// four bumpers, one has data, others at distance -1
+			bool hit = false;
 			for(EACH_IN_i(bumperDistance)) {
-				if (i->distance >= 0.00)
+				if (i->distance >= 0.00) {
 					dPrint(1,"Bumpers hit: %f meters @ %f rad", i->distance, i->angle);
+					taskLock.Lock();
+					taskState = BACK_OFF;
+					taskLock.Unlock();
+					hit = true;
+				}
+			}
+			if (taskState == BACK_OFF && hit == false) {
+				taskState = EXPLORE;
+				motionControl.stopBackingOff();
 			}
 			// TODO: do something meaningful if we crash
 			// tell main planner about it

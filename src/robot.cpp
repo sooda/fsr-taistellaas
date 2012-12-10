@@ -78,8 +78,6 @@ void Robot::planAction(void) {
 		if(statistics.taskStartTime == 0)
 			statistics.taskStartTime = ownTime_get_ms();
 		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
-		p.x += slamcalib.x;
-		p.y += slamcalib.y;
 		bool succeeded = false;
 		switch (taskState) {
 			case EXPLORE:
@@ -130,25 +128,7 @@ void Robot::planAction(void) {
 }
 
 void Robot::threadMain(void) {
-	// TODO(mulppi&sooda): is there a need for calibration anymore?
-	// is the slam origin at robot location after starting, every time?
-	// (hung in this loop if haven't moved anywhere)
 	SLAM::RobotLocation slamloc;
-#if 0
-	while (slamloc.x == 0 && slamloc.y == 0) {
-		slamloc = slam.getCurrentMapData().getRobotLocation();
-		ownSleep_ms(1);
-		if (IsRequestTermination())
-			return;
-	}
-#endif
-	// robot starts in these coordinates in our (simulator's/motioncontrol's) system
-	// slam coordinate is out of sync, but in correct orientation; calibrate only location
-	float startx = 3, starty = 2.7;
-	slamcalib.x = startx - slamloc.x;
-	slamcalib.y = starty - slamloc.y;
-	slamloc.x = startx;
-	slamloc.y = starty;
 	motionControl.setPose(slamloc);
 	while (!IsRequestTermination()) {
 		// TODO: do some main planner magic here
@@ -246,7 +226,8 @@ void Robot::threadSlam(void) {
 	while (!IsRequestTermination(0)) {
 		if (statistics.lidar > statistics.slam) {
 			if (statistics.odometry != 0)
-				slam.updateLaserData(lastMeas.lidar.get());
+				if (slam.updateLaserData(lastMeas.lidar.get()))
+					navigation.refreshMap(slam.getCurrentMapData());
 			statistics.slam++;
 		}
 	}
@@ -328,6 +309,7 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 	const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
 
 	navigation.draw(screen, slamGridEnd, slamGridEnd);
+	motionControl.drawInfo(screen, SLAM::MapData::gridSize, slamGridEnd + SLAM::MapData::gridSize / 2);
 	//motionControl.drawMap(screen, slamGridEnd, win_height-1-10);
 
 	int y = slamGridEnd;
@@ -370,7 +352,7 @@ void Robot::pollEvents(void) {
 				manual.speed = 0;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == SDL_BUTTON_RIGHT) {
+				if (taskState == EXPLORE && event.button.button == SDL_BUTTON_RIGHT) {
 					const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
 					int x = event.button.x - slamGridEnd, y = event.button.y - slamGridEnd;
 					if (y >= 0 && y < SLAM::MapData::gridSize) {
@@ -379,7 +361,8 @@ void Robot::pollEvents(void) {
 							x -= SLAM::MapData::gridSize;
 						if (x >= 0 && x < SLAM::MapData::gridSize) {
 							std::cout << "Find route: " << x << " " << y << std::endl;
-							navigation.solveGrid(x, y);
+							if (navigation.solveGrid(x, y))
+								navigate();
 						}
 					}
 				}

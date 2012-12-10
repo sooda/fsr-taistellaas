@@ -14,13 +14,10 @@ SLAM main interface class
 #include "J2B2-API.hpp"
 #include "gmapping/gfs-j2b2/gfs-j2b2.hpp"
 #include <gimutils.h>
-
-#ifndef _DONT_USE_SDL_
 #include <../SDL/SDL.h>
 #include <../SDL/SDL_image.h>
 #include <../SDL/SDL_thread.h>
 #include <../SDL/SDL_gfxPrimitives.h>
-#endif
 
 namespace SLAM {
 
@@ -41,7 +38,7 @@ MapData getCurrentMapData();
 
 // inform SLAM of the latest laser data
 // may also trigger SLAM update
-void updateLaserData(MaCI::Ranging::TDistanceArray laserData);
+bool updateLaserData(MaCI::Ranging::TDistanceArray laserData);
 
 // inform SLAM of the latest odometry data
 void updateOdometryData(RobotLocation delta);

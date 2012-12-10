@@ -10,19 +10,14 @@ namespace Navi {
 
 class Navigation {
 public:
-	typedef SLAM::RobotLocation Pose;
-	typedef std::list<Pose> PoseList;
+	typedef std::list<SLAM::Location> LocList;
 
 	Navigation();
 	void refreshMap(const SLAM::MapData& data);
 	void draw(SDL_Surface* surface, int posx, int posy) const;
-	void solveGrid(int x, int y);
-	const PoseList& getRoute(void) const;
-	// void findRoute(Pose destination); // MIDTERM: not needed yet.
-
+	bool solveGrid(int x, int y);
+	LocList getRoute(void) const;
 private:
-	PoseList route;
-	void loadMidterm();
 	SLAM::MapData map;
 	GridMap wallmap_orig;
 	GridMap wallmap_dila;

@@ -7,20 +7,10 @@ using namespace std; // FIXME: remove, after fixing the debug prints
 // (TODO: write a cool modern c++-raii-style logging mechanism with modular and named levels)
 namespace Motion {
 
-MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0), routeStarting(0) {
-#if 0
-	// simulator
-	const float max_speed=0.1;
-	const float max_possible_dist=1; // no waypoint >1m away
-	k.p = 3*max_speed/max_possible_dist;
-	k.a = 3*0.32;
-	k.b = 3*0.2;
-#else
+MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctrl(), k(), lastPose(0, 0, 0), routeStarting(false) {
 	k.p = 0.1;
 	k.a = 0.3;
-	k.b = 0.0; // 0.3 (0.1 in sim)
 	k.iiris = k.p / M_PI;
-#endif
 	k.closeEnough = 0.15;
 	interface.iMotionCtrl->SetStop();
 	interface.iBehaviourCtrl->SetStart();
@@ -71,7 +61,6 @@ void MotionControl::stop() {
 	ctrl.angle = 0;
 	interface.iMotionCtrl->SetStop();
 	midpoints.clear();
-	waypoints.clear();
 }
 
 // Main control loop to read current pose and update control values
@@ -95,49 +84,43 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 		ctrl.angle = 0;
 		return false;
 	}
-	Pose midpdest = currentMidpoint();
+	SLAM::Location midpdest = midpoints.front();
 	float dx = midpdest.x - myPose.x;
 	float dy = midpdest.y - myPose.y;
 	// TODO: subtract mod2pi somehow so that almost2pi-littleover0=2pi-almost2pi+littleover0 (?)
 	//if (myPose.theta<0.01)myPose.theta=2*M_PI;
-	float dt = midpdest.theta - myPose.theta; // my_t-dest_t in the lecture slide
-	dt = fixangles(dt);
 	float rho = sqrt(dx * dx + dy * dy);
 	float ata = atan2(dy, dx);
 	//if (ata < 0) ata += 2*M_PI;
 	float alpha = ata - myPose.theta;
 	alpha = fixangles(alpha);
-	float beta = (dt - alpha);
-	beta = fixangles(beta);
 
 	// When new route is gotten, first rotate to orientation of first waypoint.
 	static const float eps = 20*M_PI/180;
 	if (routeStarting) {
-		if (floateq(myPose.theta, midpdest.theta, eps)) {
-			routeStarting = 0;
+		if (floateq(myPose.theta, startPoint.theta, eps)) {
+			routeStarting = false;
 			return nextMidpoint();
-		}
-		else {
+		} else {
 			ctrl.speed = 0;
+			float dt = startPoint.theta - myPose.theta;
+			dt = fixangles(dt);
 			ctrl.angle = k.a * dt;
 			return true;
 		}
 	}
 	ctrl.speed = k.p - k.iiris * fabsf(alpha);// * rho;
-	ctrl.angle = k.a * alpha - k.b * beta;
+	ctrl.angle = k.a * alpha;
 
 	cout<< "\tdx = " << dx << endl;
 	cout<< "\tdy = " << dy << endl;
 	cout<< "\tmy theta = " << myPose.theta << " " << r2d(myPose.theta) << endl;
-	cout<< "\tdest theta = " << midpdest.theta << " " << r2d(midpdest.theta) << endl;
 	cout<< "\tatan2 dydx = " << ata << " " << r2d(ata) << endl;
-	cout<< "\tdt = " << dt << " " << r2d(dt) << endl;
 	cout<< "\trho = " << rho << endl;
 	cout<< "\talpha = " << alpha << " " << r2d(alpha) << endl;
-	cout<< "\tbeta = " << beta << " " << r2d(beta) << endl;
 	cout<< "\tv = " << ctrl.speed << endl;
 	cout<< "\tw = " << ctrl.angle << " " << r2d(ctrl.angle) << endl;
-	history.push_back(HistPoint{lastPose, Ctrl{ctrl.speed, ctrl.angle}});
+	history.push_back(HistPoint{lastPose, Ctrl{ctrl.speed, ctrl.angle}, alpha, ata});
 	if (rho < k.closeEnough) {
 		cout << "\tCLOSE ENOUGH!" << endl;
 		return nextMidpoint();
@@ -146,7 +129,17 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 }
 
 
+void MotionControl::drawInfo(SDL_Surface* screen, int sx, int sy) const {
+	filledCircleRGBA(screen, sx, sy, 5, 255, 255, 255, 255);
+	if (history.size()) {
+		float a = history.back().ata;
+		int dx = 20 * cos(a);
+		int dy = 20 * sin(a);
+		lineRGBA(screen, sx, sy, sx + dx, sy - dy, 255, 0, 0, 255);
+	}
+}
 void MotionControl::drawMap(SDL_Surface* screen, int sx, int sy) const {
+#if 0
 	//pixelRGBA(screen, sx, sy, 255, 255, 255, 255);
 	lineRGBA(screen, sx, sy, sx, sy-100, 255, 255, 0, 255);
 	lineRGBA(screen, sx, sy, sx+100, sy, 255, 255, 0, 255);
@@ -195,106 +188,31 @@ void MotionControl::drawMap(SDL_Surface* screen, int sx, int sy) const {
 		}
 
 	}
+#endif
 }
 
-// The midpoint we're heading towards currently
-const MotionControl::Pose& MotionControl::currentMidpoint(void) const {
-	return midpoints.front();
-}
-
-// Call after updating waypoint list or after having reached one waypoint to get the next one
-// Calculates the route settings till next waypoint
-void MotionControl::reloadWaypoint(Pose source) {
-	auto destination = waypoints.front();
-	ArcParams ellipse = ellipseParams(source, destination);
-	// not initialized if 0
-	if (ellipse.ox != 0 && ellipse.oy != 0) {
-		buildMidpoints(ellipse);
-	}
-}
 // XXX this should maybe not be called from another thread while doing some parsing
 // Currently only called once after starting, will probably be called after having
 // finished the whole route
-void MotionControl::setRoute(const PoseList& route) {
-	waypoints = route;
+void MotionControl::setRoute(const LocList& route) {
+	midpoints = route;
 	dPrint(0, "reload waypoint from current location");
-	reloadWaypoint(lastPose);
-	routeStarting = 1;
+	routeStarting = true;
+	startPoint.x = route.front().x;
+	startPoint.y = route.front().y;
+	auto it = route.begin(); ++it;
+	float dx = it->x - startPoint.x;
+	float dy = it->y - startPoint.y;
+	startPoint.theta = atan2(dy, dx);
 }
 
-// Rebuild the midpoint list from the arc parameter specification
-void MotionControl::buildMidpoints(ArcParams ellipse) {
-	assert((midpoints.empty() && "One does not simply build midpoints while still old points available"));
-	cout << "Build midpoints." << endl;
-	int steps = 6 * sqrt(ellipse.a * ellipse.a + ellipse.b * ellipse.b);
-	const float step = M_PI / 2 / steps;
-	for (float t = 0; t < M_PI / 2 + step*0.5; t += step) {
-		cout << "\tMidpoint " << t << endl;
-		float x, y, dx, dy;
-		if (!ellipse.horizontal) {
-			x = ellipse.ox + ellipse.a * cos(t); // + ox
-			y = ellipse.oy + ellipse.b * sin(t); // + oy
-			dx = ellipse.a * -sin(t);
-			dy = ellipse.b * cos(t);
-		} else {
-			x = ellipse.ox + ellipse.a * sin(t); // + ox
-			y = ellipse.oy + ellipse.b * cos(t); // + oy
-			dx = ellipse.a * cos(t);
-			dy = ellipse.b * -sin(t);
-		}
-		float theta = atan2(dy, dx);
-		//if (theta < 0) theta += 2*M_PI;
-		cout << "\t\tAt pos " << x << " " << y << endl;
-		cout << "\t\tAt angle " << theta << endl;
-		midpoints.push_back(SLAM::RobotLocation(x, y, theta));
-	}
-	if (!routeStarting)
-		nextMidpoint(); // FIXME -- this erases the first from the list, we're on that when starting..
-}
-
-// Derive an ellipse arc to drive on, from current location to a destination
-MotionControl::ArcParams MotionControl::ellipseParams(Pose source, Pose dest) {
-	cout << "ellipse params from " << source.x << " " << source.y << " " << source.theta << " to " << dest.x << "," << dest.y << "," << dest.theta << endl;
-	ArcParams p;
-	static const float eps = 20*M_PI/180;
-	if (floateq(source.theta, DIR_UP, eps) || floateq(source.theta, DIR_DOWN, eps)) {
-		cout << "\tVertical" << endl;
-		// facing up or down
-		p.ox = dest.x;
-		p.oy = source.y;
-		p.a = source.x - dest.x;
-		p.b = dest.y - source.y;
-		p.horizontal = false;
-	} else if (floateq(source.theta, DIR_RIGHT, eps) || floateq(source.theta, DIR_RIGHT + 2*M_PI) || floateq(source.theta, DIR_LEFT, eps)) { // FIXME: hack for both 0 and 2pi
-		cout << "\tHorizontal" << endl;
-		p.ox = source.x;
-		p.oy = dest.y;
-		p.a = dest.x - source.x;
-		p.b = source.y - dest.y;
-		p.horizontal = true;
-	} else {
-		dPrint(0, ("FIXME: cannot continue -- bad pose for waypoint " + lexical_cast(source.theta)).c_str());
-		p.ox=p.oy=0; // invent a better way for this
-	}
-	cout << "Got params: " << p.ox << " " << p.oy << " " << p.a << " " << p.b << endl;
-	return p;
-}
-
-// Remove the current midpoint and update target waypoint to be the next one
-// Go to next waypoint and update midpoint list if all midpoints have been consumed
+// Go to next midpoint and update midpoint list
 // return false if no midpoint available
 bool MotionControl::nextMidpoint(void) {
-midpoints.pop_front();
+	midpoints.pop_front();
 	if (midpoints.empty()) {
-		Pose lastWaypoint = waypoints.front();
-		waypoints.pop_front();
-		if (waypoints.size()) {
-			dPrint(0, "reload new waypoint");
-			reloadWaypoint(lastWaypoint);
-		} else {
-			// finished with current route -- cannot continue
-			return false;
-		}
+		// finished with current route -- cannot continue
+		return false;
 	}
 	return true;
 }

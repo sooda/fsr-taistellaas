@@ -23,15 +23,16 @@ public:
 	void avoidObstacle(float obstacleAngle);
 
 	typedef SLAM::RobotLocation Pose;
-	typedef std::list<Pose> PoseList;
+	typedef std::list<SLAM::Location> LocList;
 
-	void setRoute(const PoseList& route);
+	void setRoute(const LocList& route);
 	void drawMap(SDL_Surface* screen, int sx, int sy) const;
-	void setPose(Pose pose) ;
+	void setPose(Pose pose);
 	struct Ctrl;
 	Ctrl getCtrl() { return ctrl; }
 	void stop();
 	bool running() const;
+	void drawInfo(SDL_Surface* screen, int x, int y) const;
 private:
 	MotionControl(const MotionControl&);
 	MotionControl& operator=(const MotionControl&);
@@ -45,14 +46,14 @@ private:
 	} ctrl;
 
 	struct {
-		float p, a, b, iiris;
+		float p, a, iiris;
 		float closeEnough;
 	} k;
 
-	// these lists contain always also the one we're currently heading to,
+	// contains always also the one we're currently heading to,
 	// thus, the front is popped off only after finishing with it
-	PoseList waypoints;
-	PoseList midpoints;
+	LocList midpoints;
+	Pose startPoint;
 
 	struct ArcParams {
 		float a, b, ox, oy; // it's fine for a or b to be negative
@@ -61,16 +62,13 @@ private:
 		bool horizontal;
 	};
 
-	const Pose& currentMidpoint(void) const;
 	bool nextMidpoint();
-	void reloadWaypoint(Pose src);
-	static ArcParams ellipseParams(Pose source, Pose dest);
 	void buildMidpoints(ArcParams ellipse);
 	Pose lastPose;
 	bool routeStarting;
 
 	// TODO: a nice log of all control settings -- alpha, theta and shit
-	struct HistPoint { Pose pose; Ctrl ctrl; };
+	struct HistPoint { Pose pose; Ctrl ctrl; float alpha, ata; };
 	std::vector<HistPoint> history;
 };
 

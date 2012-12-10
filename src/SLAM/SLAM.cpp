@@ -43,15 +43,16 @@ MapData SLAM::getCurrentMapData() {
 }
 
 // make slam update map based on laser measurements
-void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
+// return true if map was updated
+bool SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 
 	if (laserData.empty()) {
 		std::cerr << "SLAM: Null laser scan array!" << std::endl;
-		return;
+		return false;
 	}
 	if (lastOdometryUpdateTime.getSeconds() == 0) {
 		std::cerr << "SLAM: No odometry data for update!" << std::endl;
-		return;
+		return false;
 	}
 
 
@@ -119,12 +120,9 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		duration -= start;
 
 		std::cout << "SLAM: t = " << duration.getSeconds() << "." << duration.getUSeconds() << "s" << std::endl; 
-
-	}	
-	else {
-		//std::cerr << "SLAM: no new map" << std::endl;
+		return true;
 	}
-
+	return false;
 }
 
 // make slam update map based on odometry data

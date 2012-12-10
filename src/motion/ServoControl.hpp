@@ -1,4 +1,5 @@
 #include "MachineCtrlClient.hpp"
+#include "J2B2-API.hpp"
 
 
 /*
@@ -25,17 +26,19 @@ public:
 	  KServoUserServo_3       ///< User defined servo 3 (on Ch 5)
 	};
 
-	ServoControl(MaCI::JointGroupCtrl::CJointGroupCtrlClient& servoCtrl);
+	ServoControl(CJ2B2Client&);
 
-	void Container(float);
+	void resetServos();
 	float getPosition(ServoControl::EServo);
 	bool setPosition(ServoControl::EServo, float);
 
 
 private:
-	ServoControl(const ServoControl&); // unimplemented
-	ServoControl operator=(const ServoControl&); // unimplemented
-	MaCI::JointGroupCtrl::CJointGroupCtrlClient& servoCtrl;
+	ServoControl(const ServoControl&);
+	ServoControl operator=(const ServoControl&);
+	CJ2B2Client &interface;
+	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl;
+	std::map<Motion::ServoControl::EServo, float> servopos;
 };
 
 }

@@ -62,6 +62,12 @@ all: $(TARGET)
 runreal: $(TARGET)
 	./taistellaas 130.233.120.178 40002
 
+runreal-valgrind: $(TARGET)
+	valgrind ./taistellaas 130.233.120.178 40002
+
+runreal-gdb: $(TARGET)
+	gdb -ex run --args ./taistellaas 130.233.120.178 40002
+
 simulate: $(TARGET)
 	./taistellaas localhost $(shell grep -wo 4002. ../../application/execute_simulator_client) FSRSim.J2B2
 

@@ -9,12 +9,14 @@
 Robot::Robot(CJ2B2Client& j2b2)
 		: CThread(NUM_THREADS), j2b2(j2b2),
 		motionControl(j2b2),
+		servoControl(j2b2),
 		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
 		navigation(),
-		servos(*j2b2.iServoCtrl),
+		camera(j2b2),
 		lastMeas(),
 		statistics(),
-		manual() {
+		manual()
+	{
 	// sanity check: are the necessary services available?
 	if (!j2b2.iPositionOdometry)
 		throw std::runtime_error("Odometry not found");
@@ -39,6 +41,9 @@ Robot::Robot(CJ2B2Client& j2b2)
 	// returns a joystick structure that we don't use for anything
 	// don't bother cleaning up, will do that later if necessary
 	SDL_JoystickOpen(0);
+
+	// need initial empty data before doing anything
+	navigation.refreshMap(slam.getCurrentMapData());
 
 	// start other threads, return immediately to caller
 	RunThread(THREAD_MAIN);
@@ -125,11 +130,18 @@ void Robot::planAction(void) {
 }
 
 void Robot::threadMain(void) {
+	// TODO(mulppi&sooda): is there a need for calibration anymore?
+	// is the slam origin at robot location after starting, every time?
+	// (hung in this loop if haven't moved anywhere)
 	SLAM::RobotLocation slamloc;
+#if 0
 	while (slamloc.x == 0 && slamloc.y == 0) {
 		slamloc = slam.getCurrentMapData().getRobotLocation();
 		ownSleep_ms(1);
+		if (IsRequestTermination())
+			return;
 	}
+#endif
 	// robot starts in these coordinates in our (simulator's/motioncontrol's) system
 	// slam coordinate is out of sync, but in correct orientation; calibrate only location
 	float startx = 3, starty = 2.7;
@@ -157,7 +169,7 @@ void Robot::threadSense(void) {
 	// FIXME: separate events could be in different threads as they all have a timeout setting.
 	// It's maybe fine to poll them very fast (with a small timeout), though
 	int positionSeq = -1, laserSeq = -1, bumperSeq = -1;
-	unsigned int cameraSeq = 0;
+//	unsigned int cameraSeq = 0;
 	while (!IsRequestTermination()) {
 		// TODO: call motionControl.pollPosition(); or something here
 		MaCI::Position::CPositionData pd;
@@ -173,7 +185,17 @@ void Robot::threadSense(void) {
 
 		}
 
-		MaCI::Image::CImageData imgData;
+		// Fetch image from robot using Camera module
+		try {
+			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
+			lastMeas.image.set(camera.getCameraImage());
+			statistics.camera++;
+			camera.updateToSLAM(slam);
+		} catch ( ... ) {
+			dPrint(1, "WTF, got image data with no data");
+		}
+
+/*		MaCI::Image::CImageData imgData;
 		if (j2b2.iImageCameraFront->GetImageData(imgData, &cameraSeq)) {
 			MaCI::Image::CImageContainer image;
 			if (imgData.GetImage(image, NULL, true)) {
@@ -183,7 +205,7 @@ void Robot::threadSense(void) {
 				dPrint(1, "WTF, got image data with no data");
 			}
 		}
-
+*/
 		// TODO: actually use the additional data for something
 		// timestamp sounds useful
 		MaCI::Ranging::TDistanceHeader laserHeader;
@@ -287,7 +309,7 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 				image.GetImageDataSize());
 		SDL_Surface *image = IMG_LoadJPG_RW(rw);
 		SDL_FreeRW(rw);
-		SDL_Rect rcDest = {0,0,0,0}; // or NULL?
+		SDL_Rect rcDest = {static_cast<Sint16>(2 * (SLAM::MapData::gridSize + 10)), 0, 0, 0};
 		SDL_BlitSurface(image, NULL, screen, &rcDest);
 		SDL_FreeSurface(image);
 	} else {
@@ -302,9 +324,13 @@ void Robot::drawScreen(SDL_Surface* screen, int frameno) {
 	} else {
 		info.push_back("Automatic steering");
 	}
-	motionControl.drawMap(screen, 10, win_height-1-10);
 
-	int y = 200;
+	const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
+
+	navigation.draw(screen, slamGridEnd, slamGridEnd);
+	//motionControl.drawMap(screen, slamGridEnd, win_height-1-10);
+
+	int y = slamGridEnd;
 	for (std::vector<std::string>::iterator it = info.begin(); it != info.end(); ++it) {
 		stringRGBA(screen, 0, y, it->c_str(), 0, 255, 0, 255);
 		y += 10;
@@ -343,6 +369,21 @@ void Robot::pollEvents(void) {
 				manual.angle = 0;
 				manual.speed = 0;
 				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_RIGHT) {
+					const int slamGridEnd = 2 * (SLAM::MapData::gridSize + 10);
+					int x = event.button.x - slamGridEnd, y = event.button.y - slamGridEnd;
+					if (y >= 0 && y < SLAM::MapData::gridSize) {
+						y = SLAM::MapData::gridSize - 1 - y;
+						if (x >= SLAM::MapData::gridSize)
+							x -= SLAM::MapData::gridSize;
+						if (x >= 0 && x < SLAM::MapData::gridSize) {
+							std::cout << "Find route: " << x << " " << y << std::endl;
+							navigation.solveGrid(x, y);
+						}
+					}
+				}
+				break;
 			default:
 				break;
 		}
@@ -369,13 +410,8 @@ void Robot::handleKey(int type, SDLKey key) {
 			case SDLK_RETURN:
 				manual.enabled = false;
 				break;
-			case SDLK_h:
-				servos.Container(0);
-				dPrint(1, "Omg 1");
-				break;
-			case SDLK_j:
-				servos.Container(M_PI/2-0.01);
-				dPrint(1, "Omg 2");
+			case SDLK_n:
+				navigation.refreshMap(slam.getCurrentMapData());
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

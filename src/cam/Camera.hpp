@@ -4,15 +4,17 @@
 #include <iostream>
 
 #include "MachineCtrlClient.hpp"
-#include "../J2B2-API.hpp"
-#include "../SLAM/SLAMutil.hpp"
-#include "../motion/ServoControl.hpp"
-#include "Camutil.hpp"
+#include "J2B2-API.hpp"
+#include "SLAM/includes.hpp"
+#include "motion/ServoControl.hpp"
+#include "cam/Camutil.hpp"
+#include "cam/CameraCalibration.hpp"
 
 #define dPan Motion::ServoControl::KServoCameraPTUPan
 #define dTilt Motion::ServoControl::KServoCameraPTUTilt
 
-#define FOV 50.0
+// TODO: oiskoha kuitenki 54?
+#define FOV 66.58 // degrees = 1.1621 rads
 
 /*
  * Camera and object recognition module
@@ -20,8 +22,6 @@
 */
 
 namespace cam {
-
-class Location { };
 
 class Camera {
 
@@ -33,58 +33,57 @@ public:
 		ERR_GET_IMAGE
 	};
 
-	// constructor initialises the Camera module
-	// takes CImageClient and ServoPosition as parameter
-	Camera(MaCI::MachineCtrl::CMachineCtrlClient *machine, Motion::ServoControl& servos);
-
-	// copy constructor
-	Camera(const cam::Camera&);
-	Camera operator=(const Camera&);
-
-	// destructor
-	~Camera();
-
-	// returns the array of location of the detected objects
-	// TODO: let's make a class for locations instead of array
-	Location* getDistanceToObjects();
+	Camera(CJ2B2Client&);
 
 	// updates data from the camera and recognise objects
-	void updateCameraData();
+	void updateCameraData(SLAM::RobotLocation);
+	MaCI::Image::CImageContainer getCameraImage();
 
 	// Calibrate camera
 	bool calibrateCamera();
 
+	// update camera data to SLAM
+	void updateToSLAM(SLAM::SLAM &slam);
+
+	std::vector<SLAM::Location> getPositionOfTargets();
+
 
 private:
+	CJ2B2Client &interface;
 
-	MaCI::MachineCtrl::CMachineCtrlClient *machineCtrl;
-	MaCI::Image::CImageClient *cameraClient;
-	MaCI::Image::CImageContainer cameraImage;
+	// image data
+	struct cameradata_t {
+		MaCI::Image::CImageContainer cameraImage;
+		float tilt;
+		float pan;
+		SLAM::RobotLocation robotloc;
+	} cameradata;
 
-
-//	MaCI::JointGroupCtrl::CJointGroupCtrlClient *iServoCtrl
-
-	// distances
-//	MaCI::Ranging::TDistance lastDistance;
-//	MaCI::Ranging::TDistanceArray lastLaserDistanceArray;
+	// Position of the balls in a real world
+	std::vector<SLAM::Location> balls;
+	std::vector<SLAM::Location> nontargets;
+	std::vector<SLAM::Location> goalarea;
 
 	bool calibrated;
 	bool show_image;
 
 	Motion::ServoControl& servoCtrl;
 
+	ownTime_ms_t lastrun;
 
-
+	cv::Mat cameraMatrix;
+	cv::Mat distCoeffs;
+	
 	void getCameraData();
 	void checkCalibration();
-
+	bool ballsInImage();
+	
 	// TODO: add some functions to recognise objects
 
-	void showImage();
-
-	Eigen::Vector2f getCamRotation();
 	Eigen::Matrix3f getObjectRotation(const float, const float);
-	void getPositionOfTargets();
+	void updateCamServos();
+	void updatePositionOfTargets();
+	
 };
 
 }

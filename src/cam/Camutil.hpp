@@ -3,7 +3,7 @@
 
 #include "MachineCtrlClient.hpp"
 #include "../J2B2-API.hpp"
-#include "../SLAM/SLAMutil.hpp"
+#include "../SLAM/SLAM.hpp"
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -24,10 +24,14 @@ public:
 	Camutil();
 
 	static cv::Mat imgToMat (MaCI::Image::CImageContainer);
-	static void FindBalls (cv::Mat);
+	static bool BallsInView (cv::Mat);
+	static std::vector<SLAM::Location> FindNonTargets (cv::Mat);
+	static std::vector<SLAM::Location> FindBalls (cv::Mat);
+	static std::vector<SLAM::Location> FindBalls (cv::Mat, bool show_image);
+	static std::vector<SLAM::Location> FindBalls (cv::Mat, bool show_image, bool targets);
+	static std::vector<SLAM::Location> FindGoalArea (cv::Mat src, bool show_image);
 
 private:
-
 
 };
 }

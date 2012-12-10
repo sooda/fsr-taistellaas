@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 		cerr << "Failed to initialize SDL Video: " << SDL_GetError() << endl;
 		return 1;
 	}
-
+	
 	Robot robot(j2b2);
 	robot.wait();
 

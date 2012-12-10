@@ -8,7 +8,9 @@ Utility stuff and such
 #define _J2B2_UTILITIES_HPP_
 
 #include <cmath>
-
+#include <utility>
+#include <iostream>
+#include <vector>
 
 namespace SLAM {
 
@@ -132,6 +134,25 @@ public:
 
 	int x;
 	int y;
+
+};
+
+class ImageData {
+
+public:
+
+	ImageData(std::vector<Location> targets_,
+		RobotLocation location_, double minDist_, 
+		double maxDist_, double viewWidth_)
+		: targets(targets_), location(location_), minDist(minDist_),
+		  maxDist(maxDist_), viewWidth(viewWidth_) { }
+
+	std::vector<Location> targets;
+	// identified targets relative to the place where the image was taken
+	RobotLocation location; // where the image was taken
+	double minDist; // distance to the earer edge of the image in m
+	double maxDist; // distance to the farther edge of the image in m
+	double viewWidth; // width of the image in rad
 
 };
 

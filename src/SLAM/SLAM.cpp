@@ -30,9 +30,9 @@ SLAM::SLAM(RobotLocation initial)
 
 // destructor
 SLAM::~SLAM() {
-	if (gfsmap) {
-		delete gfsmap;
-	}
+	//if (gfsmap) {
+	//	delete gfsmap;
+	//}
 }
 
 // can be called to get the current map data object
@@ -66,7 +66,7 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 	RobotLocation newLoc = RobotLocation(0,0,0);
 
 	slamThingy.updateMap(lastLaserData, lastOdometryData, new_gfsmap, newLoc);
-	
+
 	if (new_gfsmap != 0) {
 		// map was updated
 
@@ -79,68 +79,12 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		int ymax = gfsmap->getMapSizeY();
 	
 		if (x0 == -1 && y0 == -1 && x1 == -1 && y1 == -1) {
-			x0 = 0;
-			y0 = 0;
-			x1 = xmax;
-			y1 = ymax;
-	
-			for (int x = 0; x < xmax; x++) {
-				for (int y = 0; y < ymax; y++) {
-					if (gfsmap->cell(x,y) > 0.5) {
-						x0 = x;
-						goto end1;
-					}
-				}
-			}
-			end1:
-	
-			for (int x = xmax-1; x >= 0; x--) {
-				for (int y = 0; y < ymax; y++) {
-					if (gfsmap->cell(x,y) > 0.5) {
-						x1 = x;
-						goto end2;
-					}
-				}
-			}
-			end2:
-			
-			for (int y = 0; y < ymax; y++) {
-				for (int x = 0; x < xmax; x++) {
-					if (gfsmap->cell(x,y) > 0.5) {
-						y0 = y;
-						goto end3;
-					}
-				}
-			} 
-			end3:
-	
-			for (int y = ymax-1; y >= 0; y--) {
-				for (int x = 0; x < xmax; x++) {
-					if (gfsmap->cell(x,y) > 0.5) {
-						y1 = y;
-						goto end4;
-					}
-				}
-			}
-			end4:
-	
-			while (x1-x0 < MapData::gridSize-2) {
-				if (x0 > 0) {
-					x0--;
-				}
-				if (x1 < xmax) {
-					x1++;
-				}
-			}	
 
-			while (y1-y0 < MapData::gridSize-2) {
-				if (y0 > 0) {
-					y0--;
-				}
-				if (y1 < ymax) {
-					y1++;
-				}
-			}
+			x0 = newLoc.x - MapData::gridSize/2;
+			x1 = newLoc.x + MapData::gridSize/2;
+			y0 = newLoc.y - MapData::gridSize/2;
+			y1 = newLoc.y + MapData::gridSize/2;
+
 		}
 	
 		if(x0 != -1 && y0 != -1 && x1 != -1 && y1 != -1) {	
@@ -157,6 +101,18 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			}
 		}
 
+		/*testing
+		ImageData test1(std::vector<std::pair<double,double> >(), 
+			currentMapData.getRobotLocation(), 0.2, 0.5, 1);
+		updateImageData(test1, MapData::TARGET);
+  
+		ImageData test2(std::vector<std::pair<double,double> >(), 
+		currentMapData.getRobotLocation(), 0.5, 3, M_PI*66/180);
+		updateImageData(test2, MapData::OBSTACLE);
+
+		ImageData test3(std::vector<std::pair<double,double> >(), 
+			currentMapData.getRobotLocation(), 0.5, 1, 1.5);
+		updateImageData(test3, MapData::GOAL);*/
 	
 		gim::time duration(true);
 
@@ -227,22 +183,66 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 }
 
 // inform slam of some object at some location
-// x and y are in meters
-void SLAM::informOfObservation(MapData::ObservationType type, Location xy) {
+void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
-	// magic happens here
+	double scaleDownDeltas = 0.8;
+	double thetaMin = data.location.theta - 0.5*data.viewWidth;
+	double thetaMax = data.location.theta + 0.5*data.viewWidth;
+	double dtheta = scaleDownDeltas*MapData::unitSize/data.maxDist;
+	double r0 = 0.2;
+	double rMin = data.minDist;
+	double rMax = data.maxDist;
+	double dr = scaleDownDeltas*MapData::unitSize;
+
+/*	std::cout << "this = " << this << std::endl;
+	std::cout << "ImageData, type = " << type << std::endl;
+	std::cout << "thetaMin = " << thetaMin << " thetaMax = " << thetaMax << std::endl;
+	std::cout << "rmin = " << rMin << " rMax = " << rMax << std::endl;
+	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
+	std::cout << "loc = " << data.location << std::endl; */
+
+	for (double theta = thetaMin; theta < thetaMax; theta += dtheta) {
+		for (double r = r0; r < rMax; r += dr) {
+			double x = data.location.x + r*cos(theta);
+			double y = data.location.y + r*sin(theta);
+			double wall = currentMapData.getValue(Location(x,y), MapData::WALL);
+			if (wall > 0.5) {
+				currentMapData.setValue(Location(x,y), type, -1.0); // occlusion
+				break;
+				// move to next theta
+			}
+			if (wall < -0.5) {
+				break; // unknown area
+			}
+			if (r > rMin) {
+				currentMapData.setValue(Location(x,y), type, 0.0); // empty
+			}
+		}
+	}
+
+	for (auto it = data.targets.begin(); it != data.targets.end(); ++it) {
+		double x = it->x;
+		double y = it->y;
+		std::cout << "target at: " << x << " " << y << std::endl;
+		for (int i = -1; i < 2; i++) {
+			for (int j = -1; j < 2; j++) {
+				double x1 = x+i*MapData::unitSize;
+				double y1 = y+j*MapData::unitSize;
+				currentMapData.setValue(Location(x1, y1), type, 1.0); // target
+			}
+		}
+	}
 
 }
 
 
-#ifndef _DONT_USE_SDL_
 // draws the laser scan on screen
 void SLAM::drawLaserData(SDL_Surface* screen, const int window_width, const int window_height) {
   
 	if (lastLaserData.size()) {
 		float min_d = 1000;
 		MaCI::Ranging::TDistance min_dist;
-		float scale = 100; // scales from meters to screen pixels (mulppi saatana)
+		float scale = 50; // scales from meters to screen pixels
 		int min_x_end = 0;
 		int min_y_end = 0;
 		int x_origin = window_width/2;
@@ -295,27 +295,66 @@ void SLAM::drawMapData(SDL_Surface* screen, const int window_width, const int wi
 		return;
 	}
 
-	// draw the map
-	for (int x = 0; x < MapData::gridSize; x++) {
-		for (int y = 0; y < MapData::gridSize; y++) {
-			double wall = currentMapData.getCellValue(GridPoint(x,y), MapData::WALL);
-			int color = (int)(150+wall*100);
-			pixelRGBA(screen, x, MapData::gridSize-y, color, color, color, 100);	
+	const int gridsz = MapData::gridSize;
+	for (int type_ = MapData::WALL; type_ != MapData::OBS_TYPE_SIZE; type_++) {
+		MapData::ObservationType type = (MapData::ObservationType)type_;
+
+		int x0 = 0;
+		int y0 = 0;
+
+		if (type == MapData::TARGET) {
+			x0 = gridsz + 10;
 		}
+		if (type == MapData::OBSTACLE) {
+			y0 = gridsz + 10;
+		}
+		if (type == MapData::GOAL) {
+			x0 = gridsz + 10;
+			y0 = gridsz + 10;
+		}
+
+		// draw the map
+		lineRGBA(screen, x0, y0, x0 + gridsz + 1, y0, 255, 255, 255, 255);
+		lineRGBA(screen, x0, y0 + gridsz + 1, x0 + gridsz + 1, y0 + gridsz + 1, 255, 255, 255, 255);
+		lineRGBA(screen, x0, y0, x0, y0 + gridsz + 1, 255, 255, 255, 255);
+		lineRGBA(screen, x0 + gridsz + 1, y0, x0 + gridsz + 1, y0 + gridsz + 1, 255, 255, 255, 255);
+		x0++; y0++;
+		for (int x = 0; x < gridsz; x++) {
+			for (int y = 0; y < gridsz; y++) {
+				double wall = currentMapData.getCellValue(GridPoint(x,y), type);
+				int colorR = (int)(150+wall*100);
+				int colorG = (int)(150+wall*100);
+				int colorB = (int)(150+wall*100);
+
+				if (type == MapData::TARGET) colorR = 0;
+				if (type == MapData::OBSTACLE) colorG = 0;
+				if (type == MapData::GOAL) colorB = 0;
+
+				pixelRGBA(screen,
+					x0 + x,
+					y0 + gridsz-1 - y,
+					colorR, colorG, colorB, 255);
+			}
+		}
+	
+		// draw the robot
+		RobotLocation loc = currentMapData.getGridLocation();
+		filledCircleRGBA(screen, 
+			x0 + loc.x, 
+			y0 + gridsz-1 - loc.y, 
+			(int)(0.4 / MapData::unitSize / 2), 0, 255, 255, 255);
+
+		// draw robot direction line
+	    for (int i = 0; i < 10; i++) { 
+			pixelRGBA(screen, 
+				x0 + loc.x+i*cos(loc.theta), 
+				y0 + gridsz-1 - loc.y-i*sin(loc.theta),
+				255, 0, 0, 255);
+		}  
+
 	}
-
-	// draw the robot
-	RobotLocation loc = currentMapData.getGridLocation();
-	filledCircleRGBA(screen, loc.x, MapData::gridSize-loc.y, (int)(0.4 / MapData::unitSize / 2), 0, 255, 255, 255);
-    for (int i = 0; i < 10; i++) {
-		pixelRGBA(screen, loc.x+i*cos(loc.theta), 
-		                  MapData::gridSize-loc.y-i*sin(loc.theta),
-		                  255, 0, 0, 255);
-	}  
-
    
 }
-#endif
 
 MaCI::Ranging::TDistance SLAM::getNearest() const {
 	return lastNearest;

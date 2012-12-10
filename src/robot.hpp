@@ -6,6 +6,8 @@
 #include "J2B2-API.hpp"
 #include "SLAM/includes.hpp"
 #include "motion/motioncontrol.hpp"
+#include "motion/ServoControl.hpp"
+#include "cam/Camera.hpp"
 #include "navi/navigation.hpp"
 #include "motion/ServoControl.hpp"
 
@@ -89,9 +91,10 @@ private:
 
 	CJ2B2Client& j2b2;
 	Motion::MotionControl motionControl;
+	Motion::ServoControl servoControl;
 	SLAM::SLAM slam;
 	Navi::Navigation navigation;
-	Motion::ServoControl servos;
+	cam::Camera camera;
 
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;
@@ -121,7 +124,7 @@ private:
 	int numberOfPickUps;
 	std::vector<SLAM::Location> targets;
 
-	static const int win_width = 1024, win_height = 768;
+	static const int win_width = 310 + 310 + 640, win_height = 310 + 310 + 310;
 };
 
 #endif

@@ -329,7 +329,7 @@ void Camera::updatePositionOfTargets()
 		Vector3f t(-P(2), P(0), 0);
 #endif
 			float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-			cout << "Cam: " << (type==0?"Target":"nontarget") << " at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
+			cout << "Cam: " << (type==0?"Target":type==1?"nontarget":"goalarea") << " at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
 
 			double minDist = MIN_DIST_FAR; // image front in m
 			double maxDist = MAX_DIST_FAR; // image back in m

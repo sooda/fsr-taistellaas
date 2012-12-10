@@ -85,8 +85,6 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	cvtColor(src, dst, CV_RGB2HSV);
 
-	namedWindow("src", CV_WINDOW_AUTOSIZE);
-
 	inRange(dst, Scalar(limit_h_min, limit_s, limit_v), Scalar(limit_h_max, 255, 255), dst);
 
 	// dilation
@@ -142,8 +140,6 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
 
 //	cvtColor(src, src, CV_BGR2RGB);
 	cvtColor(src, dst, CV_RGB2HSV);
-
-	namedWindow("src", CV_WINDOW_AUTOSIZE);
 
 	inRange(dst, Scalar(0, 0, 0), Scalar(50, 255, 255), dst);
 

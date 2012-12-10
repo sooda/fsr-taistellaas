@@ -28,7 +28,7 @@ public:
 
 	ServoControl(CJ2B2Client&);
 
-	void TestMovement();
+	void resetServos();
 	float getPosition(ServoControl::EServo);
 	bool setPosition(ServoControl::EServo, float);
 

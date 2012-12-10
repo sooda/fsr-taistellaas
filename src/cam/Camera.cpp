@@ -31,7 +31,7 @@ Camera::Camera(CJ2B2Client &interface)
 	: interface(interface), calibrated(true),
 	  show_image(true), servoCtrl(interface)
 {
-	servoCtrl.TestMovement();
+	servoCtrl.resetServos();
 	lastrun = ownTime_get_ms();
 
 	this->cameraMatrix = (Mat_<double>(3,3) << 447.7679638984855, 0, 309.9314941852911, 0, 442.5677667837122, 245.2180309042916, 0, 0, 1);

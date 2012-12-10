@@ -16,20 +16,13 @@ ServoControl::ServoControl(CJ2B2Client &interface)
 	iServoCtrl = interface.iServoCtrl;
 }
 
-void ServoControl::TestMovement()
+void ServoControl::resetServos()
 {
 	float ptu_pan = 0.0;
 	float ptu_tilt = -0.8;//-1.25;
-	float ptu_pan_delta = 0.0;
-	float ptu_tilt_delta = 0.0;
 
     if (iServoCtrl)
     {
-
-    	// Do movement
-		ptu_pan += ptu_pan_delta * M_PI/20;
-		ptu_tilt += ptu_tilt_delta * M_PI/20;
-
 		// Do value checking and limiting.
 		if (ptu_pan > M_PI/2) ptu_pan = M_PI/2;
 		else if (ptu_pan < -M_PI/2) ptu_pan = -M_PI/2;
@@ -45,13 +38,13 @@ void ServoControl::TestMovement()
 			ppos = this->getPosition(KServoCameraPTUPan);
 			tpos = this->getPosition(KServoCameraPTUTilt);
 			std::cout << "Camera now pointing to pan:" << ppos << ", tilt:" << tpos << std::endl;
-
-			// Wait to stabilize
-			// ownSleep_ms(200);
 		} else {
 			std::cout << "Camera control error" << std::endl;
-			// Some failure?
 		}
+		
+		// hatch control
+		this->setPosition(KServoUserServo_0, 0.0);
+		
     }
 
 }
@@ -77,6 +70,7 @@ bool ServoControl::setPosition(ServoControl::EServo servo, float pos)
 {
 	if (!iServoCtrl) return false;
 
+	// Scale [-pi,pi] -> [-1,1]
 	// don't ask why we have to scale it, we just have to
 	iServoCtrl->SetPosition(pos/M_PI, servo);
 	this->servopos[servo] = pos;

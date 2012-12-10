@@ -14,7 +14,8 @@ MapData::MapData(RobotLocation initial)
 	  map(std::vector<std::vector<std::vector<double> > >(
 				  gridSize, std::vector<std::vector<double> >(
 					  gridSize, std::vector<double>(OBS_TYPE_SIZE, -1.0)))
-			  )
+			  ),
+	  targets(), obstacles(), goal()
 {
 }
 
@@ -92,6 +93,26 @@ RobotLocation MapData::getGridLocation() const {
 	Location temp (robotLocation.x, robotLocation.y);
 	GridPoint temp2 = loc2grid(temp);
 	return RobotLocation(temp2.x, temp2.y, robotLocation.theta);
+}
+
+// get objects in list form
+const std::vector<Location>& MapData::getObjects(ObservationType type) const {
+	if (type == MapData::TARGET)
+		return targets;
+	if (type == MapData::OBSTACLE)
+		return obstacles;
+	if (type == MapData::GOAL)
+		return goal;
+}
+
+// set objects in list form
+void MapData::setObjects(std::vector<Location> objects, ObservationType type) {
+	if (type == MapData::TARGET)
+		this->targets = objects;
+	if (type == MapData::OBSTACLE)
+		this->obstacles = objects;
+	if (type == MapData::GOAL)
+		this->goal = objects;
 }
 
 }

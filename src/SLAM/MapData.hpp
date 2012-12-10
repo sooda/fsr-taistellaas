@@ -66,7 +66,12 @@ RobotLocation getRobotLocation() const;
 	
 // used to get the robot location in the map grid
 RobotLocation getGridLocation() const;
-	
+
+// get objects in list form
+const std::vector<Location>& getObjects(ObservationType type) const;
+
+// set objects in list form
+void setObjects(std::vector<Location> objects, ObservationType type);
 
 static const int gridSize;
 static const double unitSize;
@@ -80,6 +85,10 @@ double cellxsize, cellysize;	// size of one cell (meters)
 RobotLocation robotLocation;	// robot location in the map
 
 std::vector<std::vector<std::vector<double> > > map;
+
+std::vector<Location> targets; // targets to be picked up
+std::vector<Location> obstacles; // obstacles not to be picked up
+std::vector<Location> goal; // goal: first location is center point, next up to four are corner points
 
 };
 

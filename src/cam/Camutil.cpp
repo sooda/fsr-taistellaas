@@ -127,7 +127,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	}
 	
 	if (show_image) {
-		imshow( "src", src);
+		imshow(targets ? "targetballs" : "enemyballs", src);
 		waitKey(10);
 	}
 
@@ -165,7 +165,7 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
 	for( int i = 0; i < contours.size(); i++ )
 	{
 		double area = contourArea(contours[i]);
-		if (area < 10000) continue;
+		if (area < 10000 || area > 640 * 480 / 2) continue;
 
 		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
 		

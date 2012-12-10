@@ -256,9 +256,9 @@ void Camera::updatePositionOfTargets()
 	Mat temp;
 	undistort(image, temp, this->cameraMatrix, this->distCoeffs);
 
-	std::vector<SLAM::Location> targets = Camutil::FindBalls(temp, show_image);
-	std::vector<SLAM::Location> non_targets = Camutil::FindBalls(temp, show_image, false);
-	std::vector<SLAM::Location> goal_area = Camutil::FindGoalArea(temp, show_image);
+	std::vector<SLAM::Location> targets = Camutil::FindBalls(temp.clone(), show_image);
+	std::vector<SLAM::Location> non_targets = Camutil::FindBalls(temp.clone(), show_image, false);
+	std::vector<SLAM::Location> goal_area = Camutil::FindGoalArea(temp.clone(), show_image);
 	
 	for (size_t type = 0; type <= 2; type++)
 	{

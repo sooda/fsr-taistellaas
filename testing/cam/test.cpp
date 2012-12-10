@@ -14,13 +14,13 @@ int main(int argc, char** argv)
 	Mat dst;
 
 	src = imread ( argv[1], 1 );
-	cvtColor(src, dst, CV_BGR2HSV);
+	cvtColor(src, dst, CV_RGB2HSV);
 
 	
 	namedWindow("src", CV_WINDOW_AUTOSIZE);
 
 	// tresholding
-	inRange(dst, Scalar(90, 120, 120), Scalar(130, 255, 255), dst);
+	inRange(dst, Scalar(0, 0, 0), Scalar(50, 255, 255), dst);
 
 	// dilation
 	int dilation_size = 2;
@@ -28,6 +28,8 @@ int main(int argc, char** argv)
 					Size( 2*dilation_size + 1, 2*dilation_size + 1 ),
 					Point( dilation_size, dilation_size ) );
 	dilate( dst, dst, element );
+
+	imshow( "dst", dst);
 
 	// contours
 	vector<vector<Point> > contours;
@@ -41,12 +43,15 @@ int main(int argc, char** argv)
 	{
 		Scalar color(255, 0, 0);
 
+		double area = contourArea(contours[i]);
+		if (area < 10000) continue;
+
 		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
-		
+	
 		drawContours( src, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
 		drawContours( src, contours_poly, i, Scalar(0,0,255), 1, 8, vector<Vec4i>(), 0, Point() );
 		
-		std::cout << contours_poly[i] << std::endl;
+		std::cout << contours_poly[i] << " area: " << area << std::endl;
 		
 		for (int a = 0; a < contours_poly[i].size(); a++) {
 			circle(src, contours_poly[i][a], 10, Scalar(0,0,255));

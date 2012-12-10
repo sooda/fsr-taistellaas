@@ -36,6 +36,9 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 		std::cout << "Error converting image to Mat" << std::endl;
 	}
 
+	// fix the color space
+	cvtColor(img, img, CV_BGR2RGB);
+
 	return img.clone();
 }
 
@@ -64,16 +67,18 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	int limit_h_max = 0;
 	int limit_h_min = 0;
-	int limit_s = 120;
-	int limit_v = 120;
+	int limit_s = 0;
+	int limit_v = 0;
 
 	if (targets) {
-		limit_h_min = 0;
-		limit_h_max = 10;
+		limit_h_min = 110;
+		limit_h_max = 130;
 	}
 	else {
-		limit_h_min = 38;
-		limit_h_max = 75;
+		limit_h_min = 60;
+		limit_h_max = 80;
+		limit_s = 120;
+		limit_v = 90;
 	}
 	
 	Mat dst;
@@ -82,7 +87,6 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	namedWindow("src", CV_WINDOW_AUTOSIZE);
 
-	// tresholding
 	inRange(dst, Scalar(limit_h_min, limit_s, limit_v), Scalar(limit_h_max, 255, 255), dst);
 
 	// dilation
@@ -100,7 +104,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	for( int idx = 0; idx < contours.size(); idx++ )
 	{
 		//Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
-		Scalar color(0, 0, 255);
+		Scalar color(255, 0, 0);
 		if (!targets) { color = Scalar(0, 255, 0); }
 		
 		Point2f center;
@@ -136,12 +140,12 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
 
 	Mat dst;
 
+//	cvtColor(src, src, CV_BGR2RGB);
 	cvtColor(src, dst, CV_RGB2HSV);
 
 	namedWindow("src", CV_WINDOW_AUTOSIZE);
 
-	// tresholding
-	inRange(dst, Scalar(90, 120, 120), Scalar(130, 255, 255), dst);
+	inRange(dst, Scalar(0, 0, 0), Scalar(50, 255, 255), dst);
 
 	// dilation
 	int dilation_size = 2;
@@ -160,13 +164,16 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
   
 	for( int i = 0; i < contours.size(); i++ )
 	{
+		double area = contourArea(contours[i]);
+		if (area < 10000) continue;
+
 		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
 		
 		drawContours( src, contours, i, Scalar(255, 0, 0), 1, 8, vector<Vec4i>(), 0, Point() );
 		drawContours( src, contours_poly, i, Scalar(0,0,255), 1, 8, vector<Vec4i>(), 0, Point() );
 
 		for (int a = 0; a < contours_poly[i].size(); a++) {
-			circle(src, contours_poly[i][a], 10, Scalar(0,0,255));
+			circle(src, contours_poly[i][a], 10, Scalar(255,0,0));
 			corners.push_back(SLAM::Location(contours_poly[i][a].x, contours_poly[i][a].y));
 		}
 	}

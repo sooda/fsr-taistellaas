@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 {
 
 	src = imread ( argv[1], 1 );
-	cvtColor(src, dst, CV_BGR2HSV);
+//	cvtColor(src, src, CV_RGB2BGR);
 
 	imshow("src",src);
 //	imshow("dst",dst);
@@ -51,7 +51,7 @@ void colorize (int, void*)
 //        Mat src, dst;
 
 //	src = imread ( argv[1], 1 );
-	cvtColor(src, dst, CV_BGR2HSV);
+	cvtColor(src, dst, CV_RGB2HSV);
 
 	// tresholding
 //	inRange(dst, Scalar(0, 160, 160), Scalar(10, 255, 255), dst);

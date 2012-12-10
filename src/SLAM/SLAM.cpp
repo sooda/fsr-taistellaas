@@ -30,13 +30,14 @@ SLAM::SLAM(RobotLocation initial)
 
 // destructor
 SLAM::~SLAM() {
+	// causes crashes sometimes?
 	//if (gfsmap) {
 	//	delete gfsmap;
 	//}
 }
 
 // can be called to get the current map data object
-MapData SLAM::getCurrentMapData() {
+const MapData& SLAM::getCurrentMapData() {
 
 	return currentMapData;
 
@@ -100,18 +101,39 @@ bool SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 					currentMapData.setCellValue(GridPoint(x-x0,y-y0), MapData::WALL, gfsmap->cell(x,y));				
 				}
 			}
+
+			// fix robot initial position to goal area and free space
+
+			int r_wall = 0.24 / MapData::unitSize; // robot radius in grid points
+			int r_wall2 = r_wall*r_wall;
+			int r_goal = 0.20 / MapData::unitSize; // approx goal radius
+			int r_goal2 = r_goal*r_goal;
+			int xInit = MapData::gridSize/2;
+			int yInit = MapData::gridSize/2;
+
+			for (int x = -r_wall; x <= r_wall; x++) {
+				for (int y = -r_wall; y <= r_wall; y++) {
+					int dist2 = x*x+y*y;
+					if (dist2 <= r_wall2) {
+						currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::WALL, 0);
+					}
+					if (dist2 <= r_goal2) {
+						currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::GOAL, 1);
+					}
+				}
+			}
 		}
 
-		/*testing
-		ImageData test1(std::vector<std::pair<double,double> >(), 
+		/*//testing
+		ImageData test1(std::vector<Location>(), 
 			currentMapData.getRobotLocation(), 0.2, 0.5, 1);
 		updateImageData(test1, MapData::TARGET);
   
-		ImageData test2(std::vector<std::pair<double,double> >(), 
+		ImageData test2(std::vector<Location>(), 
 		currentMapData.getRobotLocation(), 0.5, 3, M_PI*66/180);
 		updateImageData(test2, MapData::OBSTACLE);
 
-		ImageData test3(std::vector<std::pair<double,double> >(), 
+		ImageData test3(std::vector<Location>(), 
 			currentMapData.getRobotLocation(), 0.5, 1, 1.5);
 		updateImageData(test3, MapData::GOAL);*/
 	
@@ -183,6 +205,14 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 // inform slam of some object at some location
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
+	// preprocessing
+	double unusedViewWidth = M_PI*5/180; // 5 degrees from sides off
+	double unusedViewDepthFront = 0.05; // 5 cm from front off
+	double unusedViewDepthBack = 0.10; // 10cm from back off
+	data.viewWidth -= unusedViewWidth;
+	data.minDist -= unusedViewDepthFront;
+	data.maxDist -= unusedViewDepthBack;
+
 	double scaleDownDeltas = 0.8; // FIXME TODO XXX read this from servos
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
@@ -199,6 +229,11 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
 	std::cout << "loc = " << data.location << std::endl; */
 
+	double maxObjectDelta = 0.05; // max difference to create a new target
+	double maxObjectDelta2 = maxObjectDelta*maxObjectDelta;
+	std::vector<Location> objects = std::vector<Location>(currentMapData.getObjects(type));
+
+	// clear target area
 	for (double theta = thetaMin; theta < thetaMax; theta += dtheta) {
 		for (double r = r0; r < rMax; r += dr) {
 			double x = data.location.x + r*cos(theta);
@@ -213,24 +248,78 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 				break; // unknown area
 			}
 			if (r > rMin) {
-				currentMapData.setValue(Location(x,y), type, 0.0); // empty
+				double oldValue = currentMapData.getValue(Location(x,y), type);
+				if (oldValue > 0.5) {
+					// overwriting a target
+					if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
+						for (auto it = objects.begin(); it != objects.end(); ++it) {
+							double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
+							if (r2 < maxObjectDelta) {
+								bool newObjectExists = false;
+								for (auto it2 = data.targets.begin(); it2 != data.targets.end(); ++it2) {
+									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
+									if (r22 < maxObjectDelta2) {
+										newObjectExists = true;
+										std::cout << "object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
+										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;	
+										data.targets.erase(it2);
+										break;
+									}
+								}
+								if (newObjectExists == false) {
+									objects.erase(it);
+									std::cout << "object (" << type << ": " << x << ", " << y << ") removed" << std::endl;
+									currentMapData.setValue(Location(x,y), type, 0.0); // empty
+								}
+								break;
+							}
+						}
+					}
+					if (type == MapData::GOAL) {
+						// TODO
+					}
+				}
+				else {
+					currentMapData.setValue(Location(x,y), type, 0.0); // empty
+				}
 			}
 		}
 	}
 
+	// integrate new target data with old
 	for (auto it = data.targets.begin(); it != data.targets.end(); ++it) {
 		double x = it->x;
 		double y = it->y;
-		std::cout << "target at: " << x << " " << y << std::endl;
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				double x1 = x+i*MapData::unitSize;
-				double y1 = y+j*MapData::unitSize;
-				currentMapData.setValue(Location(x1, y1), type, 1.0); // target
+
+		bool duplicate = false;
+		for (auto it2 = objects.begin(); it2 != objects.end(); ++it2) {
+			double objectDelta2 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
+ 			if (objectDelta2 < maxObjectDelta2) {
+				duplicate = true;
+				std::cout << "new object (" << type << ": " << x << ", " << y << ") is duplicate with";
+				std::cout << " (" << type << ": " << it2->x << ", " << it2->y << "), omitted" << std::endl;
+				break;
 			}
 		}
+
+		if (duplicate == false) {
+			std::cout << "new object (" << type << ": " << x << ", " << y << ") added" << std::endl;
+			objects.push_back(Location(x,y));
+		}	
 	}
 
+	// redraw targets
+	if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
+		for (auto it = objects.begin(); it != objects.end(); ++it) {
+			currentMapData.setValue(Location(it->x, it->y), type, 1.0); // target
+		}
+	}
+	if (type == MapData::GOAL) {
+		// TODO	
+	}
+
+	// update targets to map data
+	currentMapData.setObjects(objects, type);
 }
 
 

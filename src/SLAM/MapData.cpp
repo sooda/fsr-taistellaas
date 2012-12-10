@@ -11,10 +11,11 @@ MapData::MapData(RobotLocation initial)
 	  xsize(gridSize*unitSize), ysize(gridSize*unitSize),
 	  cellxsize(gridSize), cellysize(gridSize),
 	  robotLocation(initial),
-	  map(std::vector<std::vector<std::vector<double>>>(
-				  gridSize, std::vector<std::vector<double>>(
+	  map(std::vector<std::vector<std::vector<double> > >(
+				  gridSize, std::vector<std::vector<double> >(
 					  gridSize, std::vector<double>(OBS_TYPE_SIZE, -1.0)))
-			  )
+			  ),
+	  targets(), obstacles(), goal()
 {
 }
 
@@ -47,7 +48,7 @@ void MapData::setValue(Location xy, ObservationType type, double value) {
 }
 
 // used to get the value at some location of the map (goes to nearest cell)
-double MapData::getValue(Location xy, ObservationType type) {
+double MapData::getValue(Location xy, ObservationType type) const {
 	GridPoint xyg = loc2grid(xy);
 	return getCellValue(xyg, type);
 }
@@ -83,7 +84,7 @@ Location MapData::grid2loc(GridPoint xy) {
 }
 
 // used to get the robot location in meters from center of map
-RobotLocation MapData::getRobotLocation() {
+RobotLocation MapData::getRobotLocation() const {
 	return robotLocation;
 }
 
@@ -92,6 +93,26 @@ RobotLocation MapData::getGridLocation() const {
 	Location temp (robotLocation.x, robotLocation.y);
 	GridPoint temp2 = loc2grid(temp);
 	return RobotLocation(temp2.x, temp2.y, robotLocation.theta);
+}
+
+// get objects in list form
+const std::vector<Location>& MapData::getObjects(ObservationType type) const {
+	if (type == MapData::TARGET)
+		return targets;
+	if (type == MapData::OBSTACLE)
+		return obstacles;
+	if (type == MapData::GOAL)
+		return goal;
+}
+
+// set objects in list form
+void MapData::setObjects(std::vector<Location> objects, ObservationType type) {
+	if (type == MapData::TARGET)
+		this->targets = objects;
+	if (type == MapData::OBSTACLE)
+		this->obstacles = objects;
+	if (type == MapData::GOAL)
+		this->goal = objects;
 }
 
 }

@@ -11,8 +11,8 @@ MapData::MapData(RobotLocation initial)
 	  xsize(gridSize*unitSize), ysize(gridSize*unitSize),
 	  cellxsize(gridSize), cellysize(gridSize),
 	  robotLocation(initial),
-	  map(std::vector<std::vector<std::vector<double>>>(
-				  gridSize, std::vector<std::vector<double>>(
+	  map(std::vector<std::vector<std::vector<double> > >(
+				  gridSize, std::vector<std::vector<double> >(
 					  gridSize, std::vector<double>(OBS_TYPE_SIZE, -1.0)))
 			  )
 {
@@ -47,7 +47,7 @@ void MapData::setValue(Location xy, ObservationType type, double value) {
 }
 
 // used to get the value at some location of the map (goes to nearest cell)
-double MapData::getValue(Location xy, ObservationType type) {
+double MapData::getValue(Location xy, ObservationType type) const {
 	GridPoint xyg = loc2grid(xy);
 	return getCellValue(xyg, type);
 }
@@ -83,7 +83,7 @@ Location MapData::grid2loc(GridPoint xy) {
 }
 
 // used to get the robot location in meters from center of map
-RobotLocation MapData::getRobotLocation() {
+RobotLocation MapData::getRobotLocation() const {
 	return robotLocation;
 }
 

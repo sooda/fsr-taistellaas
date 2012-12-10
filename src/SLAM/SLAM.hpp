@@ -37,7 +37,7 @@ SLAM(RobotLocation initial);
 ~SLAM();
 
 // returns the current map data object
-MapData getCurrentMapData();
+const MapData& getCurrentMapData();
 
 // inform SLAM of the latest laser data
 // may also trigger SLAM update

@@ -30,13 +30,14 @@ SLAM::SLAM(RobotLocation initial)
 
 // destructor
 SLAM::~SLAM() {
+	// causes crashes sometimes?
 	//if (gfsmap) {
 	//	delete gfsmap;
 	//}
 }
 
 // can be called to get the current map data object
-MapData SLAM::getCurrentMapData() {
+const MapData& SLAM::getCurrentMapData() {
 
 	return currentMapData;
 
@@ -97,6 +98,27 @@ void SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 			for (int x = x0; x <= x1; x++) {
 				for (int y = y0; y <= y1; y++) {
 					currentMapData.setCellValue(GridPoint(x-x0,y-y0), MapData::WALL, gfsmap->cell(x,y));				
+				}
+			}
+
+			// fix robot initial position to goal area and free space
+
+			int r_wall = 0.27 / MapData::unitSize; // robot radius in grid points
+			int r_wall2 = r_wall*r_wall;
+			int r_goal = 0.20 / MapData::unitSize; // approx goal radius
+			int r_goal2 = r_goal*r_goal;
+			int xInit = MapData::gridSize/2;
+			int yInit = MapData::gridSize/2;
+
+			for (int x = -r_wall; x <= r_wall; x++) {
+				for (int y = -r_wall; y <= r_wall; y++) {
+					int dist2 = x*x+y*y;
+					if (dist2 <= r_wall2) {
+						currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::WALL, 0);
+					}
+					if (dist2 <= r_goal2) {
+						currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::GOAL, 1);
+					}
 				}
 			}
 		}

@@ -28,6 +28,12 @@ enum ObservationType {
         OBS_TYPE_SIZE=4  // the size of this enumeration
 };
 
+// what the observation values mean
+//		UNKNOWN = roughly -1
+//		MISS roughly 0
+//		HIT roughly 1
+
+
 // constructor
 MapData(RobotLocation initial = RobotLocation());
 
@@ -41,9 +47,9 @@ double getCellValue(GridPoint xy, ObservationType type) const;
 void setValue(Location xy, ObservationType type, double value);
 
 // used to get the value at some location of the map (goes to nearest cell)
-double getValue(Location xy, ObservationType type);
+double getValue(Location xy, ObservationType type) const;
 
-// trnasform a location to a grid point in map
+// transform a location to a grid point in map
 static GridPoint loc2grid(Location xy);
 
 // transform a grid point in map to location
@@ -56,7 +62,7 @@ void setLocation(RobotLocation xyt);
 void setGridLocation(RobotLocation xyt);
 
 // used to get the robot location in meters from center of map
-RobotLocation getRobotLocation();
+RobotLocation getRobotLocation() const;
 	
 // used to get the robot location in the map grid
 RobotLocation getGridLocation() const;
@@ -73,7 +79,7 @@ double cellxsize, cellysize;	// size of one cell (meters)
 
 RobotLocation robotLocation;	// robot location in the map
 
-std::vector<std::vector<std::vector<double>>> map;
+std::vector<std::vector<std::vector<double> > > map;
 
 };
 

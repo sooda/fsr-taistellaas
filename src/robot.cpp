@@ -69,7 +69,11 @@ void Robot::explore() {
 }
 
 void Robot::updateTargets() {
-	// TODO: ask the locations from SLAM
+	std::cout << "Targets:" << std::endl;
+	auto locations = slam.getCurrentMapData().getObjects(SLAM::MapData::TARGET);
+	for (auto it = locations.begin(); it != locations.end(); ++it)
+		std::cout << "Target at: " << it->x << " " << it->y << std::endl;
+	// TODO: do something with the locations
 }
 
 void Robot::planAction(void) {

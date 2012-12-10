@@ -64,6 +64,7 @@ private:
 	// Position of the balls in a real world
 	std::vector<SLAM::Location> balls;
 	std::vector<SLAM::Location> nontargets;
+	std::vector<SLAM::Location> goalarea;
 
 	bool calibrated;
 	bool show_image;

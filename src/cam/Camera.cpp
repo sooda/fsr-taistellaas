@@ -249,12 +249,7 @@ void Camera::updatePositionOfTargets()
 
 	this->balls.clear();
 	this->nontargets.clear();
-/*
-	if (ownTime_get_ms_since(lastrun) < 1000) {
-		return;
-	}
-	lastrun = ownTime_get_ms();
-*/
+	this->goalarea.clear();
 
 	// find the objects in the current camera data
 
@@ -264,15 +259,18 @@ void Camera::updatePositionOfTargets()
 
 	std::vector<SLAM::Location> targets = Camutil::FindBalls(temp, show_image);
 	std::vector<SLAM::Location> non_targets = Camutil::FindBalls(temp, show_image, false);
+	std::vector<SLAM::Location> goal_area = Camutil::FindGoalArea(temp, show_image);
 	
-	for (size_t type = 0; type <= 1; type++) {
-	
+	for (size_t type = 0; type <= 2; type++)
+	{
 		std::vector<SLAM::Location> objects;
 		
 		if (type == 0)
 			objects = targets;
 		else if (type == 1)
 			objects = non_targets;
+		else if (type == 2)
+			objects = goal_area;
 			
 		
 		for (size_t i = 0; i < objects.size(); i++) {
@@ -347,14 +345,16 @@ void Camera::updatePositionOfTargets()
 				continue;
 			}
 
-			// TODO: filter only those that are in the kartio
+			// TODO: filter only those that are in the kartio <- SLAM should do it
 	//		cout << "pallo: " << t << endl;
 			if (type == 0)
 				this->balls.push_back(SLAM::Location(t.x(), t.y()));
 			else if (type == 1)
 				this->nontargets.push_back(SLAM::Location(t.x(), t.y()));
+			else if (type == 2)
+				this->goalarea.push_back(SLAM::Location(t.x(), t.y()));
 
-	}
+		}
 	}
 }
 

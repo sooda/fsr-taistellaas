@@ -24,7 +24,7 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	Mat img = Mat(rows, cols, CV_8UC1);
 	
 	if (srcimg.GetImageDataType() != MaCI::Image::EImageDataType::KImageDataJPEG) {
-		std::cout << "ImgDataType not JPEG!!!" << std::endl;;
+		std::cout << "ImgDataType not JPEG!!!" << std::endl;
 		return img;
 	}
 
@@ -160,20 +160,19 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
   
 	for( int i = 0; i < contours.size(); i++ )
 	{
-		Scalar color(255, 0, 0);
-
 		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
-		Rect boundRect = boundingRect( Mat(contours_poly[i]) );
 		
-		drawContours( src, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-		rectangle( src, boundRect.tl(), boundRect.br(), color, 2, 8, 0 );		
+		drawContours( src, contours, i, Scalar(255, 0, 0), 1, 8, vector<Vec4i>(), 0, Point() );
+		drawContours( src, contours_poly, i, Scalar(0,0,255), 1, 8, vector<Vec4i>(), 0, Point() );
 
-		corners.push_back(SLAM::Location(boundRect.tl().x, boundRect.tl().y));
-		corners.push_back(SLAM::Location(boundRect.br().x, boundRect.br().y));
+		for (int a = 0; a < contours_poly[i].size(); a++) {
+			circle(src, contours_poly[i][a], 10, Scalar(0,0,255));
+			corners.push_back(SLAM::Location(contours_poly[i][a].x, contours_poly[i][a].y));
+		}
 	}
 	
 	if (show_image) {
-		imshow( "src", src);
+		imshow( "goal", src);
 		waitKey(10);
 	}
 

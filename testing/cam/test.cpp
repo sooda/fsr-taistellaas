@@ -17,78 +17,6 @@ int h = 10;
 int s = 50;
 int v = 90;
 
-Vector2f getCamRotation()
-{
-//    float tilt = -M_PI/4;
-    float tilt = 0;
-    float pan = -M_PI/2;
-
-    Vector2f angles (tilt, pan);
-
-    return angles;
-
-}
-
-Matrix3f getObjectRotation(const float left, const float top)
-{
-    // image
-    const float width = 640;
-    const float height = 480;
-
-    // servos
-    Vector2f angles = getCamRotation();
-    const float tilt = angles(0);
-    const float pan = angles(1);
-
-    const float fov = 50.0 / 360.0 * M_PI;
-
-    // yksi pikseli vastaa radiaaneja (pystysuunnassa) (pixel per degree) (voidaanko käyttää myös vaakasuunnassa?)
-    const float ppd = fov/height;
-
-    // kohteen etäisyys keskipisteestä
-    float ydist = height/2 - top;
-    float xdist = width/2 - left;
-
-    // tarkoittaa kulmina xangl radiaania
-    float yangl = ppd*ydist;
-    float xangl = ppd*xdist;
-
-    // tällöin kulma
-    float ya = tilt + yangl;
-    float xa = pan + xangl;
-
-
-    Matrix3f rotation;
-
-    rotation = AngleAxisf(ya, Vector3f::UnitY()) * AngleAxisf(xa, Vector3f::UnitZ());
-
-    return rotation;
-
-}
-
-void printDist(const int left, const int top)
-{
-
-    Matrix3f R = getObjectRotation(left, top);
-
-    Vector3f T(0, 0, 1); // floor
-    Vector3f p(5, 0, 50); // position of the camera
-    Vector3f v(1, 0, 0); // direction of the view of the camera
-    Vector3f t(0,0,0);
-
-    v = R.transpose() * v;
-    cout << v << endl;
-
-    t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
-
-    cout << t << endl;
-
-    float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-
-    cout << "dist: " << distance << endl;
-
-}
-
 int main(int argc, char** argv)
 {
 
@@ -119,8 +47,7 @@ void colorize (int, void*)
 	cvtColor(src, dst, CV_BGR2HSV);
 
 	// tresholding
-//	inRange(dst, Scalar(0, 160, 160), Scalar(10, 255, 255), dst);
-	inRange(dst, Scalar(0, s, v), Scalar(h, 255, 255), dst);
+	inRange(dst, Scalar(0, 120, 120), Scalar(10, 255, 255), dst);
 
 	// dilation
 	int dilation_size = 2;
@@ -136,13 +63,28 @@ void colorize (int, void*)
 	vector<Vec4i> hierarchy;
 	findContours(dst, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
+	
 	for(int idx = 0; idx >= 0; idx = hierarchy[idx][0] )
 	{
-//		double area = contourArea(contours[idx]);
 		Scalar color( rand()&255, rand()&255, rand()&255 );
-//		if (area < 100) continue;
-//		if (area > 1000) color = Scalar(0,0,255);
 
+		Point2f center;
+		float radius;
+		minEnclosingCircle(contours[idx], center, radius);
+		
+		if (radius < 13) continue;
+//		std::cout << idx << ": " << center << " " << radius << std::endl;
+
+		double area1 = contourArea(contours[idx]);
+		if (area1 < 0.5 * 3.14 * radius * radius)
+			continue;
+		
+		drawContours( src, contours, idx, color, 1, 8, vector<Vec4i>(), 0, Point() );
+		circle( src, center, (int)radius * 1.2, color, 2);
+
+		std::cout << "area1: " << area1 << " radius: " << (3.14 * radius * radius) << std::endl;
+		
+/*
 		Point2f center;
 		float radius;
 		minEnclosingCircle(contours[idx], center, radius);
@@ -154,6 +96,7 @@ void colorize (int, void*)
 
 //		drawContours( src, contours, idx, color, CV_FILLED, 8, hierarchy );
 		circle( src, center, (int)radius * 1.2, color, 2);
+*/
 	}
 
 //	imshow( "origin", src);

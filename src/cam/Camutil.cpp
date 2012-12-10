@@ -64,20 +64,16 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	int limit_h_max = 0;
 	int limit_h_min = 0;
-	int limit_s = 0;
-	int limit_v = 0;
+	int limit_s = 120;
+	int limit_v = 120;
 
 	if (targets) {
 		limit_h_min = 0;
 		limit_h_max = 10;
-		limit_s = 50;
-		limit_v = 90;
 	}
 	else {
-		limit_h_min = 45;
-		limit_h_max = 70;
-		limit_s = 120;
-		limit_v = 120;
+		limit_h_min = 38;
+		limit_h_max = 75;
 	}
 	
 	Mat dst;
@@ -104,16 +100,23 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	for( int idx = 0; idx < contours.size(); idx++ )
 	{
 		//Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
-		Scalar color(0,0,255);
-		if (!targets) { color = Scalar(0,255,0); }
+		Scalar color(0, 0, 255);
+		if (!targets) { color = Scalar(0, 255, 0); }
 		
 		Point2f center;
 		float radius;
 		minEnclosingCircle(contours[idx], center, radius);
-
+		
 		if (radius < 13) continue;
 //		std::cout << idx << ": " << center << " " << radius << std::endl;
 
+		// if contour area is much smaller than eclosing circle
+		double area = contourArea(contours[idx]);
+		double minRatio = 0.5;
+		if (area < minRatio * 3.14 * radius * radius)
+			continue;
+	
+		drawContours( src, contours, idx, color, 1, 8, vector<Vec4i>(), 0, Point() );
 		circle( src, center, (int)radius * 1.2, color, 2);
 		
 		objects.push_back(SLAM::Location(center.x, center.y));
@@ -126,6 +129,55 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 
 	return objects;
 
+}
+
+std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
+	std::vector<SLAM::Location> corners;
+
+	Mat dst;
+
+	cvtColor(src, dst, CV_RGB2HSV);
+
+	namedWindow("src", CV_WINDOW_AUTOSIZE);
+
+	// tresholding
+	inRange(dst, Scalar(90, 120, 120), Scalar(130, 255, 255), dst);
+
+	// dilation
+	int dilation_size = 2;
+	Mat element = getStructuringElement( MORPH_RECT,
+					Size( 2*dilation_size + 1, 2*dilation_size + 1 ),
+					Point( dilation_size, dilation_size ) );
+	dilate( dst, dst, element );
+
+	// contours
+	vector<vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+
+	findContours(dst, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+
+	vector<vector<Point> > contours_poly( contours.size() );
+  
+	for( int i = 0; i < contours.size(); i++ )
+	{
+		Scalar color(255, 0, 0);
+
+		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
+		Rect boundRect = boundingRect( Mat(contours_poly[i]) );
+		
+		drawContours( src, contours_poly, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
+		rectangle( src, boundRect.tl(), boundRect.br(), color, 2, 8, 0 );		
+
+		corners.push_back(SLAM::Location(boundRect.tl().x, boundRect.tl().y));
+		corners.push_back(SLAM::Location(boundRect.br().x, boundRect.br().y));
+	}
+	
+	if (show_image) {
+		imshow( "src", src);
+		waitKey(10);
+	}
+
+	return corners;
 }
 
 }

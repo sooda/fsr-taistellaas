@@ -10,9 +10,13 @@ void colorize( int, void* );
 Mat src;
 Mat dst;
 
-int h = 10;
-int s = 50;
-int v = 90;
+int h_l = 0;
+int s_l = 0;
+int v_l = 0;
+
+int h_u = 180;
+int s_u = 255;
+int v_u = 255;
 
 char* win = "window";
 
@@ -28,9 +32,12 @@ int main(int argc, char** argv)
 
 	/* Create Window and Trackbar */
 	namedWindow( win, CV_WINDOW_AUTOSIZE );
-	createTrackbar( " H: (0-h)", win, &h, 255, colorize );
-	createTrackbar( " S: (s-255)", win, &s, 255, colorize );
-	createTrackbar( " V: (v-255)", win, &v, 255, colorize );
+	createTrackbar( " H_L: (0-180)", win, &h_l, 255, colorize );
+	createTrackbar( " S_L: (0-255)", win, &s_l, 255, colorize );
+	createTrackbar( " V_L: (0-255)", win, &v_l, 255, colorize );
+	createTrackbar( " H_U: (0-180)", win, &h_u, 255, colorize );
+	createTrackbar( " S_U: (0-255)", win, &s_u, 255, colorize );
+	createTrackbar( " V_U: (0-255)", win, &v_u, 255, colorize );
 	colorize( 0, 0 );
 
 	waitKey(0);
@@ -48,7 +55,7 @@ void colorize (int, void*)
 
 	// tresholding
 //	inRange(dst, Scalar(0, 160, 160), Scalar(10, 255, 255), dst);
-	inRange(dst, Scalar(0, s, v), Scalar(h, 255, 255), dst);
+	inRange(dst, Scalar(h_l, s_l, v_l), Scalar(h_u, s_u, v_u), dst);
 /*
 	// dilation
 	int dilation_size = 2;

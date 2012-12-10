@@ -29,6 +29,7 @@ public:
 	static std::vector<SLAM::Location> FindBalls (cv::Mat);
 	static std::vector<SLAM::Location> FindBalls (cv::Mat, bool show_image);
 	static std::vector<SLAM::Location> FindBalls (cv::Mat, bool show_image, bool targets);
+	static std::vector<SLAM::Location> FindGoalArea (cv::Mat src, bool show_image);
 
 private:
 

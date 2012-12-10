@@ -27,9 +27,8 @@ using namespace cv;
 
 namespace cam {
 
-Camera::Camera(CJ2B2Client &interface)
-	: interface(interface), calibrated(true),
-	  show_image(true), servoCtrl(interface)
+Camera::Camera(CJ2B2Client& interface, Motion::ServoControl& servos)
+	: calibrated(true), show_image(true), servoCtrl(servos), interface(interface)
 {
 	servoCtrl.resetServos();
 	lastrun = ownTime_get_ms();

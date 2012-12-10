@@ -33,7 +33,7 @@ public:
 		ERR_GET_IMAGE
 	};
 
-	Camera(CJ2B2Client&);
+	Camera(CJ2B2Client&, Motion::ServoControl&);
 
 	// updates data from the camera and recognise objects
 	void updateCameraData(SLAM::RobotLocation);
@@ -49,7 +49,11 @@ public:
 
 
 private:
-	CJ2B2Client &interface;
+	bool calibrated;
+	bool show_image;
+
+	Motion::ServoControl& servoCtrl;
+	CJ2B2Client& interface;
 
 	// image data
 	struct cameradata_t {
@@ -63,11 +67,6 @@ private:
 	std::vector<SLAM::Location> balls;
 	std::vector<SLAM::Location> nontargets;
 	std::vector<SLAM::Location> goalarea;
-
-	bool calibrated;
-	bool show_image;
-
-	Motion::ServoControl& servoCtrl;
 
 	ownTime_ms_t lastrun;
 

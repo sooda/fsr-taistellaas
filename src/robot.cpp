@@ -12,7 +12,7 @@ Robot::Robot(CJ2B2Client& j2b2)
 		servoControl(j2b2),
 		slam(SLAM::SLAM(SLAM::RobotLocation(0, 0, 0))),
 		navigation(),
-		camera(j2b2),
+		camera(j2b2, servoControl),
 		lastMeas(),
 		statistics(),
 		manual()

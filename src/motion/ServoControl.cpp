@@ -46,26 +46,6 @@ void ServoControl::resetServos()
 		this->setPosition(KServoUserServo_0, 0.0);
 		
     }
-
-#if 0
-	if (angle > M_PI/2) angle = M_PI/2;
-	else if (angle < 0) angle = 0;
-#endif
-	
-	int success_sent = servoCtrl.SetPosition(angle, KServoUserServo_1); //Ch 3
-	
-	// Check if was succesfully sent and print
-	if (success_sent) {
-		float pos;
-		servoCtrl.GetPosition(KServoUserServo_1, pos, 500); //Servo, variable, timeout
-		
-		dPrint(1,"Container opening to %.3f", pos);
-
-	
-	} else {
-		// Error
-		dPrint(1, "fail!");
-	}
 }
 
 float ServoControl::getPosition(ServoControl::EServo servo) const
@@ -73,7 +53,7 @@ float ServoControl::getPosition(ServoControl::EServo servo) const
 	if (servopos.find(servo) == servopos.end())
 		return 0.0;
 	else
-		return servopos[servo];
+		return servopos.find(servo)->second;
 }
 
 bool ServoControl::setPosition(ServoControl::EServo servo, float pos)

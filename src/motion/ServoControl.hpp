@@ -29,7 +29,7 @@ public:
 	ServoControl(CJ2B2Client&);
 
 	void resetServos();
-	float getPosition(ServoControl::EServo);
+	float getPosition(ServoControl::EServo) const;
 	bool setPosition(ServoControl::EServo, float);
 
 

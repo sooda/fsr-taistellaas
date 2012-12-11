@@ -45,8 +45,6 @@ public:
 	// update camera data to SLAM
 	void updateToSLAM(SLAM::SLAM &slam);
 
-	std::vector<SLAM::Location> getPositionOfTargets();
-
 
 private:
 	bool calibrated;
@@ -77,9 +75,6 @@ private:
 	void checkCalibration();
 	bool ballsInImage();
 	
-	// TODO: add some functions to recognise objects
-
-	Eigen::Matrix3f getObjectRotation(const float, const float);
 	void updateCamServos();
 	void updatePositionOfTargets();
 	

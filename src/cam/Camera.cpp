@@ -105,8 +105,9 @@ void Camera::updateToSLAM(SLAM::SLAM &slam) {
 		minDist = MIN_DIST_NEAR; // image front in m
 		maxDist = MAX_DIST_NEAR; // image back in m
 	}
-
-	double viewWidth = M_PI*FOV/180; // image fov in rad
+	
+	// TODO: Correct FOV??
+	double viewWidth = M_PI*FOV/180; // image fov in rad 
 
 	for (int type_ = SLAM::MapData::TARGET; type_ != SLAM::MapData::OBS_TYPE_SIZE; type_++) {
 
@@ -138,23 +139,8 @@ CImageContainer Camera::getCameraImage()
 
 void Camera::checkCalibration()
 {
+	// enable camera calibration by changing calibrated variable in the instruction list
 	if (!this->calibrated) calibrateCamera();
-
-//undistort(image, imageUndistorted, intrinsic, distCoeffs);
-
-//Mat cameraMatrix = (Mat_<double>(3,3) << 447.7679638984855, 0, 309.9314941852911, 0, 442.5677667837122, 245.2180309042916, 0, 0, 1);
-//Mat distCoeffs   = (Mat_<double>(1,5) << 0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765);
-
-	/*
-cameraMatrix:
-[447.7679638984855, 0, 309.9314941852911;
-  0, 442.5677667837122, 245.2180309042916;
-  0, 0, 1]
-
-distCoeffs:
-[0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765]
-	*/
-
 }
 
 bool Camera::calibrateCamera()
@@ -172,49 +158,6 @@ void Camera::updateCamServos()
 	cameradata.pan  = servoCtrl.getPosition(dPan);
 }
 
-Eigen::Matrix3f Camera::getObjectRotation(const float left, const float top)
-{
-    // image
-    const MaCI::Image::TImageInfo imginfo = cameradata.cameraImage.GetImageInfoRef();
-    const float height = (float)imginfo.imageheight;
-    const float width = (float)imginfo.imagewidth;
-
-//    const float width = 640;
-//    const float height = 480;
-
-    // servos
-    const float tilt = cameradata.tilt;
-    const float pan = cameradata.pan;
-
-    const float fov = M_PI*FOV/180;
-
-    // yksi pikseli vastaa radiaaneja (vaakasuunnassa??) (pixel per degree)
-    const float ppd = fov/width;
-
-    // kohteen etäisyys keskipisteestä
-    float ydist = height/2 - top;
-    float xdist = (width/2 - left)*-1;
-
-	std::cout << "xdist: " << xdist << " ydist: " << ydist << std::endl;
-
-    // tarkoittaa kulmina xangl radiaania
-    float yangl = ppd*ydist;
-    float xangl = ppd*xdist;
-
-    // tällöin kulma
-	std::cout << "tilt: " << tilt << " yangl: " << yangl << std::endl;
-
-    float ya = (tilt + yangl); // positiivinen ylöspäin
-    float xa = pan + xangl;  // positiivinen oikealle
-
-
-	Matrix3f rotation;
-
-    rotation = AngleAxisf(ya, Vector3f::UnitY()) * AngleAxisf(xa, Vector3f::UnitZ());
-
-	return rotation;
-
-}
 Matrix3f rotx(double alpha) {
 	double c = cos(alpha), s = sin(alpha);
 	Matrix3f ret;
@@ -245,7 +188,6 @@ Matrix3f rotz(double alpha) {
 
 void Camera::updatePositionOfTargets()
 {
-
 	this->balls.clear();
 	this->nontargets.clear();
 	this->goalarea.clear();
@@ -271,63 +213,35 @@ void Camera::updatePositionOfTargets()
 		else if (type == 2)
 			objects = goal_area;
 			
-		
-		for (size_t i = 0; i < objects.size(); i++) {
+			for (size_t i = 0; i < objects.size(); i++) {
 
-			SLAM::Location ball = objects.at(i);
-		
-#if 0
-			Matrix3f R = getObjectRotation(ball.x, ball.y);
+				SLAM::Location ball = objects.at(i);
+			
+			double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
+	//		cout << "target at (no ei mut tilt=" << theta_cam << endl;
+			double theta_rob = -cameradata.robotloc.theta;
+	//		cout << "target at (no ei mut rob=" << theta_rob << endl;
+			double f = 0.0037; // as it reads in the lens
+			double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
+			double m = f / pxlsz;
 
-			Vector3f T(0, 0, 1); // floor
-			Vector3f p(0.24, 0, 0.73); // position of the camera
-			Vector3f v(1, 0, 0); // direction of the view of the camera
-			Vector3f t(0,0,0);
+			Matrix3f K;
+			K << m, 0, 320, 0, m, 240, 0, 0, 1;
+			Matrix3f Ki = K.inverse();
 
-			v = R.transpose() * v;
+			Vector3f P_cam(0, 0.72, -0.27);
+			Vector3f P_rob(cameradata.robotloc.y, 0, -cameradata.robotloc.x); // minuses?
+			Matrix3f R_cam(rotx(theta_cam));
+			Matrix3f R_rob(roty(theta_rob));
+			Vector3f p(ball.x, ball.y, 1);
+			Vector3f v = R_rob * R_cam * Ki * p;
+			double l = -P_cam(1) / v(1);
+			Vector3f P0 = P_rob + R_rob * P_cam;
+			Vector3f P = P0 + l * v;
+	//		cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
+	//		cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
+			Vector3f t(-P(2), P(0), 0);
 
-			t = p - ((T.transpose() * p)/(T.transpose() * v) * v.transpose()).transpose();
-
-			std::cout << t << std::endl;
-
-			double theta = cameradata.robotloc.theta;
-			// TODO: Check the rotation!
-			double x = t.x() * cos(theta) - t.y() * sin(theta);
-			double y = t.x() * sin(theta) + t.y() * cos(theta);
-
-			// TODO: CHECK THE CALCULATIONS AND REMOVE THESE LINES!
-			// causes segfault, 'cos are not in mapData area
-			if (x > 3) x = 3;
-			if (y > 3) y = 3;
-			if (x < -3) x = -3;
-			if (y < -3) y = -3;
-
-#else
-		double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
-//		cout << "target at (no ei mut tilt=" << theta_cam << endl;
-		double theta_rob = -cameradata.robotloc.theta;
-//		cout << "target at (no ei mut rob=" << theta_rob << endl;
-		double f = 0.0037; // as it reads in the lens
-		double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
-		double m = f / pxlsz;
-
-		Matrix3f K;
-		K << m, 0, 320, 0, m, 240, 0, 0, 1;
-		Matrix3f Ki = K.inverse();
-
-		Vector3f P_cam(0, 0.72, -0.27);
-		Vector3f P_rob(cameradata.robotloc.y, 0, -cameradata.robotloc.x); // minuses?
-		Matrix3f R_cam(rotx(theta_cam));
-		Matrix3f R_rob(roty(theta_rob));
-		Vector3f p(ball.x, ball.y, 1);
-		Vector3f v = R_rob * R_cam * Ki * p;
-		double l = -P_cam(1) / v(1);
-		Vector3f P0 = P_rob + R_rob * P_cam;
-		Vector3f P = P0 + l * v;
-//		cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
-//		cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
-		Vector3f t(-P(2), P(0), 0);
-#endif
 			float distance = sqrt(t.x() * t.x() + t.y() * t.y());
 			cout << "Cam: " << (type==0?"Target":type==1?"nontarget":"goalarea") << " at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
 

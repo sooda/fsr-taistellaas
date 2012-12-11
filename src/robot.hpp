@@ -57,6 +57,7 @@ private:
 		THREAD_SENSE,
 		THREAD_CONTROL,
 		THREAD_SLAM,
+		THREAD_CAMERA,
 		THREAD_USER,
 
 		NUM_THREADS
@@ -83,6 +84,7 @@ private:
 	void threadSense(void);
 	void threadControl(void);
 	void threadSlam(void);
+	void threadCamera(void);
 	void threadUser(void);
 
 	void navigate(void);

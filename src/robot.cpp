@@ -50,6 +50,7 @@ Robot::Robot(CJ2B2Client& j2b2)
 	RunThread(THREAD_SENSE);
 	RunThread(THREAD_CONTROL);
 	RunThread(THREAD_SLAM);
+	RunThread(THREAD_CAMERA);
 	RunThread(THREAD_USER);
 }
 
@@ -216,6 +217,7 @@ void Robot::wait(void) {
 	WaitThread(THREAD_SENSE);
 	WaitThread(THREAD_CONTROL);
 	WaitThread(THREAD_SLAM);
+	WaitThread(THREAD_CAMERA);
 	WaitThread(THREAD_USER);
 }
 
@@ -246,7 +248,6 @@ void Robot::threadSense(void) {
 			camera.updateCameraData(slam.getCurrentMapData().getRobotLocation());
 			lastMeas.image.set(camera.getCameraImage());
 			statistics.camera++;
-			camera.updateToSLAM(slam);
 		} catch ( ... ) {
 			dPrint(1, "WTF, got image data with no data");
 		}
@@ -316,6 +317,12 @@ void Robot::threadSlam(void) {
 					navigation.refreshMap(slam.getCurrentMapData());
 			statistics.slam++;
 		}
+	}
+}
+
+void Robot::threadCamera(void) {
+	while (!IsRequestTermination(0)) {
+		camera.updateToSLAM(slam);
 	}
 }
 
@@ -541,6 +548,7 @@ int Robot::ThreadFunction(int threadId) {
 		case THREAD_SENSE: threadSense(); break;
 		case THREAD_CONTROL: threadControl(); break;
 		case THREAD_SLAM: threadSlam(); break;
+		case THREAD_CAMERA: threadCamera(); break;
 		case THREAD_USER: threadUser(); break;
 		default: throw std::runtime_error("Bad thread number"); break;
 	}

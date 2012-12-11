@@ -64,6 +64,7 @@ private:
 		float tilt;
 		float pan;
 		SLAM::RobotLocation robotloc;
+		bool initd;
 	} cameradata;
 
 	// Position of the balls in a real world

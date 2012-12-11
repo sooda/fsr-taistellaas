@@ -30,6 +30,7 @@ namespace cam {
 Camera::Camera(CJ2B2Client& interface, Motion::ServoControl& servos)
 	: calibrated(true), show_image(true), servoCtrl(servos), interface(interface)
 {
+	cameradata.initd = false;
 	servoCtrl.resetServos();
 	rotateFar();
 	lastrun = ownTime_get_ms();
@@ -82,12 +83,14 @@ void Camera::getCameraData()
 		cout << "error 3" << endl;
 		throw ERR_GET_IMAGE;
 	}
-
+	cameradata.initd = true;
 }
 
 void Camera::updateToSLAM(SLAM::SLAM &slam)
 {
-	int waitTime = 10;
+	if (!cameradata.initd)
+		return;
+	int waitTime = 100;
 	if (isRotatedNear())
 		waitTime = 500;
 

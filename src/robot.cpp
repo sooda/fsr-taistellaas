@@ -110,6 +110,7 @@ void Robot::navigateTarget() {
 
 void Robot::planAction(void) {
 	ownTime_ms_delta_t hurryUp = 1000*60*13; // If it's time to abandon everything else and get current targets to the goal 
+	updateTargets();
 	if (!manual.enabled) {
 		if(statistics.taskStartTime == 0)
 			statistics.taskStartTime = ownTime_get_ms();
@@ -121,7 +122,6 @@ void Robot::planAction(void) {
 					taskState = EXPLORE;
 				break;
 			case EXPLORE: // seek unexplored areas until targets visible
-				updateTargets();
 				if (targets.size()) {
 					if (motionControl.running())
 						motionControl.stop();

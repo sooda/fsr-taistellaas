@@ -114,6 +114,7 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 			routeStarting = false;
 			return nextMidpoint();
 		} else {
+			std::cout << "Route starting" << std::endl;
 			ctrl.speed = 0;
 			float dt = startPoint.theta - myPose.theta;
 			dt = fixangles(dt);
@@ -264,10 +265,10 @@ float MotionControl::routeLeft() const {
 		int dy = abs(next->y - prev->y);
 		if (dx + dy == 2) // diagonal walk
 			amount += sqrt(2);
-		else // 1
+		else // axis-aligned
 			amount++;
 	}
-	return amount / SLAM::MapData::unitSize;
+	return amount * SLAM::MapData::unitSize;
 }
 
 const float MotionControl::acceleration = 0.3;

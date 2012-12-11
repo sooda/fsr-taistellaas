@@ -68,7 +68,7 @@ search_info Navigation::findRoute(SLAM::GridPoint point) {
 	return gridsearch(container, start, goal);
 }
 
-bool Navigation::routeLength(SLAM::Location loc) {
+float Navigation::routeLength(SLAM::Location loc) {
 	return findRoute(SLAM::MapData::loc2grid(loc)).second / SLAM::MapData::unitSize;
 }
 

@@ -18,7 +18,7 @@ public:
 	void draw(SDL_Surface* surface, int posx, int posy) const;
 	bool solveTo(SLAM::Location loc);
 	bool solveTo(SLAM::GridPoint point);
-	bool routeLength(SLAM::Location loc);
+	float routeLength(SLAM::Location loc);
 	LocList getRoute(void) const;
 	void updateLocation(SLAM::RobotLocation pos);
 	bool isFloor(SLAM::Location loc) const;

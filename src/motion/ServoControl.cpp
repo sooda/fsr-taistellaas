@@ -14,15 +14,26 @@ ServoControl::ServoControl(CJ2B2Client &interface)
 	: interface(interface)
 {
 	iServoCtrl = interface.iServoCtrl;
+	if (!iServoCtrl) {
+		std::cout << "ServoCtrl: ERROR! Cannot access iServoCtrl!" << std::endl;
+	}
 }
 
 void ServoControl::resetServos()
 {
-	float ptu_pan = 0.0;
-	float ptu_tilt = -0.8;//-1.25;
+//	float ptu_pan = 0.0;
+//	float ptu_tilt = -0.8;//-1.25;
 
     if (iServoCtrl)
     {
+		// camera servos
+		this->setPosition(KServoCameraPTUPan, 0.0);
+		this->setPosition(KServoCameraPTUTilt, 0.0);
+	
+		// hatch control
+		this->setPosition(KServoUserServo_0, 0.0);
+	
+	/*
 		// Do value checking and limiting.
 		if (ptu_pan > M_PI/2) ptu_pan = M_PI/2;
 		else if (ptu_pan < -M_PI/2) ptu_pan = -M_PI/2;
@@ -41,11 +52,11 @@ void ServoControl::resetServos()
 		} else {
 			std::cout << "Camera control error" << std::endl;
 		}
-		
-		// hatch control
-		this->setPosition(KServoUserServo_0, 0.0);
-		
+*/		
     }
+	else {
+		std::cout << "ServoCtrl: ERROR! Cannot access iServoCtrl!" << std::endl;
+	}
 }
 
 void ServoControl::setHatch(bool state) {

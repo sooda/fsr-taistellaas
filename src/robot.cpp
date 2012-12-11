@@ -442,17 +442,20 @@ void Robot::handleKey(int type, SDLKey key) {
 			case SDLK_0:
 				servoControl.setHatch(false);
 				break;
-			case SDLK_PAGEUP: {
+			case SDLK_PAGEUP:
+				camera.rotateFar();
+/*
 				float tilt = servoControl.getPosition(Motion::ServoControl::KServoCameraPTUTilt) - 0.05;
 				std::cout << "CAM TILT AT: " << tilt << std::endl;
 				servoControl.setPosition(Motion::ServoControl::KServoCameraPTUTilt, tilt);
-				}
+*/
 				break;
-			case SDLK_PAGEDOWN: {
-				float tilt = servoControl.getPosition(Motion::ServoControl::KServoCameraPTUTilt) + 0.05;
+			case SDLK_PAGEDOWN:
+				camera.rotateNear();
+/*				float tilt = servoControl.getPosition(Motion::ServoControl::KServoCameraPTUTilt) + 0.05;
 				std::cout << "CAM TILT AT: " << tilt << std::endl;
 				servoControl.setPosition(Motion::ServoControl::KServoCameraPTUTilt, tilt);
-				}
+*/
 				break;
 			default:
 				dPrint(1, "SDL KEYDOWN event: %d/%s",

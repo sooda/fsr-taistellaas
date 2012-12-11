@@ -137,7 +137,16 @@ void Robot::planAction(void) {
 					navigateTarget();
 				} else {
 					if (!motionControl.iterate(p)) {
-						explore();
+						SLAM::RobotLocation p2 = p;
+						p2.theta += M_PI/2;
+						float walk = navigation.wallClearance(p);
+						if (walk < 0.1)
+							walk = 0.06;
+						else
+							walk -= 0.1;
+						navigation.solveTo(SLAM::Location(p2.x + cos(p2.theta) * walk, p2.y + sin(p2.theta) * walk));
+						navigate();
+						//explore();
 					}
 				}
 				break;

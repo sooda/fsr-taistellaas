@@ -105,6 +105,7 @@ private:
 	SLAM::SLAM slam;
 	Navi::Navigation navigation;
 	cam::Camera camera;
+	void speak(const std::string&);
 
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;
@@ -140,8 +141,8 @@ private:
 };
 
 // open the hatch when distance from robot center to goal is < this
-#define HATCH_OPEN_DISTANCE (0.24 + 0.5)
-#define GOALWALK 0.2
+#define HATCH_OPEN_DISTANCE (0.24 + 0.5 / 2)
+#define GOALWALK 0.4
 #define ROBOT_RADIUS 0.24
 
 #endif

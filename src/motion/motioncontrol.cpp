@@ -59,7 +59,7 @@ bool MotionControl::rollStart(Pose pose) {
 	if (finished) {
 		ctrl.angle = 0;
 	} else {
-		ctrl.angle = 1 / 10.0 * M_PI;
+		ctrl.angle = -1 / 10.0 * M_PI;
 	}
 	return !finished;
 }

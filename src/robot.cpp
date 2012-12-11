@@ -113,7 +113,6 @@ void Robot::selectTarget() {
 void Robot::navigateTarget() {
 	navigation.solveTo(currentTarget);
 	navigate();
-
 }
 
 void Robot::planAction(void) {
@@ -157,6 +156,7 @@ void Robot::planAction(void) {
 					servoControl.setHatch(true);
 					camera.rotateFar();
 					numberOfPickUps++;
+					speak("Picked up number " + lexical_cast(numberOfPickUps));
 					if(numberOfPickUps >= 10) {
 						taskState = GO_RETURN_TO_GOAL;
 					} else {
@@ -201,6 +201,7 @@ void Robot::planAction(void) {
 				// TODO: examine your balls
 				break;
 			case END_STATE: // world domination succeeded
+				speak("Vooorlld domineiisoon");
 				manual.enabled = true;
 				break;
 			case BACK_OFF: // bumpers hit. exit to exploring when bumpers not hitting anymore
@@ -485,6 +486,11 @@ void Robot::pollEvents(void) {
 		}
 	}
 }
+
+void Robot::speak(const std::string& str) {
+	j2b2.iTextToSpeech->SendText(str);
+}
+
 void Robot::handleKey(int type, SDLKey key) {
 	if (type == SDL_KEYDOWN) {
 		switch (key) {
@@ -515,7 +521,7 @@ void Robot::handleKey(int type, SDLKey key) {
 				taskLock.Unlock();
 				break;
 			case SDLK_h:
-				j2b2.iTextToSpeech->SendText("Hello world");
+				speak("Hellou voorld");
 				break;
 			case SDLK_1:
 				servoControl.setHatch(true);

@@ -21,7 +21,7 @@ void Navigation::refreshMap(const SLAM::MapData& data) {
 			wallmap_orig[y][x] = !(wall >= -0.1 && wall <= 0.8);
 		}
 	}
-	wallmap_dila = dilate(wallmap_orig, 0.24 / SLAM::MapData::unitSize);
+	wallmap_dila = dilate(wallmap_orig, 0.24 / SLAM::MapData::unitSize - 1);
 }
 void Navigation::updateLocation(SLAM::RobotLocation pos) {
 	roboPos = pos;
@@ -54,7 +54,7 @@ search_info Navigation::findRoute(SLAM::GridPoint point) {
 }
 
 bool Navigation::routeLength(SLAM::Location loc) {
-	return findRoute(SLAM::MapData::loc2grid(loc)).second;
+	return findRoute(SLAM::MapData::loc2grid(loc)).second / SLAM::MapData::unitSize;
 }
 bool Navigation::solveTo(SLAM::GridPoint point) {
 	current_route = findRoute(point).first;

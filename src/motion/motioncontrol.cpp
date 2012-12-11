@@ -265,7 +265,7 @@ float MotionControl::routeLeft() const {
 		else // 1
 			amount++;
 	}
-	return amount;
+	return amount / SLAM::MapData::unitSize;
 }
 
 const float MotionControl::acceleration = 0.3;

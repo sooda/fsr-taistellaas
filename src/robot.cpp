@@ -66,19 +66,19 @@ void Robot::navigate(void) {
 void Robot::explore() {
 	// TODO: write code to search the largest unknown area
 	// currently, in this state, someone should click the destination with a mouse
-	std::cout << "Hey user, click somewhere to explore!" << std::endl;
+	std::cout << "PLANNER: Hey user, click somewhere to explore!" << std::endl;
 }
 
 void Robot::updateTargets() {
-	std::cout << "Targets:" << std::endl;
+	std::cout << "PLANNER: Targets:" << std::endl;
 	targets = slam.getCurrentMapData().getObjects(SLAM::MapData::TARGET);
 	if (targets.empty()) {
-		std::cout << "(none)" << std::endl;
+		std::cout << "PLANNER: (none)" << std::endl;
 	}
 	for (auto it = targets.begin(); it != targets.end();) {
-		std::cout << "Target at: " << it->x << " " << it->y << std::endl;
+		std::cout << "PLANNER: Target at: " << it->x << " " << it->y << std::endl;
 		if (!navigation.isFloor(*it)) {
-			std::cout << "Not reachable yet" << std::endl;
+			std::cout << "PLANNER: Not reachable yet" << std::endl;
 			it = targets.erase(it);
 		} else {
 			++it;
@@ -92,14 +92,13 @@ void Robot::selectTarget() {
 	int minId = 0, i = 0;
 	float minDist = navigation.routeLength(targets.front());
 	for (auto it = targets.begin(); it != targets.end(); ++it, ++i) {
-		std::cout << "Target at: " << it->x << " " << it->y << std::endl;
 		float dist = navigation.routeLength(*it);
 		if (dist < minDist) {
 			minDist = dist;
 			minId = i;
 		}
 	}
-	std::cout << "NEAREST: " << targets[minId].x << " " << targets[minId].y << " at " << minDist << std::endl;
+	std::cout << "PLANNER: NEAREST: " << targets[minId].x << " " << targets[minId].y << " at " << minDist << std::endl;
 	currentTarget = targets[minId];
 	targets.erase(targets.begin() + minId);
 }
@@ -115,7 +114,7 @@ void Robot::planAction(void) {
 		if(statistics.taskStartTime == 0)
 			statistics.taskStartTime = ownTime_get_ms();
 		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
-		std::cout << "ROBOT LOCATION IN PLANNER: " << p.x << " " << p.y << " " << p.theta << std::endl;
+		std::cout << "PLANNER: ROBOT LOCATION " << p.x << " " << p.y << " " << p.theta << std::endl;
 		switch (taskState) {
 			case START: // roll around to discover empty areas
 				if (!motionControl.rollStart(p))
@@ -126,7 +125,7 @@ void Robot::planAction(void) {
 				if (targets.size()) {
 					if (motionControl.running())
 						motionControl.stop();
-					taskState = PICK_UP;
+					taskState = GO_TO_TARGET;
 					selectTarget();
 					navigateTarget();
 				} else {
@@ -141,6 +140,7 @@ void Robot::planAction(void) {
 					camera.rotateNear();
 					// TODO: stop for taking better images?
 					navigateTarget();
+					taskState = PICK_UP;
 				}
 				motionControl.iterate(p);
 				break;
@@ -184,7 +184,7 @@ void Robot::planAction(void) {
 				manual.enabled = true;
 				break;
 			case BACK_OFF: // bumpers hit. exit to exploring when bumpers not hitting anymore
-				std::cout << "DYNDYNDYY" << std::endl;
+				std::cout << "PLANNER: DYNDYNDYY" << std::endl;
 				motionControl.backOff();
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
@@ -197,7 +197,7 @@ void Robot::planAction(void) {
 				&& taskState != BACK_OFF)
 			taskState = GO_RETURN_TO_GOAL;
 	}
-	std::cout << "CURRENT TASK: " << taskdescr[taskState] << std::endl;
+	std::cout << "PLANNER: CURRENT TASK: " << taskdescr[taskState] << std::endl;
 }
 
 void Robot::threadMain(void) {
@@ -453,7 +453,7 @@ void Robot::pollEvents(void) {
 						if (x >= SLAM::MapData::gridSize)
 							x -= SLAM::MapData::gridSize;
 						if (x >= 0 && x < SLAM::MapData::gridSize) {
-							std::cout << "Find route: " << x << " " << y << std::endl;
+							std::cout << "PLANNER: Find route: " << x << " " << y << std::endl;
 							if (navigation.solveTo(SLAM::GridPoint(x, y)))
 								navigate();
 						}

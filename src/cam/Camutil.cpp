@@ -21,7 +21,7 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	const MaCI::Image::TImageInfo imginfo = srcimg.GetImageInfoRef();
 	const unsigned int rows = imginfo.imageheight;
 	const unsigned int cols = imginfo.imagewidth;
-	Mat img = Mat(rows, cols, CV_8UC1);
+	Mat img = Mat(rows, cols, CV_8UC3);
 	
 	if (srcimg.GetImageDataType() != MaCI::Image::EImageDataType::KImageDataJPEG) {
 		std::cout << "ImgDataType not JPEG!!!" << std::endl;

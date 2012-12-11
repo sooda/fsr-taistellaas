@@ -21,10 +21,15 @@ void Navigation::refreshMap(const SLAM::MapData& data) {
 			wallmap_orig[y][x] = !(wall >= -0.1 && wall <= 0.8);
 		}
 	}
-	wallmap_dila = dilate(wallmap_orig, 5); // TODO: correct amount
+	wallmap_dila = dilate(wallmap_orig, 0.24 / SLAM::MapData::unitSize);
 }
 void Navigation::updateLocation(SLAM::RobotLocation pos) {
 	roboPos = pos;
+}
+
+bool Navigation::isFloor(SLAM::Location loc) const {
+	SLAM::GridPoint gp = SLAM::MapData::loc2grid(loc);
+	return wallmap_dila[gp.y][gp.x];
 }
 
 void drawGrid(const GridMap& grid, SDL_Surface* screen, int x0, int y0) {
@@ -41,13 +46,23 @@ void drawGrid(const GridMap& grid, SDL_Surface* screen, int x0, int y0) {
 	}
 }
 
-bool Navigation::solveGrid(int x, int y) {
-	SLAM::RobotLocation loc = map.getGridLocation();
+search_info Navigation::findRoute(SLAM::GridPoint point) {
 	VectorGrid container(wallmap_dila);
-	gridvertex start(loc.x, loc.y, &container);
-	gridvertex goal(x, y, &container);
-	current_route = gridsearch(container, start, goal);
+	gridvertex start(roboPos.x, roboPos.y, &container);
+	gridvertex goal(point.x, point.y, &container);
+	return gridsearch(container, start, goal);
+}
+
+bool Navigation::routeLength(SLAM::Location loc) {
+	return findRoute(SLAM::MapData::loc2grid(loc)).second;
+}
+bool Navigation::solveTo(SLAM::GridPoint point) {
+	current_route = findRoute(point).first;
 	return !current_route.empty();
+}
+
+bool Navigation::solveTo(SLAM::Location loc) {
+	return solveTo(SLAM::MapData::loc2grid(loc));
 }
 
 void Navigation::draw(SDL_Surface* screen, int posx, int posy) const {

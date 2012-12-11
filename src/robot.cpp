@@ -70,10 +70,42 @@ void Robot::explore() {
 
 void Robot::updateTargets() {
 	std::cout << "Targets:" << std::endl;
-	auto locations = slam.getCurrentMapData().getObjects(SLAM::MapData::TARGET);
-	for (auto it = locations.begin(); it != locations.end(); ++it)
+	targets = slam.getCurrentMapData().getObjects(SLAM::MapData::TARGET);
+	if (targets.empty()) {
+		std::cout << "(none)" << std::endl;
+	}
+	for (auto it = targets.begin(); it != targets.end();) {
 		std::cout << "Target at: " << it->x << " " << it->y << std::endl;
-	// TODO: do something with the locations
+		if (!navigation.isFloor(*it)) {
+			std::cout << "Not reachable yet" << std::endl;
+			it = targets.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+void Robot::selectTarget() {
+	if (targets.empty()) {
+		return;
+	}
+	int minId = 0, i = 0;
+	float minDist = navigation.routeLength(targets.front());
+	for (auto it = targets.begin(); it != targets.end(); ++it, ++i) {
+		std::cout << "Target at: " << it->x << " " << it->y << std::endl;
+		float dist = navigation.routeLength(*it);
+		if (dist < minDist) {
+			minDist = dist;
+			minId = i;
+		}
+	}
+	std::cout << "NEAREST: " << targets[minId].x << " " << targets[minId].y << " at " << minDist << std::endl;
+	currentTarget = targets[minId];
+	targets.erase(targets.begin() + minId);
+}
+void Robot::navigateTarget() {
+	navigation.solveTo(currentTarget);
+	navigate();
+
 }
 
 void Robot::planAction(void) {
@@ -83,44 +115,60 @@ void Robot::planAction(void) {
 			statistics.taskStartTime = ownTime_get_ms();
 		SLAM::RobotLocation p = slam.getCurrentMapData().getRobotLocation();
 		std::cout << "ROBOT LOCATION IN PLANNER: " << p.x << " " << p.y << " " << p.theta << std::endl;
-		bool succeeded = false;
 		switch (taskState) {
-			case START:
+			case START: // roll around to discover empty areas
 				if (!motionControl.rollStart(p))
 					taskState = EXPLORE;
 				break;
-			case EXPLORE:
+			case EXPLORE: // seek unexplored areas until targets visible
 				updateTargets();
 				if (targets.size()) {
 					if (motionControl.running())
 						motionControl.stop();
 					taskState = PICK_UP;
+					selectTarget();
+					navigateTarget();
 				} else {
 					if (!motionControl.iterate(p)) {
 						explore();
 					}
 				}
 				break;
-			case PICK_UP:
-				// TODO: 1. Ask slam, where is closest ball
-				// 2. Make navigation navigate close to it
-				// 3. Open hatch
-				// 4. Make navigation navigate over it
-				// 5. Close hatch
-				if(succeeded)
-					numberOfPickUps++;
-				if(numberOfPickUps >= 10 || ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
-					taskState = GO_RETURN_TO_GOAL;
+			case GO_TO_TARGET: // Move near the nearest target to open the hatch
+				if (motionControl.routeLeft() < HATCH_OPEN_DISTANCE) {
+					servoControl.setHatch(false);
+					camera.rotateNear();
+					// TODO: stop for taking better images?
+					navigateTarget();
+				}
+				motionControl.iterate(p);
 				break;
-			case GO_RETURN_TO_GOAL:
-				if (navigation.solveGrid(SLAM::MapData::gridSize / 2, SLAM::MapData::gridSize / 2)) {
+			case PICK_UP: // Move on to the target and close the hatch when finished
+				if (!motionControl.iterate(p)) {
+					servoControl.setHatch(true);
+					camera.rotateFar();
+					numberOfPickUps++;
+					if(numberOfPickUps >= 10) {
+						taskState = GO_RETURN_TO_GOAL;
+					} else {
+						if (targets.empty()) {
+							taskState = EXPLORE;
+						} else {
+							selectTarget();
+							navigateTarget();
+						}
+					}
+				}
+				break;
+			case GO_RETURN_TO_GOAL: // Try to find a route to the goal -- if cannot, explore more
+				if (navigation.solveTo(SLAM::Location(0, 0))) {
 					navigate();
 					taskState = RETURN_TO_GOAL;
 				} else {
 					taskState = EXPLORE;
 				}
 				break;
-			case RETURN_TO_GOAL:
+			case RETURN_TO_GOAL: // Going to goal
 				if (!motionControl.iterate(p))
 					taskState = RELEASE_TARGETS;
 				break;
@@ -131,17 +179,22 @@ void Robot::planAction(void) {
 				}
 				// TODO: examine your balls
 				break;
-			case END_STATE:
+			case END_STATE: // OK!
 				manual.enabled = true;
 				break;
-			case BACK_OFF:
+			case BACK_OFF: // bumpers hit. exit to exploring when bumpers not hitting anymore
 				std::cout << "DYNDYNDYY" << std::endl;
 				motionControl.backOff();
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}
-		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp)
-			taskState = RETURN_TO_GOAL;
+		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp
+				&& taskState != GO_RETURN_TO_GOAL
+				&& taskState != RETURN_TO_GOAL
+				&& taskState != RELEASE_TARGETS
+				&& taskState != END_STATE
+				&& taskState != BACK_OFF)
+			taskState = GO_RETURN_TO_GOAL;
 	}
 	std::cout << "CURRENT TASK: " << taskdescr[taskState] << std::endl;
 }
@@ -393,7 +446,7 @@ void Robot::pollEvents(void) {
 							x -= SLAM::MapData::gridSize;
 						if (x >= 0 && x < SLAM::MapData::gridSize) {
 							std::cout << "Find route: " << x << " " << y << std::endl;
-							if (navigation.solveGrid(x, y))
+							if (navigation.solveTo(SLAM::GridPoint(x, y)))
 								navigate();
 						}
 					}
@@ -495,6 +548,7 @@ int Robot::ThreadFunction(int threadId) {
 const char* Robot::taskdescr[] = {
 	"Start",
 	"Explore",
+	"Go to target",
 	"Pick up",
 	"Go return to goal",
 	"Return to goal",

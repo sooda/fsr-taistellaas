@@ -1,7 +1,7 @@
 #include "gridsearch.hpp"
 #include "gridgraph.hpp"
 
-std::list<vertex_descriptor> gridsearch(const VectorGrid& grid, vertex_descriptor start, vertex_descriptor goal) {
+search_info gridsearch(const VectorGrid& grid, vertex_descriptor start, vertex_descriptor goal) {
 	using namespace std;
 	gridgraph g(grid);
 	grid_heuristic<gridgraph, cost> heuristic(goal);
@@ -46,6 +46,5 @@ std::list<vertex_descriptor> gridsearch(const VectorGrid& grid, vertex_descripto
 		cout << " -> " << *spi;
 	cout << endl << "Total travel time: " << d[goal] << endl;
 	cout << "search finished" << endl;
-	//return make_pair(shortest_path, p);
-	return shortest_path;
+	return make_pair(shortest_path, d[goal]);
 }

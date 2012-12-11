@@ -4,6 +4,7 @@
 #include "gridutil.hpp"
 #include <list>
 
-std::list<gridvertex> gridsearch(const VectorGrid& grid, gridvertex start, gridvertex goal);
+typedef std::pair<std::list<gridvertex>, float> search_info;
+search_info gridsearch(const VectorGrid& grid, gridvertex start, gridvertex goal);
 
 #endif

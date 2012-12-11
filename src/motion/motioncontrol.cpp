@@ -252,6 +252,22 @@ bool MotionControl::backFromGoal(SLAM::RobotLocation current) {
 	return true;
 }
 
+float MotionControl::routeLeft() const {
+	if (midpoints.empty())
+		return 0;
+	float amount = 0;
+	auto prev = midpoints.begin(), next = prev;
+	for (++next; next != midpoints.end(); prev = next++) {
+		int dx = abs(next->x - prev->x);
+		int dy = abs(next->y - prev->y);
+		if (dx + dy == 2) // diagonal walk
+			amount += sqrt(2);
+		else // 1
+			amount++;
+	}
+	return amount;
+}
+
 const float MotionControl::acceleration = 0.3;
 
 }

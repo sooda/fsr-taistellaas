@@ -36,6 +36,7 @@ public:
 	void drawInfo(SDL_Surface* screen, int x, int y) const;
 	bool backFromGoal(SLAM::RobotLocation current);
 	bool rollStart(Pose pose);
+	float routeLeft() const;
 private:
 	MotionControl(const MotionControl&);
 	MotionControl& operator=(const MotionControl&);

@@ -65,6 +65,7 @@ private:
 	enum TaskState {
 		START,
 		EXPLORE,
+		GO_TO_TARGET,
 		PICK_UP,
 		GO_RETURN_TO_GOAL,
 		RETURN_TO_GOAL,
@@ -88,6 +89,8 @@ private:
 	void explore(void);
 	void planAction(void);
 	void updateTargets(void);
+	void selectTarget(void);
+	void navigateTarget(void);
 
 	void pollEvents(void);
 	void handleKey(int, SDLKey);
@@ -128,8 +131,12 @@ private:
 	gim::CSync taskLock;
 	int numberOfPickUps;
 	std::vector<SLAM::Location> targets;
+	SLAM::Location currentTarget;
 
 	static const int win_width = 310 + 310 + 640, win_height = 310 + 310 + 310;
 };
+
+// open the hatch when distance from robot center to goal is < this
+#define HATCH_OPEN_DISTANCE (0.24 + 0.5)
 
 #endif

@@ -5,6 +5,7 @@
 #include <list>
 #include "navi/util/dilate.hpp"
 #include "navi/util/gridutil.hpp"
+#include "navi/util/gridsearch.hpp"
 
 namespace Navi {
 
@@ -15,10 +16,14 @@ public:
 	Navigation();
 	void refreshMap(const SLAM::MapData& data);
 	void draw(SDL_Surface* surface, int posx, int posy) const;
-	bool solveGrid(int x, int y);
+	bool solveTo(SLAM::Location loc);
+	bool solveTo(SLAM::GridPoint point);
+	bool routeLength(SLAM::Location loc);
 	LocList getRoute(void) const;
 	void updateLocation(SLAM::RobotLocation pos);
+	bool isFloor(SLAM::Location loc) const;
 private:
+	search_info findRoute(SLAM::GridPoint point);
 	SLAM::MapData map;
 	GridMap wallmap_orig;
 	GridMap wallmap_dila;

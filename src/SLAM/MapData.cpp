@@ -103,6 +103,7 @@ const std::vector<Location>& MapData::getObjects(ObservationType type) const {
 		return obstacles;
 	if (type == MapData::GOAL)
 		return goal;
+	return std::vector<Location>();
 }
 
 // set objects in list form
@@ -113,6 +114,8 @@ void MapData::setObjects(std::vector<Location> objects, ObservationType type) {
 		this->obstacles = objects;
 	if (type == MapData::GOAL)
 		this->goal = objects;
+	return std::vector<Location>();
+
 }
 
 }

@@ -205,15 +205,15 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 // inform slam of some object at some location
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
-	// preprocessing
+/*	// preprocessing
 	double unusedViewWidth = M_PI*5/180; // 5 degrees from sides off
 	double unusedViewDepthFront = 0.05; // 5 cm from front off
 	double unusedViewDepthBack = 0.10; // 10cm from back off
 	data.viewWidth -= unusedViewWidth;
 	data.minDist -= unusedViewDepthFront;
-	data.maxDist -= unusedViewDepthBack;
+	data.maxDist -= unusedViewDepthBack;*/
 
-	double scaleDownDeltas = 0.8; // FIXME TODO XXX read this from servos
+	double scaleDownDeltas = 0.8;
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
 	double dtheta = scaleDownDeltas*MapData::unitSize/data.maxDist;
@@ -252,6 +252,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 				if (oldValue > 0.5) {
 					// overwriting a target
 					if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
+						std::cout << "overwriting object at (" << x << ", " << y << ")" << std::endl;
 						for (auto it = objects.begin(); it != objects.end(); ++it) {
 							double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
 							if (r2 < maxObjectDelta2) {
@@ -263,12 +264,13 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 										std::cout << "object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
 										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;	
 										data.targets.erase(it2);
+										currentMapData.setValue(Location(x,y), type, 0.0); // empty to avoid double tagging
 										break;
 									}
 								}
 								if (newObjectExists == false) {
 									objects.erase(it);
-									std::cout << "object (" << type << ": " << x << ", " << y << ") removed" << std::endl;
+									std::cout << "object (" << type << ": " << it->x << ", " << it->y << ") removed" << std::endl;
 									currentMapData.setValue(Location(x,y), type, 0.0); // empty
 								}
 								break;
@@ -405,9 +407,9 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	}
 	if (type == MapData::GOAL) {
 		if (objects.size() == 5) {
-			Location c1 = objects[0];
-			Location c2 = objects[1]; // we don't need c3, actually
-			Location c4 = objects[3];
+			Location c1 = objects[1];
+			Location c2 = objects[2]; // we don't need c3, actually
+			Location c4 = objects[4];
 
 			for (double i = 0; i <= 1; i+=MapData::unitSize*0.9) {
 				for (double j = 0; j <= 1; j+=MapData::unitSize*0.9) {

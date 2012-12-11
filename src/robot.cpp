@@ -72,13 +72,21 @@ void Robot::explore() {
 void Robot::updateTargets() {
 	std::cout << "PLANNER: Targets:" << std::endl;
 	targets = slam.getCurrentMapData().getObjects(SLAM::MapData::TARGET);
+	SLAM::RobotLocation roboloc = slam.getCurrentMapData().getRobotLocation();
+	
 	if (targets.empty()) {
 		std::cout << "PLANNER: (none)" << std::endl;
 	}
 	for (auto it = targets.begin(); it != targets.end();) {
+		double distx = roboloc.x - it->x;
+		double disty = roboloc.y - it->y;
+
 		std::cout << "PLANNER: Target at: " << it->x << " " << it->y << std::endl;
 		if (!navigation.isFloor(*it)) {
 			std::cout << "PLANNER: Not reachable yet" << std::endl;
+			it = targets.erase(it);
+		} else if (sqrt(distx * distx + disty * disty) < ROBOT_RADIUS) {
+			std::cout << "PLANNER: Target inside robot!" << std::endl;
 			it = targets.erase(it);
 		} else {
 			++it;

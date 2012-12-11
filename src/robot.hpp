@@ -142,5 +142,6 @@ private:
 // open the hatch when distance from robot center to goal is < this
 #define HATCH_OPEN_DISTANCE (0.24 + 0.5)
 #define GOALWALK 0.2
+#define ROBOT_RADIUS 0.24
 
 #endif

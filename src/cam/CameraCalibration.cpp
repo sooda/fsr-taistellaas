@@ -95,7 +95,7 @@ void CameraCalibration::runCalibration() {
  
         image = getImage();
  
-        int key = waitKey(1000);
+        int key = waitKey(200);
 
         if(key==27)
             return;

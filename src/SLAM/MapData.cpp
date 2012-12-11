@@ -3,8 +3,8 @@
 
 namespace SLAM {
 
-const int MapData::gridSize = 301;
-const double MapData::unitSize = 0.03;
+const int MapData::gridSize = 201;
+const double MapData::unitSize = 0.05;
 
 MapData::MapData(RobotLocation initial)
 	: xdim(gridSize), ydim(gridSize),
@@ -96,7 +96,7 @@ RobotLocation MapData::getGridLocation() const {
 }
 
 // get objects in list form
-const std::vector<Location>& MapData::getObjects(ObservationType type) const {
+const std::vector<Location> MapData::getObjects(ObservationType type) const {
 	if (type == MapData::TARGET)
 		return targets;
 	if (type == MapData::OBSTACLE)
@@ -114,8 +114,6 @@ void MapData::setObjects(std::vector<Location> objects, ObservationType type) {
 		this->obstacles = objects;
 	if (type == MapData::GOAL)
 		this->goal = objects;
-	return std::vector<Location>();
-
 }
 
 }

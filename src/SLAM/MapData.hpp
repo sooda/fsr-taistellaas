@@ -68,7 +68,7 @@ RobotLocation getRobotLocation() const;
 RobotLocation getGridLocation() const;
 
 // get objects in list form
-const std::vector<Location>& getObjects(ObservationType type) const;
+const std::vector<Location> getObjects(ObservationType type) const;
 
 // set objects in list form
 void setObjects(std::vector<Location> objects, ObservationType type);

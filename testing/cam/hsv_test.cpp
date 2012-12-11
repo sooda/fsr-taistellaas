@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 {
 
 	src = imread ( argv[1], 1 );
-//	cvtColor(src, src, CV_RGB2BGR);
+//	cvtColor(src, src, CV_BGR2RGB);
 
 	imshow("src",src);
 //	imshow("dst",dst);

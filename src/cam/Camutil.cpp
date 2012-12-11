@@ -58,20 +58,16 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, Mat& drawing, bool targ
 
 	int limit_h_max = 0;
 	int limit_h_min = 0;
-	int limit_s = 0;
-	int limit_v = 0;
+	int limit_s = 90;
+	int limit_v = 90;
 
 	if (targets) {
 		limit_h_min = 110;
 		limit_h_max = 130;
-		limit_s = 90;
-		limit_v = 90;
 	}
 	else {
 		limit_h_min = 60;
 		limit_h_max = 80;
-		limit_s = 120;
-		limit_v = 90;
 	}
 	
 	Mat dst;
@@ -129,7 +125,7 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, Mat& drawing) {
 //	cvtColor(src, src, CV_BGR2RGB);
 	cvtColor(src, dst, CV_RGB2HSV);
 
-	inRange(dst, Scalar(0, 5, 5), Scalar(65, 255, 255), dst);
+	inRange(dst, Scalar(0, 2, 2), Scalar(255, 35, 255), dst);
 
 	// dilation
 	int dilation_size = 5;

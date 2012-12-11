@@ -205,13 +205,13 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 // inform slam of some object at some location
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
-/*	// preprocessing
+	// preprocessing
 	double unusedViewWidth = M_PI*5/180; // 5 degrees from sides off
-	double unusedViewDepthFront = 0.05; // 5 cm from front off
-	double unusedViewDepthBack = 0.10; // 10cm from back off
+	double unusedViewDepthFront = MapData::unitSize; // from front off
+	double unusedViewDepthBack = MapData::unitSize; // from back off
 	data.viewWidth -= unusedViewWidth;
 	data.minDist -= unusedViewDepthFront;
-	data.maxDist -= unusedViewDepthBack;*/
+	data.maxDist -= unusedViewDepthBack;
 
 	double scaleDownDeltas = 0.8;
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
@@ -229,7 +229,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
 	std::cout << "loc = " << data.location << std::endl; */
 
-	double maxObjectDelta = 0.05; // max difference to create a new target
+	double maxObjectDelta = MapData::unitSize; // max difference to create a new target
 	double maxObjectDelta2 = maxObjectDelta*maxObjectDelta;
 	std::vector<Location> objects = std::vector<Location>(currentMapData.getObjects(type));
 
@@ -261,7 +261,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
 									if (r22 < maxObjectDelta2) {
 										newObjectExists = true;
-										std::cout << "object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
+										std::cout << "new object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
 										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;	
 										data.targets.erase(it2);
 										currentMapData.setValue(Location(x,y), type, 0.0); // empty to avoid double tagging
@@ -286,6 +286,18 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 					currentMapData.setValue(Location(x,y), type, 0.0); // empty
 				}
 			}
+		}
+	}
+
+	// discard improbable targets
+	for (auto it = data.targets.begin(); it != data.targets.end();) {
+		double wallValue = currentMapData.getValue(Location(it->x,it->y), MapData::WALL);
+		if (fabs(wallValue) > 0.5) { // wall or unknown
+			std::cout << "new object (" << type << ": " << it->x << ", " << it->y << ") in unprobable location, omitted" << std::endl;
+			it = data.targets.erase(it);
+		} 
+		else {
+			++it;
 		}
 	}
 
@@ -314,8 +326,8 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	
 	}
 	if ((type == MapData::GOAL) && (data.targets.size() > 0)) {
-		double width2 = 0.50*0.50;
-		double height2 = 0.42*0.42;
+		double width2 = 0.48*0.48;
+		double height2 = 0.40*0.40;
 
 		if (data.targets.size() == 4) {
 			Location c1 = data.targets[0];
@@ -360,22 +372,26 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 			std::cout << ", c3: (" << c3.x << ", " << c3.y << ")";
 			std::cout << ", c4: (" << c4.x << ", " << c4.y << ")" << std::endl;
 
+			std::cout << "height: " << sqrt(d12) << " and " << sqrt(d13-d14) << ", width: " << sqrt(d14) << " and " << sqrt(d13-d12) << std::endl;
+
 			// check rationality of points
+			// TODO fix the thing that causes edge lengths to be wrong
 			bool rational = true;
-			if (abs(d12-height2) > maxObjectDelta2) {
-				std::cout << "goal short edge c1-c2 wrong size" << std::endl;
+			if (fabs(d12-height2) > 0.04) {
+				// fucking fabsulous
+				std::cout << "goal short edge c1-c2 wrong size (" << sqrt(d12) << ")" << std::endl;
 				rational = false;
 			}
-			if (abs(d13-d14-height2) > maxObjectDelta2) { // pythagoras, assuming ~90 deg angles
-				std::cout << "goal short edge c3-c4 wrong size" << std::endl;
+			if (fabs(d13-d14-height2) > 0.04) { // pythagoras, assuming ~90 deg angles
+				std::cout << "goal short edge c3-c4 wrong size(" << sqrt(d13-d14) << ")" << std::endl;
 				rational = false;
 			}
-			if (abs(d14-width2) > maxObjectDelta2) {
-				std::cout << "goal long edge c1-c4 wrong size" << std::endl;
+			if (fabs(d14-width2) > 0.04) {
+				std::cout << "goal long edge c1-c4 wrong size(" << sqrt(d14) << ")" << std::endl;
 				rational = false;
 			}
-			if (abs(d13-d12-width2) > maxObjectDelta2) { // pythagoras, assuming ~90 deg angles
-				std::cout << "goal long edge c2-c3 wrong size" << std::endl;
+			if (fabs(d13-d12-width2) > 0.04) { // pythagoras, assuming ~90 deg angles
+				std::cout << "goal long edge c2-c3 wrong size(" << sqrt(d13-d12) << ")" << std::endl;
 				rational = false;
 			}
 

@@ -44,7 +44,7 @@ void Camera::updateCameraData(SLAM::RobotLocation robloc)
 	cameradata.robotloc = robloc;
 	this->updateCamServos();
 	this->checkCalibration();
-	this->getCameraData();
+	this->getCameraData(); // could be moved before?
 
 	// find balls from image only when updating SLAM
 	// this->updatePositionOfTargets();
@@ -87,7 +87,7 @@ void Camera::getCameraData()
 
 void Camera::updateToSLAM(SLAM::SLAM &slam)
 {
-	int waitTime = 1000;
+	int waitTime = 10;
 	if (isRotatedNear())
 		waitTime = 500;
 
@@ -105,7 +105,7 @@ void Camera::updateToSLAM(SLAM::SLAM &slam)
 	// far position
 	double minDist = MIN_DIST_FAR; // image front in m
 	double maxDist = MAX_DIST_FAR; // image back in m
-	if (abs(cameradata.tilt-ANGLE_NEAR) < abs(cameradata.tilt-ANGLE_FAR)) {
+	if (fabs(cameradata.tilt-ANGLE_NEAR) < fabs(cameradata.tilt-ANGLE_FAR)) {
 		// near position
 		minDist = MIN_DIST_NEAR; // image front in m
 		maxDist = MAX_DIST_NEAR; // image back in m
@@ -157,7 +157,7 @@ bool Camera::isRotatedNear() const {
 }
 
 bool Camera::isRotatedNear(float camPos) const {
-	return (abs(camPos-ANGLE_NEAR) < abs(camPos-ANGLE_FAR));
+	return (fabs(camPos-ANGLE_NEAR) < fabs(camPos-ANGLE_FAR));
 }
 
 void Camera::checkCalibration()
@@ -218,8 +218,8 @@ void Camera::updatePositionOfTargets()
 	// find the objects in the current camera data
 
 	Mat image = Camutil::imgToMat(this->getCameraImage());
-	Mat temp;
-	undistort(image, temp, this->cameraMatrix, this->distCoeffs);
+	Mat temp = image;
+//	undistort(image, temp, this->cameraMatrix, this->distCoeffs);
 
 	Mat drawing = temp.clone();
 	
@@ -266,10 +266,16 @@ void Camera::updatePositionOfTargets()
 			Vector3f P = P0 + l * v;
 			Vector3f t(-P(2), P(0), 0);
 
-			float distance = sqrt(t.x() * t.x() + t.y() * t.y());
-			cout << "Cam: " << (type==0?"Target":type==1?"nontarget":"goalarea") << " at (" << t.x() << ", " << t.y() << ") " << "dist: " << distance << endl;
+			double dx = t.x() - cameradata.robotloc.x;
+			double dy = t.y() - cameradata.robotloc.y;
 
-			double minDist = MIN_DIST_FAR; // image front in m
+			double r = sqrt(dx*dx + dy*dy);
+			double theta = atan2(dy, dx) - cameradata.robotloc.theta;
+			theta = atan2(sin(theta), cos(theta));
+			
+			cout << "Cam: " << (type==0?"Target":type==1?"nontarget":"goalarea") << " at (" << t.x() << ", " << t.y() << ") " << " = (r " << r << ", t " << theta << ")" << endl;
+
+			/*double minDist = MIN_DIST_FAR; // image front in m
 			double maxDist = MAX_DIST_FAR; // image back in m
 			if (this->isRotatedNear(cameradata.tilt)) {
 				// near position
@@ -280,9 +286,8 @@ void Camera::updatePositionOfTargets()
 			if ((distance > maxDist) || (distance < minDist)) {
 				std::cout << "Cam: ball omitted" << std::endl;
 				continue;
-			}
+			}*/
 
-			// TODO: filter only those that are in the kartio <- SLAM should do it
 			if (type == 0)
 				this->balls.push_back(SLAM::Location(t.x(), t.y()));
 			else if (type == 1)

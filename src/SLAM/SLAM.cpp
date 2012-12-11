@@ -77,8 +77,8 @@ bool SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 		delete gfsmap;
 		gfsmap = new_gfsmap;
 
-		int xmax = gfsmap->getMapSizeX();
-		int ymax = gfsmap->getMapSizeY();
+		//int xmax = gfsmap->getMapSizeX();
+		//int ymax = gfsmap->getMapSizeY();
 	
 		if (x0 == -1 && y0 == -1 && x1 == -1 && y1 == -1) {
 
@@ -161,7 +161,7 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 	
 	RobotLocation dxy = loc - lastLoc;	
 	dxy.normalizeTheta();
-	double ddist = sqrt(dxy.x*dxy.x+dxy.y*dxy.y);
+//	double ddist = sqrt(dxy.x*dxy.x+dxy.y*dxy.y);
 	double dtheta = dxy.theta;
 
 /*  std::cout << "---" << std::endl;
@@ -254,7 +254,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 					if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
 						for (auto it = objects.begin(); it != objects.end(); ++it) {
 							double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
-							if (r2 < maxObjectDelta) {
+							if (r2 < maxObjectDelta2) {
 								bool newObjectExists = false;
 								for (auto it2 = data.targets.begin(); it2 != data.targets.end(); ++it2) {
 									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
@@ -276,7 +276,8 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 						}
 					}
 					if (type == MapData::GOAL) {
-						// TODO
+						// goal points are redrawn later
+						currentMapData.setValue(Location(x,y), type, 0.0);
 					}
 				}
 				else {
@@ -287,25 +288,113 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	}
 
 	// integrate new target data with old
-	for (auto it = data.targets.begin(); it != data.targets.end(); ++it) {
-		double x = it->x;
-		double y = it->y;
+	if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
+		for (auto it = data.targets.begin(); it != data.targets.end(); ++it) {
+			double x = it->x;
+			double y = it->y;
 
-		bool duplicate = false;
-		for (auto it2 = objects.begin(); it2 != objects.end(); ++it2) {
-			double objectDelta2 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
- 			if (objectDelta2 < maxObjectDelta2) {
-				duplicate = true;
-				std::cout << "new object (" << type << ": " << x << ", " << y << ") is duplicate with";
-				std::cout << " (" << type << ": " << it2->x << ", " << it2->y << "), omitted" << std::endl;
-				break;
+			bool duplicate = false;
+			for (auto it2 = objects.begin(); it2 != objects.end(); ++it2) {
+				double objectDelta2 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
+	 			if (objectDelta2 < maxObjectDelta2) {
+					duplicate = true;
+					std::cout << "new object (" << type << ": " << x << ", " << y << ") is duplicate with";
+					std::cout << " (" << type << ": " << it2->x << ", " << it2->y << "), omitted" << std::endl;
+					break;
+				}
 			}
+	
+			if (duplicate == false) {
+				std::cout << "new object (" << type << ": " << x << ", " << y << ") added" << std::endl;
+				objects.push_back(Location(x,y));
+			}	
 		}
+	
+	}
+	if ((type == MapData::GOAL) && (data.targets.size() > 0)) {
+		double width2 = 0.50*0.50;
+		double height2 = 0.42*0.42;
 
-		if (duplicate == false) {
-			std::cout << "new object (" << type << ": " << x << ", " << y << ") added" << std::endl;
-			objects.push_back(Location(x,y));
-		}	
+		if (data.targets.size() == 4) {
+			Location c1 = data.targets[0];
+			Location c2 = data.targets[1];
+			Location c3 = data.targets[2];
+			Location c4 = data.targets[3];
+			Location swap = c1;
+
+			double d12 = (c1.x-c2.x)*(c1.x-c2.x)+(c1.y-c2.y)*(c1.y-c2.y);
+			double d13 = (c1.x-c3.x)*(c1.x-c3.x)+(c1.y-c3.y)*(c1.y-c3.y);
+			double d14 = (c1.x-c4.x)*(c1.x-c4.x)+(c1.y-c4.y)*(c1.y-c4.y);
+			double swapd;
+
+			// make c3 be the diagonal point from c1 and c1-c2 the shorter edge
+			if (d12 > d13) {
+				swap = c3;
+				swapd = d13;
+				c3 = c2;
+				d13 = d12;
+				c2 = swap;
+				d12 = swapd;
+			}
+			if (d14 > d13) {
+				swap = c3;
+				swapd = d13;
+				c3 = c4;
+				d13 = d14;
+				c4 = swap;
+				d14 = swapd;
+			}
+			if (d12 > d14) {
+				swap = c4;
+				swapd = d14;
+				c4 = c2;
+				d14 = d12;
+				c2 = swap;
+				d12 = swapd;
+			}
+
+			std::cout << "goal at c1: (" << c1.x << ", " << c1.y << ")";
+			std::cout << ", c2: (" << c2.x << ", " << c2.y << ")";
+			std::cout << ", c3: (" << c3.x << ", " << c3.y << ")";
+			std::cout << ", c4: (" << c4.x << ", " << c4.y << ")" << std::endl;
+
+			// check rationality of points
+			bool rational = true;
+			if (abs(d12-height2) > maxObjectDelta2) {
+				std::cout << "goal short edge c1-c2 wrong size" << std::endl;
+				rational = false;
+			}
+			if (abs(d13-d14-height2) > maxObjectDelta2) { // pythagoras, assuming ~90 deg angles
+				std::cout << "goal short edge c3-c4 wrong size" << std::endl;
+				rational = false;
+			}
+			if (abs(d14-width2) > maxObjectDelta2) {
+				std::cout << "goal long edge c1-c4 wrong size" << std::endl;
+				rational = false;
+			}
+			if (abs(d13-d12-width2) > maxObjectDelta2) { // pythagoras, assuming ~90 deg angles
+				std::cout << "goal long edge c2-c3 wrong size" << std::endl;
+				rational = false;
+			}
+
+			if (rational == false) {
+				std::cout << "omitting this goal data" << std::endl;
+			}
+			else {
+				Location center = Location((c1.x+c2.x+c3.x+c4.x)/4, (c1.y+c2.y+c3.y+c4.y)/4);
+				std::cout << "goal center now at (" << center.x << ", " << center.y << ")" << std::endl;
+
+				objects.clear();
+				objects.push_back(center);
+				objects.push_back(c1);
+				objects.push_back(c2);
+				objects.push_back(c3);
+				objects.push_back(c4);
+			}
+		} 
+		else {
+			std::cout << "invalid amount of goal corner points given (" << data.targets.size() << ")" << std::endl;
+		}
 	}
 
 	// redraw targets
@@ -315,7 +404,19 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 		}
 	}
 	if (type == MapData::GOAL) {
-		// TODO	
+		if (objects.size() == 5) {
+			Location c1 = objects[0];
+			Location c2 = objects[1]; // we don't need c3, actually
+			Location c4 = objects[3];
+
+			for (double i = 0; i <= 1; i+=MapData::unitSize*0.9) {
+				for (double j = 0; j <= 1; j+=MapData::unitSize*0.9) {
+					double x = c1.x + (c2.x-c1.x)*i + (c4.x-c1.x)*j;
+					double y = c1.y + (c2.y-c1.y)*i + (c4.y-c1.y)*j;
+					currentMapData.setValue(Location(x,y), type, 1.0);
+				}
+			}
+		}
 	}
 
 	// update targets to map data

@@ -137,6 +137,24 @@ CImageContainer Camera::getCameraImage()
 	return this->cameradata.cameraImage;
 }
 
+void Camera::rotateNear() {
+	servoCtrl.setPosition(dTilt, ANGLE_NEAR);
+	servoCtrl.setPosition(dPan, 0.0);
+}
+
+void Camera::rotateFar() {
+	servoCtrl.setPosition(dTilt, ANGLE_FAR);
+	servoCtrl.setPosition(dPan, 0.0);
+}
+
+bool Camera::isRotatedNear() const {
+	return this->isRotatedNear(servoCtrl.getPosition(dTilt));
+}
+
+bool Camera::isRotatedNear(float camPos) const {
+	return (abs(camPos-ANGLE_NEAR) < abs(camPos-ANGLE_FAR));
+}
+
 void Camera::checkCalibration()
 {
 	// enable camera calibration by changing calibrated variable in the instruction list
@@ -213,14 +231,12 @@ void Camera::updatePositionOfTargets()
 		else if (type == 2)
 			objects = goal_area;
 			
-			for (size_t i = 0; i < objects.size(); i++) {
+		for (size_t i = 0; i < objects.size(); i++) {
 
-				SLAM::Location ball = objects.at(i);
+			SLAM::Location ball = objects.at(i);
 			
 			double theta_cam = cameradata.tilt - 0.07; // TODO: correct the magic constant to a good place
-	//		cout << "target at (no ei mut tilt=" << theta_cam << endl;
 			double theta_rob = -cameradata.robotloc.theta;
-	//		cout << "target at (no ei mut rob=" << theta_rob << endl;
 			double f = 0.0037; // as it reads in the lens
 			double pxlsz = 0.000007; // hacked experimentally, physical pixel size on image sensor
 			double m = f / pxlsz;
@@ -238,8 +254,6 @@ void Camera::updatePositionOfTargets()
 			double l = -P_cam(1) / v(1);
 			Vector3f P0 = P_rob + R_rob * P_cam;
 			Vector3f P = P0 + l * v;
-	//		cout << "target at hihhii " << P.x() << " " << P.y() << " " << P.z() << " " << endl;
-	//		cout << "target at hahhaa " << (P - P_rob).x() << " " << (P - P_rob).y() << " " << (P - P_rob).z()  << endl;
 			Vector3f t(-P(2), P(0), 0);
 
 			float distance = sqrt(t.x() * t.x() + t.y() * t.y());
@@ -247,7 +261,7 @@ void Camera::updatePositionOfTargets()
 
 			double minDist = MIN_DIST_FAR; // image front in m
 			double maxDist = MAX_DIST_FAR; // image back in m
-			if (abs(cameradata.tilt-ANGLE_NEAR) < abs(cameradata.tilt-ANGLE_FAR)) {
+			if (this->isRotatedNear(cameradata.tilt)) {
 				// near position
 				minDist = MIN_DIST_NEAR; // image front in m
 				maxDist = MAX_DIST_NEAR; // image back in m
@@ -259,7 +273,6 @@ void Camera::updatePositionOfTargets()
 			}
 
 			// TODO: filter only those that are in the kartio <- SLAM should do it
-	//		cout << "pallo: " << t << endl;
 			if (type == 0)
 				this->balls.push_back(SLAM::Location(t.x(), t.y()));
 			else if (type == 1)
@@ -270,11 +283,5 @@ void Camera::updatePositionOfTargets()
 		}
 	}
 }
-
-std::vector<SLAM::Location> Camera::getPositionOfTargets()
-{
-	return balls;
-}
-
 
 }

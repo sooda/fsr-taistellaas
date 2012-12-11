@@ -44,6 +44,11 @@ public:
 
 	// update camera data to SLAM
 	void updateToSLAM(SLAM::SLAM &slam);
+	
+	void rotateNear();
+	void rotateFar();
+	bool isRotatedNear() const;
+	bool isRotatedNear(float camPos) const;
 
 
 private:

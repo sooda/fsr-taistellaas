@@ -25,7 +25,7 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	
 	if (srcimg.GetImageDataType() != MaCI::Image::EImageDataType::KImageDataJPEG) {
 		std::cout << "ImgDataType not JPEG!!!" << std::endl;
-		return img;
+		return img.clone();
 	}
 
 	bool success = srcimg.ConvertTo(MaCI::Image::EImageDataType::KImageDataRGB);
@@ -34,6 +34,7 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 	}
 	else {
 		std::cout << "Error converting image to Mat" << std::endl;
+		return img.clone();
 	}
 
 	// fix the color space

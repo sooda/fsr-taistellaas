@@ -3,7 +3,7 @@
 
 namespace SLAM {
 
-const int MapData::gridSize = 201;
+const int MapData::gridSize = 301;
 const double MapData::unitSize = 0.05;
 
 MapData::MapData(RobotLocation initial)

@@ -101,10 +101,10 @@ bool SLAM::updateLaserData(MaCI::Ranging::TDistanceArray laserData) {
 					currentMapData.setCellValue(GridPoint(x-x0,y-y0), MapData::WALL, gfsmap->cell(x,y));				
 				}
 			}
-
+	
 			// fix robot initial position to goal area and free space
 
-			int r_wall = 0.24 / MapData::unitSize; // robot radius in grid points
+			int r_wall = 0.30 / MapData::unitSize; // robot radius in grid points
 			int r_wall2 = r_wall*r_wall;
 			int r_goal = 0.20 / MapData::unitSize; // approx goal radius
 			int r_goal2 = r_goal*r_goal;
@@ -206,7 +206,7 @@ void SLAM::updateOdometryData(RobotLocation loc) {
 void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
 	// preprocessing
-	double unusedViewWidth = M_PI*5/180; // 5 degrees from sides off
+	double unusedViewWidth = M_PI*15/180; // 5 degrees from sides off
 	double unusedViewDepthFront = MapData::unitSize; // from front off
 	double unusedViewDepthBack = MapData::unitSize; // from back off
 	data.viewWidth -= unusedViewWidth;
@@ -229,7 +229,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
 	std::cout << "loc = " << data.location << std::endl; */
 
-	double maxObjectDelta = MapData::unitSize; // max difference to create a new target
+	double maxObjectDelta = MapData::unitSize*2; // max difference to create a new target
 	double maxObjectDelta2 = maxObjectDelta*maxObjectDelta;
 	std::vector<Location> objects = std::vector<Location>(currentMapData.getObjects(type));
 
@@ -436,6 +436,28 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 			}
 		}
 	}
+
+	// fix robot initial position to goal area and free space
+
+	int r_wall = 0.30 / MapData::unitSize; // robot radius in grid points
+	int r_wall2 = r_wall*r_wall;
+	int r_goal = 0.20 / MapData::unitSize; // approx goal radius
+	int r_goal2 = r_goal*r_goal;
+	int xInit = MapData::gridSize/2;
+	int yInit = MapData::gridSize/2;
+
+	for (int x = -r_wall; x <= r_wall; x++) {
+		for (int y = -r_wall; y <= r_wall; y++) {
+			int dist2 = x*x+y*y;
+			if (dist2 <= r_wall2) {
+				currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::WALL, 0);
+			}
+			if (dist2 <= r_goal2) {
+				currentMapData.setCellValue(GridPoint(xInit+x, yInit+y), MapData::GOAL, 1);
+			}
+		}
+	}
+
 
 	// update targets to map data
 	currentMapData.setObjects(objects, type);

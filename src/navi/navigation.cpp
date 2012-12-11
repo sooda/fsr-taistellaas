@@ -18,7 +18,7 @@ void Navigation::refreshMap(const SLAM::MapData& data) {
 	for (int y = 0; y < MapData::gridSize; y++) {
 		for (int x = 0; x < MapData::gridSize; x++) {
 			double wall = map.getCellValue(SLAM::GridPoint(x,y), MapData::WALL);
-			wallmap_orig[y][x] = !(wall >= -0.1 && wall <= 0.8);
+			wallmap_orig[y][x] = !(wall >= -0.1 && wall <= 0.25);
 		}
 	}
 	wallmap_dila = dilate(wallmap_orig, 0.24 / SLAM::MapData::unitSize - 1);
@@ -29,7 +29,7 @@ void Navigation::updateLocation(SLAM::RobotLocation pos) {
 
 bool Navigation::isFloor(SLAM::Location loc) const {
 	SLAM::GridPoint gp = SLAM::MapData::loc2grid(loc);
-	return wallmap_dila[gp.y][gp.x];
+	return !wallmap_dila[gp.y][gp.x];
 }
 
 void drawGrid(const GridMap& grid, SDL_Surface* screen, int x0, int y0) {

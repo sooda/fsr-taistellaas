@@ -157,6 +157,7 @@ void Robot::planAction(void) {
 						} else {
 							selectTarget();
 							navigateTarget();
+							taskState = GO_TO_TARGET;
 						}
 					}
 				}

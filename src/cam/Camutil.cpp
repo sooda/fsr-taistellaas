@@ -44,25 +44,16 @@ Mat Camutil::imgToMat (MaCI::Image::CImageContainer srcimg)
 
 bool Camutil::BallsInView (Mat src)
 {
-	std::vector<SLAM::Location> object = FindBalls(src, false);
+	std::vector<SLAM::Location> object = FindBalls(src, src);
 	return !object.empty();
 }
 
-std::vector<SLAM::Location> Camutil::FindNonTargets (Mat src) {
-	return FindBalls (src, false, false);
+std::vector<SLAM::Location> Camutil::FindBalls (Mat src, Mat& drawing) {
+	return FindBalls (src, drawing, true);
 }
 
-std::vector<SLAM::Location> Camutil::FindBalls (Mat src) {
-	return FindBalls (src, false, true);
-}
-
-std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image) {
-	return FindBalls (src, show_image, true);
-}
-
-std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool targets)
+std::vector<SLAM::Location> Camutil::FindBalls (Mat src, Mat& drawing, bool targets)
 {
-
 	std::vector<SLAM::Location> objects;
 
 	int limit_h_max = 0;
@@ -99,7 +90,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 	vector<Vec4i> hierarchy;
 	findContours(dst, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
-	for( int idx = 0; idx < contours.size(); idx++ )
+	for( size_t idx = 0; idx < contours.size(); idx++ )
 	{
 		//Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
 		Scalar color(255, 0, 0);
@@ -118,22 +109,17 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, bool show_image, bool t
 		if (area < minRatio * 3.14 * radius * radius)
 			continue;
 	
-		drawContours( src, contours, idx, color, 1, 8, vector<Vec4i>(), 0, Point() );
-		circle( src, center, (int)radius * 1.2, color, 2);
+		drawContours( drawing, contours, idx, color, 1, 8, vector<Vec4i>(), 0, Point() );
+		circle( drawing, center, (int)radius * 1.2, color, 2);
 		
 		objects.push_back(SLAM::Location(center.x, center.y));
 	}
 	
-	if (show_image) {
-		imshow(targets ? "targetballs" : "enemyballs", src);
-		waitKey(10);
-	}
-
 	return objects;
 
 }
 
-std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
+std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, Mat& drawing) {
 	std::vector<SLAM::Location> corners;
 
 	Mat dst;
@@ -158,27 +144,22 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, bool show_image) {
 
 	vector<vector<Point> > contours_poly( contours.size() );
   
-	for( int i = 0; i < contours.size(); i++ )
+	for( size_t i = 0; i < contours.size(); i++ )
 	{
 		double area = contourArea(contours[i]);
 		if (area < 10000 || area > 640 * 480 / 2) continue;
 
 		approxPolyDP( Mat(contours[i]), contours_poly[i], arcLength(Mat(contours[i]), true)*0.02, true );		
 		
-		drawContours( src, contours, i, Scalar(255, 0, 0), 1, 8, vector<Vec4i>(), 0, Point() );
-		drawContours( src, contours_poly, i, Scalar(0,0,255), 1, 8, vector<Vec4i>(), 0, Point() );
+		drawContours( drawing, contours, i, Scalar(255, 0, 0), 1, 8, vector<Vec4i>(), 0, Point() );
+		drawContours( drawing, contours_poly, i, Scalar(0,0,255), 1, 8, vector<Vec4i>(), 0, Point() );
 
-		for (int a = 0; a < contours_poly[i].size(); a++) {
-			circle(src, contours_poly[i][a], 10, Scalar(255,0,0));
+		for (size_t a = 0; a < contours_poly[i].size(); a++) {
+			circle( drawing, contours_poly[i][a], 10, Scalar(255,0,0));
 			corners.push_back(SLAM::Location(contours_poly[i][a].x, contours_poly[i][a].y));
 		}
 	}
 	
-	if (show_image) {
-		imshow( "goal", src);
-		waitKey(10);
-	}
-
 	return corners;
 }
 

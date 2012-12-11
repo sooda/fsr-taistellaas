@@ -64,6 +64,8 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, Mat& drawing, bool targ
 	if (targets) {
 		limit_h_min = 110;
 		limit_h_max = 130;
+		limit_s = 90;
+		limit_v = 90;
 	}
 	else {
 		limit_h_min = 60;
@@ -93,7 +95,7 @@ std::vector<SLAM::Location> Camutil::FindBalls (Mat src, Mat& drawing, bool targ
 	for( size_t idx = 0; idx < contours.size(); idx++ )
 	{
 		//Scalar color( rand()&255, rand()&255, rand()&255 ); // random color
-		Scalar color(255, 0, 0);
+		Scalar color(0, 0, 255);
 		if (!targets) { color = Scalar(0, 255, 0); }
 		
 		Point2f center;
@@ -127,10 +129,10 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, Mat& drawing) {
 //	cvtColor(src, src, CV_BGR2RGB);
 	cvtColor(src, dst, CV_RGB2HSV);
 
-	inRange(dst, Scalar(0, 0, 0), Scalar(50, 255, 255), dst);
+	inRange(dst, Scalar(0, 5, 5), Scalar(65, 255, 255), dst);
 
 	// dilation
-	int dilation_size = 2;
+	int dilation_size = 5;
 	Mat element = getStructuringElement( MORPH_RECT,
 					Size( 2*dilation_size + 1, 2*dilation_size + 1 ),
 					Point( dilation_size, dilation_size ) );
@@ -140,7 +142,7 @@ std::vector<SLAM::Location> Camutil::FindGoalArea (Mat src, Mat& drawing) {
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 
-	findContours(dst, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
+	findContours(dst, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
 	vector<vector<Point> > contours_poly( contours.size() );
   

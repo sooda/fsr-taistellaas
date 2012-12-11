@@ -84,9 +84,13 @@ void Camera::getCameraData()
 
 }
 
-void Camera::updateToSLAM(SLAM::SLAM &slam) {
+void Camera::updateToSLAM(SLAM::SLAM &slam)
+{
+	int waitTime = 1000;
+	if (isRotatedNear())
+		waitTime = 500;
 
-	if (ownTime_get_ms_since(lastrun) < 1000) {
+	if (ownTime_get_ms_since(lastrun) < waitTime) {
 		return;
 	}
 

@@ -12,6 +12,7 @@ MotionControl::MotionControl(CJ2B2Client &interface) : interface(interface), ctr
 	k.a = 0.2;
 	k.iiris = k.p / M_PI;
 	k.closeEnough = 0.15;
+	k.closeEnoughLast = 0.10;
 	interface.iMotionCtrl->SetStop();
 	interface.iBehaviourCtrl->SetStart();
 }
@@ -132,7 +133,8 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 	cout<< "\tv = " << ctrl.speed << endl;
 	cout<< "\tw = " << ctrl.angle << " " << r2d(ctrl.angle) << endl;
 	history.push_back(HistPoint{lastPose, Ctrl{ctrl.speed, ctrl.angle}, alpha, ata});
-	if (rho < k.closeEnough) {
+	float enough = (midpoints.size() > 1) ? k.closeEnough : k.closeEnoughLast;
+	if (rho < enough) {
 		cout << "\tCLOSE ENOUGH!" << endl;
 		return nextMidpoint();
 	}

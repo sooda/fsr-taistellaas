@@ -22,6 +22,7 @@ public:
 	LocList getRoute(void) const;
 	void updateLocation(SLAM::RobotLocation pos);
 	bool isFloor(SLAM::Location loc) const;
+	float wallClearance(SLAM::RobotLocation source) const;
 private:
 	search_info findRoute(SLAM::GridPoint point);
 	SLAM::MapData map;

@@ -171,17 +171,28 @@ void Robot::planAction(void) {
 				}
 				break;
 			case RETURN_TO_GOAL: // Going to goal
-				if (!motionControl.iterate(p))
-					taskState = RELEASE_TARGETS;
+				if (!motionControl.iterate(p)) {
+					float clear = navigation.wallClearance(p);
+					float walk = clear < GOALWALK ? clear : GOALWALK;
+					navigation.solveTo(SLAM::Location(p.x + cos(p.theta) * walk, p.y + sin(p.theta) * walk));
+					navigate();
+					taskState = GOAL_WALKHAX;
+				}
 				break;
-			case RELEASE_TARGETS:
+			case GOAL_WALKHAX: // in goal, drive a bit forwards to be able to drop targets correctly
+				if (!motionControl.iterate(p)) {
+					taskState = RELEASE_TARGETS;
+					servoControl.setHatch(false);
+				}
+				break;
+			case RELEASE_TARGETS: // eggs hatching, get back
 				servoControl.setHatch(false);
 				if (!motionControl.backFromGoal(p)) {
 					taskState = END_STATE;
 				}
 				// TODO: examine your balls
 				break;
-			case END_STATE: // OK!
+			case END_STATE: // world domination succeeded
 				manual.enabled = true;
 				break;
 			case BACK_OFF: // bumpers hit. exit to exploring when bumpers not hitting anymore
@@ -555,13 +566,14 @@ int Robot::ThreadFunction(int threadId) {
 	}
 	return 0;
 }
-const char* Robot::taskdescr[] = {
+const char* Robot::taskdescr[NUM_TASK_STATES] = {
 	"Start",
-	"Explore",
-	"Go to target",
-	"Pick up",
-	"Go return to goal",
+	"Explore unknown",
+	"Go to pick target",
+	"Pick target up",
+	"Go to returning to goal",
 	"Return to goal",
+	"Goal walkhax",
 	"Release targets",
 	"End state",
 	"Back off"

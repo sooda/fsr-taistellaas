@@ -52,6 +52,7 @@ private:
 	struct {
 		float p, a, iiris;
 		float closeEnough;
+		float closeEnoughLast;
 	} k;
 
 	// contains always also the one we're currently heading to,

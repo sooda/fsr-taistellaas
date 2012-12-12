@@ -214,6 +214,8 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	data.maxDist -= unusedViewDepthBack;
 
 	double scaleDownDeltas = 0.8;
+//	double thetaMin = currentMapData.getRobotLocation().theta - 0.5*data.viewWidth;
+//	double thetaMax = currentMapData.getRobotLocation().theta + 0.5*data.viewWidth;
 	double thetaMin = data.location.theta - 0.5*data.viewWidth;
 	double thetaMax = data.location.theta + 0.5*data.viewWidth;
 	double dtheta = scaleDownDeltas*MapData::unitSize/data.maxDist;
@@ -229,13 +231,18 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
 	std::cout << "loc = " << data.location << std::endl; */
 
-	double maxObjectDelta = MapData::unitSize*3; // max difference to create a new target
+	double maxObjectDelta = MapData::unitSize*2; // max difference to create a new target
 	double maxObjectDelta2 = maxObjectDelta*maxObjectDelta;
 	std::vector<Location> objects = std::vector<Location>(currentMapData.getObjects(type));
+	std::vector<Location> trash = std::vector<Location>();
+
 
 	// clear target area
 	for (double theta = thetaMin; theta < thetaMax; theta += dtheta) {
 		for (double r = r0; r < rMax; r += dr) {
+
+			//double x = currentMapData.getRobotLocation().x + r*cos(theta);
+			//double y = currentMapData.getRobotLocation().y + r*sin(theta);
 			double x = data.location.x + r*cos(theta);
 			double y = data.location.y + r*sin(theta);
 			double wall = currentMapData.getValue(Location(x,y), MapData::WALL);
@@ -253,19 +260,32 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 					// overwriting a target
 					if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
 						std::cout << "SLAM: overwriting object at (" << x << ", " << y << ")" << std::endl;
+						double hattuvakio = (r/10)*(r/10);
 						for (auto it = objects.begin(); it != objects.end(); ++it) {
 							double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
-							if (r2 < maxObjectDelta2) {
+							if (r2 < maxObjectDelta2 + hattuvakio) {
 								bool newObjectExists = false;
-								for (auto it2 = data.targets.begin(); it2 != data.targets.end(); ++it2) {
+								for (auto it2 = trash.begin(); it2 != trash.end(); ++it2) {
 									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
-									if (r22 < maxObjectDelta2) {
+									if (r22 < maxObjectDelta2 + hattuvakio) {
 										newObjectExists = true;
 										std::cout << "SLAM: new object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
-										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;	
-										data.targets.erase(it2);
+										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;
 										currentMapData.setValue(Location(x,y), type, 0.0); // empty to avoid double tagging
-										break;
+									}
+								}
+								for (auto it2 = data.targets.begin(); it2 != data.targets.end();) {
+									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
+									if (r22 < maxObjectDelta2 + hattuvakio) {
+										newObjectExists = true;
+										std::cout << "SLAM: new object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
+										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;
+										trash.push_back(*it2);
+										it2 = data.targets.erase(it2);
+										currentMapData.setValue(Location(x,y), type, 0.0); // empty to avoid double tagging
+									}
+									else {
+										++it2;
 									}
 								}
 								if (newObjectExists == false) {
@@ -295,7 +315,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 		if (fabs(wallValue) > 0.5) { // wall or unknown
 			std::cout << "SLAM: new object (" << type << ": " << it->x << ", " << it->y << ") in unprobable location, omitted" << std::endl;
 			it = data.targets.erase(it);
-		} 
+		}
 		else {
 			++it;
 		}
@@ -325,8 +345,10 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 
 			bool duplicate = false;
 			for (auto it2 = objects.begin(); it2 != objects.end(); ++it2) {
+				double r2 = (x - currentMapData.getRobotLocation().x)*(x - currentMapData.getRobotLocation().x)+(y - currentMapData.getRobotLocation().y)*(y - currentMapData.getRobotLocation().y);
+				double hattuvakio = r2/100;
 				double objectDelta2 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
-	 			if (objectDelta2 < maxObjectDelta2) {
+	 			if (objectDelta2 < maxObjectDelta2 + hattuvakio) {
 					duplicate = true;
 					std::cout << "SLAM: new object (" << type << ": " << x << ", " << y << ") is duplicate with";
 					std::cout << " (" << type << ": " << it2->x << ", " << it2->y << "), omitted" << std::endl;

@@ -31,7 +31,7 @@ void ServoControl::resetServos()
 		this->setPosition(KServoCameraPTUTilt, 0.0);
 	
 		// hatch control
-		this->setPosition(KServoUserServo_0, 0.0);
+		this->setPosition(KServoUserServo_0, M_PI);
 	
 	/*
 		// Do value checking and limiting.
@@ -60,7 +60,7 @@ void ServoControl::resetServos()
 }
 
 void ServoControl::setHatch(bool state) {
-	setPosition(KServoUserServo_0, state ? 0 : 1);
+	this->setPosition(KServoUserServo_0, state ? M_PI : 0);
 }
 
 float ServoControl::getPosition(ServoControl::EServo servo) const

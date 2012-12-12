@@ -34,7 +34,8 @@ Camera::Camera(CJ2B2Client& interface, Motion::ServoControl& servos)
 	servoCtrl.resetServos();
 	rotateFar();
 	lastrun = ownTime_get_ms();
-
+	cameraRotated = ownTime_get_ms();
+	
 	this->cameraMatrix = (Mat_<double>(3,3) << 447.7679638984855, 0, 309.9314941852911, 0, 442.5677667837122, 245.2180309042916, 0, 0, 1);
 	this->distCoeffs   = (Mat_<double>(1,5) << 0.08322752073634829, -0.2949847441859801, 0.002063609323629203, 0.0005587292612777254, 0.3479390918780765);
 
@@ -90,14 +91,18 @@ void Camera::updateToSLAM(SLAM::SLAM &slam)
 {
 	if (!cameradata.initd)
 		return;
+
 	int waitTime = 100;
-	if (isRotatedNear())
-		waitTime = 500;
 
 	if (ownTime_get_ms_since(lastrun) < waitTime) {
 		return;
 	}
-
+	
+	// if we have just rotated camera, skip
+	if (ownTime_get_ms_since(cameraRotated) < 500) {
+		return;
+	}
+	
 	lastrun = ownTime_get_ms();
 	updatePositionOfTargets();
 
@@ -146,11 +151,13 @@ CImageContainer Camera::getCameraImage()
 }
 
 void Camera::rotateNear() {
+	cameraRotated = ownTime_get_ms();
 	servoCtrl.setPosition(dTilt, ANGLE_NEAR);
 	servoCtrl.setPosition(dPan, 0.0);
 }
 
 void Camera::rotateFar() {
+	cameraRotated = ownTime_get_ms();
 	servoCtrl.setPosition(dTilt, ANGLE_FAR);
 	servoCtrl.setPosition(dPan, 0.0);
 }

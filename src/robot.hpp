@@ -67,10 +67,11 @@ private:
 		START,
 		EXPLORE,
 		GO_TO_TARGET,
-		PICK_UP,
+		APPROACH_PICK_UP,
 		GO_RETURN_TO_GOAL,
 		RETURN_TO_GOAL,
 		GOAL_WALKHAX,
+		PICK_UP,
 		RELEASE_TARGETS,
 		END_STATE,
 		BACK_OFF,
@@ -107,6 +108,8 @@ private:
 	cam::Camera camera;
 	void speak(const std::string&);
 
+	ownTime_ms_t approachStarted;
+		
 	struct Measurements {
 		Measurement<MaCI::Image::CImageContainer> image;
 		Measurement<MaCI::Ranging::TDistanceArray> lidar;
@@ -141,7 +144,7 @@ private:
 };
 
 // open the hatch when distance from robot center to goal is < this
-#define HATCH_OPEN_DISTANCE (0.24 + 0.5 / 2)
+#define HATCH_OPEN_DISTANCE (0.24/2 + 0.5 / 2)
 #define GOALWALK 0.4
 #define ROBOT_RADIUS 0.24
 

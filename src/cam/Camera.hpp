@@ -73,6 +73,7 @@ private:
 	std::vector<SLAM::Location> goalarea;
 
 	ownTime_ms_t lastrun;
+	ownTime_ms_t cameraRotated;
 
 	cv::Mat cameraMatrix;
 	cv::Mat distCoeffs;

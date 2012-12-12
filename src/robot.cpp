@@ -52,6 +52,9 @@ Robot::Robot(CJ2B2Client& j2b2)
 	RunThread(THREAD_SLAM);
 	RunThread(THREAD_CAMERA);
 	RunThread(THREAD_USER);
+	
+	// init variables
+	approachStarted = 0;
 }
 
 Robot::~Robot() {
@@ -116,7 +119,7 @@ void Robot::navigateTarget() {
 }
 
 void Robot::planAction(void) {
-	ownTime_ms_delta_t hurryUp = 1000*60*13; // If it's time to abandon everything else and get current targets to the goal 
+	ownTime_ms_delta_t hurryUp = 1000*60*11; // If it's time to abandon everything else and get current targets to the goal 
 	updateTargets();
 	if (!manual.enabled) {
 		if(statistics.taskStartTime == 0)
@@ -155,31 +158,31 @@ void Robot::planAction(void) {
 				break;
 			case GO_TO_TARGET: // Move near the nearest target to open the hatch
 				if (motionControl.routeLeft() < HATCH_OPEN_DISTANCE) {
-					servoControl.setHatch(false);
+					if (approachStarted < 1) {
+						approachStarted = ownTime_get_ms();
+						break;
+					}
 					camera.rotateNear();
-					// TODO: stop for taking better images?
+					if(ownTime_get_ms_since(approachStarted) < 1000) {
+						if (motionControl.running()) {
+							motionControl.stop();
+						}
+						break;
+					}
+					servoControl.setHatch(false);
 					navigateTarget();
-					taskState = PICK_UP;
+					approachStarted = 0;
+					taskState = APPROACH_PICK_UP;
 				}
 				motionControl.iterate(p);
 				break;
-			case PICK_UP: // Move on to the target and close the hatch when finished
+			case APPROACH_PICK_UP: // Move on close to target
 				if (!motionControl.iterate(p)) {
-					servoControl.setHatch(true);
-					camera.rotateFar();
-					numberOfPickUps++;
-					speak("Picked up number " + lexical_cast(numberOfPickUps));
-					if(numberOfPickUps >= 10) {
-						taskState = GO_RETURN_TO_GOAL;
-					} else {
-						if (targets.empty()) {
-							taskState = EXPLORE;
-						} else {
-							selectTarget();
-							navigateTarget();
-							taskState = GO_TO_TARGET;
-						}
-					}
+					float clear = navigation.wallClearance(p);
+					float walk = clear < GOALWALK ? clear : GOALWALK;
+					navigation.solveTo(SLAM::Location(p.x + cos(p.theta) * walk, p.y + sin(p.theta) * walk));
+					navigate();
+					taskState = PICK_UP;
 				}
 				break;
 			case GO_RETURN_TO_GOAL: // Try to find a route to the goal -- if cannot, explore more
@@ -196,6 +199,7 @@ void Robot::planAction(void) {
 					float walk = clear < GOALWALK ? clear : GOALWALK;
 					navigation.solveTo(SLAM::Location(p.x + cos(p.theta) * walk, p.y + sin(p.theta) * walk));
 					navigate();
+					camera.rotateFar();
 					taskState = GOAL_WALKHAX;
 				}
 				break;
@@ -203,6 +207,26 @@ void Robot::planAction(void) {
 				if (!motionControl.iterate(p)) {
 					taskState = RELEASE_TARGETS;
 					servoControl.setHatch(false);
+				}
+				break;
+			case PICK_UP: // when target is near, drive a bit forwards to be sure
+				if (!motionControl.iterate(p)) {
+					servoControl.setHatch(true);
+					camera.rotateFar();
+					numberOfPickUps++;
+					speak("Pallo " + lexical_cast(numberOfPickUps));
+					if(numberOfPickUps >= 10) {
+						taskState = GO_RETURN_TO_GOAL;
+					} else {
+						if (targets.empty()) {
+							taskState = EXPLORE;
+						} else {
+							selectTarget();
+							navigateTarget();
+							taskState = GO_TO_TARGET;
+						}
+					taskState = EXPLORE;
+					}
 				}
 				break;
 			case RELEASE_TARGETS: // eggs hatching, get back
@@ -213,6 +237,7 @@ void Robot::planAction(void) {
 				// TODO: examine your balls
 				break;
 			case END_STATE: // world domination succeeded
+				camera.rotateNear();
 				speak("Hurraa");
 				manual.enabled = true;
 				break;
@@ -227,6 +252,7 @@ void Robot::planAction(void) {
 				&& taskState != RETURN_TO_GOAL
 				&& taskState != RELEASE_TARGETS
 				&& taskState != END_STATE
+				&& taskState != GOAL_WALKHAX
 				&& taskState != BACK_OFF) {
 			taskState = GO_RETURN_TO_GOAL;
 			speak("Hop hop hop");
@@ -598,10 +624,11 @@ const char* Robot::taskdescr[NUM_TASK_STATES] = {
 	"Start",
 	"Explore unknown",
 	"Go to pick target",
-	"Pick target up",
+	"Approach pick target up",
 	"Go to returning to goal",
 	"Return to goal",
 	"Goal walkhax",
+	"Pick target up",
 	"Release targets",
 	"End state",
 	"Back off"

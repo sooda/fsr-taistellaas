@@ -52,13 +52,13 @@ float Navigation::wallClearance(SLAM::RobotLocation source) const {
 	SLAM::GridPoint pt = SLAM::MapData::loc2grid(SLAM::Location(source.x, source.y));
 	float x = pt.x;
 	float y = pt.y;
-	while (wallmap_dila[int(y)][int(x)]) {
+	while (!wallmap_dila[int(y)][int(x)]) {
 		x += walkx;
 		y += walky;
 	}
-	float dx = x - source.x;
-	float dy = y - source.y;
-	return sqrt(dx * dx + dy * dy);
+	float dx = x - pt.x;
+	float dy = y - pt.y;
+	return sqrt(dx * dx + dy * dy) * SLAM::MapData::unitSize;
 }
 
 search_info Navigation::findRoute(SLAM::GridPoint point) {

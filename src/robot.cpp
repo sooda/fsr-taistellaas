@@ -139,12 +139,15 @@ void Robot::planAction(void) {
 					if (!motionControl.iterate(p)) {
 						SLAM::RobotLocation p2 = p;
 						p2.theta += M_PI/2;
-						float walk = navigation.wallClearance(p);
+						float walk = navigation.wallClearance(p2);
+						std::cout << "PLANNER: hox walk distance " << walk << std::endl;
 						if (walk < 0.1)
 							walk = 0.06;
 						else
 							walk -= 0.1;
-						navigation.solveTo(SLAM::Location(p2.x + cos(p2.theta) * walk, p2.y + sin(p2.theta) * walk));
+						SLAM::Location to(p2.x + cos(p2.theta) * walk, p2.y + sin(p2.theta) * walk);
+						std::cout << "PLANNER: solve to " << to.x << " " << to.y << std::endl;
+						navigation.solveTo(to);
 						navigate();
 						//explore();
 					}
@@ -210,7 +213,7 @@ void Robot::planAction(void) {
 				// TODO: examine your balls
 				break;
 			case END_STATE: // world domination succeeded
-				speak("Vooorlld domineiisoon");
+				speak("Hurraa");
 				manual.enabled = true;
 				break;
 			case BACK_OFF: // bumpers hit. exit to exploring when bumpers not hitting anymore
@@ -219,13 +222,15 @@ void Robot::planAction(void) {
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}
-		if(ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp
+		if (ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp
 				&& taskState != GO_RETURN_TO_GOAL
 				&& taskState != RETURN_TO_GOAL
 				&& taskState != RELEASE_TARGETS
 				&& taskState != END_STATE
-				&& taskState != BACK_OFF)
+				&& taskState != BACK_OFF) {
 			taskState = GO_RETURN_TO_GOAL;
+			speak("Hop hop hop");
+		}
 	}
 	std::cout << "PLANNER: CURRENT TASK: " << taskdescr[taskState] << std::endl;
 }

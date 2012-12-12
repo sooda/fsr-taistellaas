@@ -229,7 +229,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	std::cout << "dtheta = " << dtheta << " dr = " << dr << std::endl;
 	std::cout << "loc = " << data.location << std::endl; */
 
-	double maxObjectDelta = MapData::unitSize*2; // max difference to create a new target
+	double maxObjectDelta = MapData::unitSize*3; // max difference to create a new target
 	double maxObjectDelta2 = maxObjectDelta*maxObjectDelta;
 	std::vector<Location> objects = std::vector<Location>(currentMapData.getObjects(type));
 

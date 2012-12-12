@@ -85,7 +85,7 @@ void Robot::updateTargets() {
 		double disty = roboloc.y - it->y;
 
 		std::cout << "PLANNER: Target at: " << it->x << " " << it->y << std::endl;
-		if (!navigation.isFloor(*it)) {
+		if (!navigation.navigable(*it)) {
 			std::cout << "PLANNER: Not reachable yet" << std::endl;
 			it = targets.erase(it);
 		} else if (sqrt(distx * distx + disty * disty) < ROBOT_RADIUS) {
@@ -95,6 +95,7 @@ void Robot::updateTargets() {
 			++it;
 		}
 	}
+	navigation.refreshTargets(targets);
 }
 void Robot::selectTarget() {
 	if (targets.empty()) {
@@ -120,6 +121,7 @@ void Robot::navigateTarget() {
 
 void Robot::planAction(void) {
 	ownTime_ms_delta_t hurryUp = 1000*60*11; // If it's time to abandon everything else and get current targets to the goal 
+	static ownTime_ms_delta_t explRollStartTime = 0;
 	updateTargets();
 	if (!manual.enabled) {
 		if(statistics.taskStartTime == 0)
@@ -139,17 +141,14 @@ void Robot::planAction(void) {
 					selectTarget();
 					navigateTarget();
 				} else {
-					if (!motionControl.iterate(p)) {
-						SLAM::RobotLocation p2 = p;
-						p2.theta += M_PI/2;
-						float walk = navigation.wallClearance(p2);
-						std::cout << "PLANNER: hox walk distance " << walk << std::endl;
-						if (walk < 0.1)
-							walk = 0.06;
-						else
-							walk -= 0.1;
-						SLAM::Location to(p2.x + cos(p2.theta) * walk, p2.y + sin(p2.theta) * walk);
-						std::cout << "PLANNER: solve to " << to.x << " " << to.y << std::endl;
+					if (!motionControl.iterate(p) && explRollStartTime == 0) {
+						explRollStartTime = ownTime_get_ms();
+						motionControl.setCtrl(0, 1.0 / 10 * M_PI);
+					} else if (explRollStartTime != 0 && ownTime_get_ms_since(explRollStartTime) > 3000) {
+						motionControl.setCtrl(0, 0);
+						SLAM::Location to(navigation.farthest());
+						explRollStartTime = 0;
+						std::cout << "PLANNER: explore to farthest " << to.x << " " << to.y << std::endl;
 						navigation.solveTo(to);
 						navigate();
 						//explore();
@@ -179,7 +178,7 @@ void Robot::planAction(void) {
 			case APPROACH_PICK_UP: // Move on close to target
 				if (!motionControl.iterate(p)) {
 					float clear = navigation.wallClearance(p);
-					float walk = clear < GOALWALK ? clear : GOALWALK;
+					float walk = clear < PICKUPWALK ? clear : PICKUPWALK;
 					navigation.solveTo(SLAM::Location(p.x + cos(p.theta) * walk, p.y + sin(p.theta) * walk));
 					navigate();
 					taskState = PICK_UP;
@@ -225,16 +224,37 @@ void Robot::planAction(void) {
 							navigateTarget();
 							taskState = GO_TO_TARGET;
 						}
-					taskState = EXPLORE;
+						taskState = EXPLORE;
 					}
 				}
 				break;
 			case RELEASE_TARGETS: // eggs hatching, get back
 				servoControl.setHatch(false);
 				if (!motionControl.backFromGoal(p)) {
+					taskState = RETURN_TO_GOAL_AGAIN;
+					navigation.solveTo(SLAM::Location(0, 0));
+					navigate();
+				}
+				break;
+			case RETURN_TO_GOAL_AGAIN: // Going to goal another time to get last balls rolling
+				if (!motionControl.iterate(p)) {
+					float clear = navigation.wallClearance(p);
+					float walk = clear < GOALWALK_AGAIN ? clear : GOALWALK_AGAIN;
+					navigation.solveTo(SLAM::Location(p.x + cos(p.theta) * walk, p.y + sin(p.theta) * walk));
+					navigate();
+					camera.rotateFar();
+					taskState = GOAL_WALKHAX_AGAIN;
+				}
+				break;
+			case GOAL_WALKHAX_AGAIN: // in goal, drive a bit forwards to be able to drop targets correctly
+				if (!motionControl.iterate(p)) {
+					taskState = RELEASE_TARGETS_AGAIN;
+				}
+				break;
+			case RELEASE_TARGETS_AGAIN: // they see me rollin', they hatin'
+				if (!motionControl.backFromGoal(p)) {
 					taskState = END_STATE;
 				}
-				// TODO: examine your balls
 				break;
 			case END_STATE: // world domination succeeded
 				camera.rotateNear();
@@ -247,18 +267,19 @@ void Robot::planAction(void) {
 				break;
 			default: throw std::runtime_error("Bad task state number"); break;
 		}
-		if (ownTime_get_ms_since(statistics.taskStartTime) >= hurryUp
-				&& taskState != GO_RETURN_TO_GOAL
-				&& taskState != RETURN_TO_GOAL
-				&& taskState != RELEASE_TARGETS
-				&& taskState != END_STATE
-				&& taskState != GOAL_WALKHAX
-				&& taskState != BACK_OFF) {
+		float timeSince = ownTime_get_ms_since(statistics.taskStartTime);
+		if (timeSince >= hurryUp && (
+				taskState == START
+				|| taskState == EXPLORE
+				|| taskState == GO_TO_TARGET
+				|| taskState == APPROACH_PICK_UP
+				|| taskState == PICK_UP
+		   )) {
 			taskState = GO_RETURN_TO_GOAL;
 			speak("Hop hop hop");
 		}
+		std::cout << "PLANNER: CURRENT TASK: " << taskdescr[taskState] << ", time elapsed " << (timeSince / 1000) << std::endl;
 	}
-	std::cout << "PLANNER: CURRENT TASK: " << taskdescr[taskState] << std::endl;
 }
 
 void Robot::threadMain(void) {
@@ -627,9 +648,12 @@ const char* Robot::taskdescr[NUM_TASK_STATES] = {
 	"Approach pick target up",
 	"Go to returning to goal",
 	"Return to goal",
+	"Return to goal again",
 	"Goal walkhax",
+	"Goal walkhax again",
 	"Pick target up",
 	"Release targets",
+	"Release targets again",
 	"End state",
 	"Back off"
 };

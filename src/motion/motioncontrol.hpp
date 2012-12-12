@@ -31,6 +31,7 @@ public:
 	void setPose(Pose pose);
 	struct Ctrl;
 	Ctrl getCtrl() { return ctrl; }
+	void setCtrl(float speed, float angle) { ctrl.speed = speed; ctrl.angle = angle; }
 	void stop();
 	bool running() const;
 	void drawInfo(SDL_Surface* screen, int x, int y) const;

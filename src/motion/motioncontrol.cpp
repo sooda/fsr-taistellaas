@@ -110,7 +110,7 @@ bool MotionControl::iterate(SLAM::RobotLocation myPose) {
 	// When new route is gotten, first rotate to orientation of first waypoint.
 	static const float eps = 20*M_PI/180;
 	if (routeStarting) {
-		if (floateq(myPose.theta, startPoint.theta, eps)) {
+		if (floateq(fixangles(myPose.theta), fixangles(startPoint.theta), eps)) {
 			routeStarting = false;
 			return nextMidpoint();
 		} else {

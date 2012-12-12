@@ -48,3 +48,35 @@ search_info gridsearch(const VectorGrid& grid, vertex_descriptor start, vertex_d
 	cout << "search finished" << endl;
 	return make_pair(shortest_path, d[goal]);
 }
+
+vertex_descriptor gridsearch_farthest(const VectorGrid& grid, vertex_descriptor start, vertex_descriptor goal) {
+	using namespace std;
+	gridgraph g(grid);
+	grid_heuristic<gridgraph, cost> heuristic(goal);
+	grid_visitor<gridvertex> visitor(goal);
+	my_pred_map p; // vec(num_vertices(g)); (vector is faster if indexed with my index map, but it uses more memory)
+	my_dist_map d; // vec(num_vertices(g));
+	d[start] = 0; // mandatory for some magic reason
+	std::map<vertex_descriptor, boost::default_color_type> colors;
+	try {
+		boost::astar_search_no_init(g, start, heuristic,
+				boost::visitor(visitor)
+				.predecessor_map(boost::ref(p))
+				.distance_map(boost::ref(d))
+				.color_map(boost::associative_property_map<map<vertex_descriptor, boost::default_color_type>>(colors))
+		);
+	} catch (found_goal&) {
+		cout << "HURRAA" << endl;
+	}
+	/*for (auto it = p.begin(); it != p.end(); ++it) {
+		cout << it->first << " pred is " << it->second << endl;
+	}
+	*/
+	auto farthest = d.begin();
+	for (auto it = d.begin(); it != d.end(); ++it) {
+		if (it->second > farthest->second) {
+			farthest = it;
+		}
+	}
+	return farthest->first;
+}

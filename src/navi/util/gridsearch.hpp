@@ -6,5 +6,6 @@
 
 typedef std::pair<std::list<gridvertex>, float> search_info;
 search_info gridsearch(const VectorGrid& grid, gridvertex start, gridvertex goal);
+gridvertex gridsearch_farthest(const VectorGrid& grid, gridvertex start, gridvertex goal);
 
 #endif

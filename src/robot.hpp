@@ -70,9 +70,12 @@ private:
 		APPROACH_PICK_UP,
 		GO_RETURN_TO_GOAL,
 		RETURN_TO_GOAL,
+		RETURN_TO_GOAL_AGAIN,
 		GOAL_WALKHAX,
+		GOAL_WALKHAX_AGAIN,
 		PICK_UP,
 		RELEASE_TARGETS,
+		RELEASE_TARGETS_AGAIN,
 		END_STATE,
 		BACK_OFF,
 		
@@ -145,7 +148,9 @@ private:
 
 // open the hatch when distance from robot center to goal is < this
 #define HATCH_OPEN_DISTANCE (0.24/2 + 0.5 / 2)
+#define PICKUPWALK 0.4
 #define GOALWALK 0.4
+#define GOALWALK_AGAIN 0.2
 #define ROBOT_RADIUS 0.24
 
 #endif

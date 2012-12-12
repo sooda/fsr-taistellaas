@@ -13,15 +13,53 @@ Navigation::Navigation() :
 		wallmap_dila(wallmap_orig)
 		{
 }
+// clear the starting point so that we don't accidentally get stuck in the beginning
+// also empty the current location so nearby walls don't affect us
+GridMap startptshit(const GridMap& map, const SLAM::GridPoint& pt, int amount) {
+	const int w = map[0].size(), h = map.size();
+	SDL_Surface* surf = SDL_CreateRGBSurface(0, w, h, 32, 0, 0, 0xff, 0);
+	SDL_FillRect(surf, NULL, 0);
+	filledCircleColor(surf, pt.x, pt.y, amount, 0xffffff);
+	GridMap out(map);
+	for (int y = 0; y < h; y++) {
+		Uint32* srcrow = reinterpret_cast<Uint32*>(static_cast<char*>(surf->pixels) + surf->pitch * y);
+		GridRow& dstrow = out[y];
+		for (int x = 0; x < w; x++) {
+			if (srcrow[x])
+				dstrow[x] = false;
+		}
+	}
+	return out;
+}
+
 void Navigation::refreshMap(const SLAM::MapData& data) {
 	map = data;
+	GridMap obstacles(wallmap_orig);
 	for (int y = 0; y < MapData::gridSize; y++) {
 		for (int x = 0; x < MapData::gridSize; x++) {
 			double wall = map.getCellValue(SLAM::GridPoint(x,y), MapData::WALL);
 			wallmap_orig[y][x] = !(wall >= -0.1 && wall <= 0.25);
+
+			double obst = map.getCellValue(SLAM::GridPoint(x,y), MapData::OBSTACLE);
+			obstacles[y][x] = obst >= 0.25;
 		}
 	}
+	const int sz = SLAM::MapData::gridSize;
+	const int pienimulku = 2;
+	obstacles = dilate(obstacles, round(0.15 / SLAM::MapData::unitSize));
 	wallmap_dila = dilate(wallmap_orig, round(0.3 / SLAM::MapData::unitSize));
+	wallmap_dila = startptshit(wallmap_dila, SLAM::GridPoint(sz/2, sz/2), pienimulku);
+	auto bot = map.getRobotLocation();
+	SLAM::Location botp(bot.x, bot.y);
+	wallmap_dila = startptshit(wallmap_dila, SLAM::MapData::loc2grid(botp), pienimulku);
+	for (int y = 0; y < MapData::gridSize; y++) {
+		for (int x = 0; x < MapData::gridSize; x++) {
+			wallmap_dila[y][x] = wallmap_dila[y][x] || obstacles[y][x];
+		}
+	}
+}
+void Navigation::refreshTargets(const std::vector<SLAM::Location>& tgts) {
+	targets = tgts;
 }
 void Navigation::updateLocation(SLAM::RobotLocation pos) {
 	roboPos = pos;
@@ -72,6 +110,16 @@ float Navigation::routeLength(SLAM::Location loc) {
 	return findRoute(SLAM::MapData::loc2grid(loc)).second / SLAM::MapData::unitSize;
 }
 
+bool Navigation::navigable(SLAM::Location loc) {
+	return !findRoute(SLAM::MapData::loc2grid(loc)).first.empty();
+}
+SLAM::Location Navigation::farthest() {
+	VectorGrid container(wallmap_dila);
+	gridvertex start(roboPos.x, roboPos.y, &container);
+	gridvertex goal(0, 0, &container); // usually wall
+	gridvertex place_to_be = gridsearch_farthest(container, start, goal);
+	return SLAM::MapData::grid2loc(SLAM::GridPoint(place_to_be.x, place_to_be.y));
+}
 bool Navigation::solveTo(SLAM::GridPoint point) {
 	current_route = findRoute(point).first;
 	return !current_route.empty();
@@ -111,6 +159,10 @@ void Navigation::draw(SDL_Surface* screen, int posx, int posy) const {
 	}
 	for (auto it = current_route.begin(); it != current_route.end(); ++it) {
 		pixelRGBA(screen, x0 + MapData::gridSize + it->x, y0 + gridsz-1 - it->y, 0, 255, 0, 255);
+	}
+	for (auto it = targets.begin(); it != targets.end(); ++it) {
+		SLAM::GridPoint pt(SLAM::MapData::loc2grid(*it));
+		pixelRGBA(screen, x0 + MapData::gridSize + pt.x, y0 + gridsz-1 - pt.y, 200, 0, 200, 255);
 	}
 }
 

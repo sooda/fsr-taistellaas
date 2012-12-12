@@ -210,7 +210,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	double unusedViewDepthFront = MapData::unitSize; // from front off
 	double unusedViewDepthBack = MapData::unitSize; // from back off
 	data.viewWidth -= unusedViewWidth;
-	data.minDist -= unusedViewDepthFront;
+	data.minDist += unusedViewDepthFront;
 	data.maxDist -= unusedViewDepthBack;
 
 	double scaleDownDeltas = 0.8;
@@ -252,7 +252,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 				if (oldValue > 0.5) {
 					// overwriting a target
 					if ((type == MapData::TARGET) || (type == MapData::OBSTACLE)) {
-						std::cout << "overwriting object at (" << x << ", " << y << ")" << std::endl;
+						std::cout << "SLAM: overwriting object at (" << x << ", " << y << ")" << std::endl;
 						for (auto it = objects.begin(); it != objects.end(); ++it) {
 							double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
 							if (r2 < maxObjectDelta2) {
@@ -261,7 +261,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 									double r22 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
 									if (r22 < maxObjectDelta2) {
 										newObjectExists = true;
-										std::cout << "new object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
+										std::cout << "SLAM: new object (" << type << ": " << it2->x << ", " << it2->y << ") already exists ";
 										std::cout << "as (" << type << ": " << it->x << ", " << it->y << "), omitted" << std::endl;	
 										data.targets.erase(it2);
 										currentMapData.setValue(Location(x,y), type, 0.0); // empty to avoid double tagging
@@ -270,7 +270,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 								}
 								if (newObjectExists == false) {
 									objects.erase(it);
-									std::cout << "object (" << type << ": " << it->x << ", " << it->y << ") removed" << std::endl;
+									std::cout << "SLAM: object (" << type << ": " << it->x << ", " << it->y << ") removed" << std::endl;
 									currentMapData.setValue(Location(x,y), type, 0.0); // empty
 								}
 								break;
@@ -293,8 +293,23 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 	for (auto it = data.targets.begin(); it != data.targets.end();) {
 		double wallValue = currentMapData.getValue(Location(it->x,it->y), MapData::WALL);
 		if (fabs(wallValue) > 0.5) { // wall or unknown
-			std::cout << "new object (" << type << ": " << it->x << ", " << it->y << ") in unprobable location, omitted" << std::endl;
+			std::cout << "SLAM: new object (" << type << ": " << it->x << ", " << it->y << ") in unprobable location, omitted" << std::endl;
 			it = data.targets.erase(it);
+		} 
+		else {
+			++it;
+		}
+	}
+
+	// discard targets under robot
+	double robotRad2 = 0.24*0.24;
+	for (auto it = objects.begin(); it != objects.end();) {
+		double x = currentMapData.getRobotLocation().x;
+		double y = currentMapData.getRobotLocation().y;
+		double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
+		if (r2 < robotRad2) { // under robot
+			std::cout << "SLAM: object (" << type << ": " << it->x << ", " << it->y << ") under robot, removed" << std::endl;
+			it = objects.erase(it);
 		} 
 		else {
 			++it;
@@ -312,14 +327,14 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 				double objectDelta2 = (x - it2->x)*(x - it2->x)+(y - it2->y)*(y - it2->y);
 	 			if (objectDelta2 < maxObjectDelta2) {
 					duplicate = true;
-					std::cout << "new object (" << type << ": " << x << ", " << y << ") is duplicate with";
+					std::cout << "SLAM: new object (" << type << ": " << x << ", " << y << ") is duplicate with";
 					std::cout << " (" << type << ": " << it2->x << ", " << it2->y << "), omitted" << std::endl;
 					break;
 				}
 			}
 	
 			if (duplicate == false) {
-				std::cout << "new object (" << type << ": " << x << ", " << y << ") added" << std::endl;
+				std::cout << "SLAM: new object (" << type << ": " << x << ", " << y << ") added" << std::endl;
 				objects.push_back(Location(x,y));
 			}	
 		}
@@ -367,40 +382,40 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 				d12 = swapd;
 			}
 
-			std::cout << "goal at c1: (" << c1.x << ", " << c1.y << ")";
+			std::cout << "SLAM: goal at c1: (" << c1.x << ", " << c1.y << ")";
 			std::cout << ", c2: (" << c2.x << ", " << c2.y << ")";
 			std::cout << ", c3: (" << c3.x << ", " << c3.y << ")";
 			std::cout << ", c4: (" << c4.x << ", " << c4.y << ")" << std::endl;
 
-			std::cout << "height: " << sqrt(d12) << " and " << sqrt(d13-d14) << ", width: " << sqrt(d14) << " and " << sqrt(d13-d12) << std::endl;
+			std::cout << "SLAM: height: " << sqrt(d12) << " and " << sqrt(d13-d14) << ", width: " << sqrt(d14) << " and " << sqrt(d13-d12) << std::endl;
 
 			// check rationality of points
 			// TODO fix the thing that causes edge lengths to be wrong
 			bool rational = true;
 			if (fabs(d12-height2) > 0.04) {
 				// fucking fabsulous
-				std::cout << "goal short edge c1-c2 wrong size (" << sqrt(d12) << ")" << std::endl;
+				std::cout << "SLAM: goal short edge c1-c2 wrong size (" << sqrt(d12) << ")" << std::endl;
 				rational = false;
 			}
 			if (fabs(d13-d14-height2) > 0.04) { // pythagoras, assuming ~90 deg angles
-				std::cout << "goal short edge c3-c4 wrong size(" << sqrt(d13-d14) << ")" << std::endl;
+				std::cout << "SLAM: goal short edge c3-c4 wrong size(" << sqrt(d13-d14) << ")" << std::endl;
 				rational = false;
 			}
 			if (fabs(d14-width2) > 0.04) {
-				std::cout << "goal long edge c1-c4 wrong size(" << sqrt(d14) << ")" << std::endl;
+				std::cout << "SLAM: goal long edge c1-c4 wrong size(" << sqrt(d14) << ")" << std::endl;
 				rational = false;
 			}
 			if (fabs(d13-d12-width2) > 0.04) { // pythagoras, assuming ~90 deg angles
-				std::cout << "goal long edge c2-c3 wrong size(" << sqrt(d13-d12) << ")" << std::endl;
+				std::cout << "SLAM: goal long edge c2-c3 wrong size(" << sqrt(d13-d12) << ")" << std::endl;
 				rational = false;
 			}
 
 			if (rational == false) {
-				std::cout << "omitting this goal data" << std::endl;
+				std::cout << "SLAM: omitting this goal data" << std::endl;
 			}
 			else {
 				Location center = Location((c1.x+c2.x+c3.x+c4.x)/4, (c1.y+c2.y+c3.y+c4.y)/4);
-				std::cout << "goal center now at (" << center.x << ", " << center.y << ")" << std::endl;
+				std::cout << "SLAM: goal center now at (" << center.x << ", " << center.y << ")" << std::endl;
 
 				objects.clear();
 				objects.push_back(center);
@@ -411,7 +426,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 			}
 		} 
 		else {
-			std::cout << "invalid amount of goal corner points given (" << data.targets.size() << ")" << std::endl;
+			std::cout << "SLAM: invalid amount of goal corner points given (" << data.targets.size() << ")" << std::endl;
 		}
 	}
 

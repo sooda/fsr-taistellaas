@@ -309,6 +309,7 @@ void SLAM::updateImageData(ImageData data, MapData::ObservationType type) {
 		double r2 = (x - it->x)*(x - it->x)+(y - it->y)*(y - it->y);
 		if (r2 < robotRad2) { // under robot
 			std::cout << "SLAM: object (" << type << ": " << it->x << ", " << it->y << ") under robot, removed" << std::endl;
+			currentMapData.setValue(Location(it->x,it->y), type, 0.0); // set empty
 			it = objects.erase(it);
 		} 
 		else {

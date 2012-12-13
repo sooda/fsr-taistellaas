@@ -122,7 +122,7 @@ void Robot::navigateTarget() {
 void Robot::planAction(void) {
 	ownTime_ms_delta_t hurryUp = 1000*60*11; // If it's time to abandon everything else and get current targets to the goal 
 	static ownTime_ms_delta_t explRollStartTime = 0;
-	updateTargets();
+	static ownTime_ms_delta_t hidasprkl = 0;
 	if (!manual.enabled) {
 		if(statistics.taskStartTime == 0)
 			statistics.taskStartTime = ownTime_get_ms();
@@ -134,6 +134,10 @@ void Robot::planAction(void) {
 					taskState = EXPLORE;
 				break;
 			case EXPLORE: // seek unexplored areas until targets visible
+				if (ownTime_get_ms_since(hidasprkl) >= 5000) {
+					hidasprkl = ownTime_get_ms();
+					updateTargets();
+				}
 				if (targets.size()) {
 					if (motionControl.running())
 						motionControl.stop();
@@ -185,6 +189,8 @@ void Robot::planAction(void) {
 				}
 				break;
 			case GO_RETURN_TO_GOAL: // Try to find a route to the goal -- if cannot, explore more
+				ownSleep_ms(1000);
+				updateTargets();
 				if (navigation.solveTo(SLAM::Location(0, 0))) {
 					navigate();
 					taskState = RETURN_TO_GOAL;
